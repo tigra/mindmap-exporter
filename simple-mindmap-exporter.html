@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian MindMap Exporter</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f7;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            grid-gap: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .preview {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: #f8f8f8;
+            background-image:
+              linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+              linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+              linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+              linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0 0 20px 0;
+            color: #2a2a2a;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #7E57C2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #6A45B0;
+        }
+
+        .controls {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .settings-section {
+            background: #f9f9f9;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .settings-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        #mindmap-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #status-message {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .status-success {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            display: block !important;
+        }
+
+        .status-error {
+            background-color: #ffebee;
+            color: #b71c1c;
+            display: block !important;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>Obsidian MindMap Exporter</h1>
+
+        <div>
+            <label for="markdown-input">Paste Your MindMap Markdown:</label>
+            <textarea id="markdown-input" placeholder="# Root Topic&#10;## Subtopic 1&#10;### Detail 1.1&#10;## Subtopic 2"></textarea>
+            <div id="status-message"></div>
+        </div>
+
+        <div class="settings-section">
+            <h3>Appearance</h3>
+            <div class="form-group">
+                <label for="theme-selector">Color Theme:</label>
+                <select id="theme-selector">
+                    <option value="default">Default Purple</option>
+                    <option value="ocean">Ocean Blue</option>
+                    <option value="forest">Forest Green</option>
+                    <option value="sunset">Sunset Orange</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="layout-type">Layout Style:</label>
+                <select id="layout-type">
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>Export Settings</h3>
+            <div class="form-group">
+                <label for="export-format">Export Format:</label>
+                <select id="export-format">
+                    <option value="svg">SVG Vector</option>
+                    <option value="png">PNG Image</option>
+                </select>
+            </div>
+        </div>
+
+        <button id="generate-btn">Generate MindMap</button>
+    </div>
+
+    <div class="preview">
+        <div class="preview-content">
+            <div id="mindmap-container"></div>
+            <div class="loading" id="loading-indicator">Generate a mindmap to preview</div>
+        </div>
+
+        <div class="controls">
+            <button id="export-btn" disabled>Export</button>
+        </div>
+    </div>
+
+    <script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get DOM elements
+            var markdownInput = document.getElementById('markdown-input');
+            var generateBtn = document.getElementById('generate-btn');
+            var exportBtn = document.getElementById('export-btn');
+            var mindmapContainer = document.getElementById('mindmap-container');
+            var loadingIndicator = document.getElementById('loading-indicator');
+            var statusMessage = document.getElementById('status-message');
+            var themeSelector = document.getElementById('theme-selector');
+            var layoutType = document.getElementById('layout-type');
+            var exportFormat = document.getElementById('export-format');
+
+            // Sample data
+            markdownInput.value = "# Project Planning\n## Research\n### Market Analysis\n### Technical Feasibility\n## Design\n### UI/UX Design\n### System Architecture\n## Development\n### Frontend\n### Backend\n## Testing";
+
+            // Color themes
+            var colorThemes = {
+                default: {
+                    root: ['#7E57C2', '#4527A0'],
+                    level1: ['#5C6BC0', '#283593'],
+                    level2: ['#26A69A', '#00796B'],
+                    level3: ['#66BB6A', '#2E7D32'],
+                    background: '#f5f5f7',
+                    connection: '#9575CD'
+                },
+                ocean: {
+                    root: ['#039BE5', '#01579B'],
+                    level1: ['#29B6F6', '#0277BD'],
+                    level2: ['#00ACC1', '#006064'],
+                    level3: ['#26C6DA', '#00838F'],
+                    background: '#E3F2FD',
+                    connection: '#81D4FA'
+                },
+                forest: {
+                    root: ['#43A047', '#1B5E20'],
+                    level1: ['#7CB342', '#33691E'],
+                    level2: ['#C0CA33', '#827717'],
+                    level3: ['#FDD835', '#F57F17'],
+                    background: '#F1F8E9',
+                    connection: '#AED581'
+                },
+                sunset: {
+                    root: ['#FB8C00', '#E65100'],
+                    level1: ['#F4511E', '#BF360C'],
+                    level2: ['#E53935', '#B71C1C'],
+                    level3: ['#8E24AA', '#4A148C'],
+                    background: '#FFF3E0',
+                    connection: '#FFCC80'
+                }
+            };
+
+            // Helper function to escape XML in SVG text
+            function escapeXml(text) {
+                return text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&apos;');
+            }
+
+            // Parse mindmap markdown
+            function parseMindmap(markdown) {
+                var lines = markdown.split('\n');
+                var root = { text: '', children: [], level: 0 };
+                var stack = [root];
+
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim();
+                    if (!line) continue;
+
+                    // Count # characters to determine level
+                    var level = 0;
+                    for (var j = 0; j < line.length; j++) {
+                        if (line[j] === '#') level++;
+                        else break;
+                    }
+
+                    // Extract text
+                    var text = line.substring(level).trim();
+
+                    // Create node
+                    var node = { text: text, children: [], level: level };
+
+                    // Find the parent node
+                    while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+                        stack.pop();
+                    }
+
+                    // Add to parent
+                    stack[stack.length - 1].children.push(node);
+
+                    // Add to stack
+                    stack.push(node);
+                }
+
+                return root.children.length > 0 ? root.children[0] : null;
+            }
+
+            // Calculate dimensions of a node based on text
+            function getNodeSize(text, isRoot) {
+                var fontSize = isRoot ? 18 : 14;
+                var fontWeight = isRoot ? 'bold' : 'normal';
+                var padding = isRoot ? 20 : 15;
+
+                // Create temporary element to measure text
+                var temp = document.createElement('div');
+                temp.style.position = 'absolute';
+                temp.style.visibility = 'hidden';
+                temp.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+                temp.style.fontSize = fontSize + 'px';
+                temp.style.fontWeight = fontWeight;
+                temp.style.whiteSpace = 'nowrap';
+                temp.textContent = text;
+
+                document.body.appendChild(temp);
+                var width = temp.offsetWidth + (padding * 2);
+                var height = temp.offsetHeight + (padding * 2);
+                document.body.removeChild(temp);
+
+                return {
+                    width: Math.max(width, 100),
+                    height: Math.max(height, 40)
+                };
+            }
+
+            // Apply horizontal layout
+            function layoutHorizontal(node, x, y) {
+                var nodeSize = getNodeSize(node.text, node.level === 1);
+                node.x = x;
+                node.y = y - (nodeSize.height / 2);
+                node.width = nodeSize.width;
+                node.height = nodeSize.height;
+
+                if (node.children.length === 0) {
+                    return {
+                        width: nodeSize.width,
+                        height: nodeSize.height
+                    };
+                }
+
+                var childX = x + nodeSize.width + 80;
+                var totalHeight = 0;
+                var maxChildWidth = 0;
+
+                // Position children
+                for (var i = 0; i < node.children.length; i++) {
+                    var child = node.children[i];
+                    var childSize = layoutHorizontal(child, childX, y + totalHeight);
+
+                    totalHeight += childSize.height + 30;
+                    maxChildWidth = Math.max(maxChildWidth, childSize.width);
+                }
+
+                // Center parent vertically
+                node.y = y - (nodeSize.height / 2) + ((totalHeight - 30 - nodeSize.height) / 2);
+
+                return {
+                    width: nodeSize.width + 80 + maxChildWidth,
+                    height: Math.max(nodeSize.height, totalHeight - 30)
+                };
+            }
+
+            // Apply vertical layout
+            function layoutVertical(node, x, y) {
+                var nodeSize = getNodeSize(node.text, node.level === 1);
+                node.x = x - (nodeSize.width / 2);
+                node.y = y;
+                node.width = nodeSize.width;
+                node.height = nodeSize.height;
+
+                if (node.children.length === 0) {
+                    return {
+                        width: nodeSize.width,
+                        height: nodeSize.height
+                    };
+                }
+
+                var childY = y + nodeSize.height + 60;
+                var totalWidth = 0;
+                var maxChildHeight = 0;
+
+                // Position children
+                for (var i = 0; i < node.children.length; i++) {
+                    var child = node.children[i];
+                    var childSize = layoutVertical(child, x + totalWidth, childY);
+
+                    totalWidth += childSize.width + 30;
+                    maxChildHeight = Math.max(maxChildHeight, childSize.height);
+                }
+
+                // Center parent horizontally
+                node.x = x - (nodeSize.width / 2) + ((totalWidth - 30 - nodeSize.width) / 2);
+
+                return {
+                    width: Math.max(nodeSize.width, totalWidth - 30),
+                    height: nodeSize.height + 60 + maxChildHeight
+                };
+            }
+
+            // Apply layout based on selected type
+            function applyLayout(rootNode, isVertical) {
+                if (isVertical) {
+                    return layoutVertical(rootNode, 0, 0);
+                } else {
+                    return layoutHorizontal(rootNode, 0, 0);
+                }
+            }
+
+            // Render the mindmap as SVG
+            function renderMindmap(rootNode, theme, isVertical) {
+                // Find bounds
+                var minX = Infinity;
+                var minY = Infinity;
+                var maxX = -Infinity;
+                var maxY = -Infinity;
+
+                function findBounds(node) {
+                    minX = Math.min(minX, node.x);
+                    minY = Math.min(minY, node.y);
+                    maxX = Math.max(maxX, node.x + node.width);
+                    maxY = Math.max(maxY, node.y + node.height);
+
+                    for (var i = 0; i < node.children.length; i++) {
+                        findBounds(node.children[i]);
+                    }
+                }
+
+                findBounds(rootNode);
+
+                // Add padding
+                var padding = 30;
+                minX -= padding;
+                minY -= padding;
+                maxX += padding;
+                maxY += padding;
+
+                var width = maxX - minX;
+                var height = maxY - minY;
+
+                // Create SVG
+                var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="' + minX + ' ' + minY + ' ' + width + ' ' + height + '">';
+
+                // Add definitions for gradients
+                svg += '<defs>';
+                svg += '<linearGradient id="rootGradient" x1="0%" y1="0%" x2="100%" y2="100%">' +
+                       '<stop offset="0%" style="stop-color:' + theme.root[0] + ';stop-opacity:1" />' +
+                       '<stop offset="100%" style="stop-color:' + theme.root[1] + ';stop-opacity:1" />' +
+                       '</linearGradient>';
+
+                svg += '<linearGradient id="level1Gradient" x1="0%" y1="0%" x2="100%" y2="100%">' +
+                       '<stop offset="0%" style="stop-color:' + theme.level1[0] + ';stop-opacity:1" />' +
+                       '<stop offset="100%" style="stop-color:' + theme.level1[1] + ';stop-opacity:1" />' +
+                       '</linearGradient>';
+
+                svg += '<linearGradient id="level2Gradient" x1="0%" y1="0%" x2="100%" y2="100%">' +
+                       '<stop offset="0%" style="stop-color:' + theme.level2[0] + ';stop-opacity:1" />' +
+                       '<stop offset="100%" style="stop-color:' + theme.level2[1] + ';stop-opacity:1" />' +
+                       '</linearGradient>';
+
+                svg += '<linearGradient id="level3Gradient" x1="0%" y1="0%" x2="100%" y2="100%">' +
+                       '<stop offset="0%" style="stop-color:' + theme.level3[0] + ';stop-opacity:1" />' +
+                       '<stop offset="100%" style="stop-color:' + theme.level3[1] + ';stop-opacity:1" />' +
+                       '</linearGradient>';
+
+                svg += '<filter id="dropShadow">' +
+                       '<feGaussianBlur in="SourceAlpha" stdDeviation="2"/>' +
+                       '<feOffset dx="2" dy="2" result="offsetblur"/>' +
+                       '<feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer>' +
+                       '<feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>' +
+                       '</filter>';
+
+                svg += '</defs>';
+
+                // Draw nodes and connections
+                function drawNode(node) {
+                    // Select fill color based on level
+                    var fillColor;
+                    if (node.level === 1) fillColor = "url(#rootGradient)";
+                    else if (node.level === 2) fillColor = "url(#level1Gradient)";
+                    else if (node.level === 3) fillColor = "url(#level2Gradient)";
+                    else fillColor = "url(#level3Gradient)";
+
+                    // Draw connections to children
+                    for (var i = 0; i < node.children.length; i++) {
+                        var child = node.children[i];
+                        var startX, startY, endX, endY;
+
+                        if (isVertical) {
+                            startX = node.x + node.width / 2;
+                            startY = node.y + node.height;
+                            endX = child.x + child.width / 2;
+                            endY = child.y;
+                        } else {
+                            startX = node.x + node.width;
+                            startY = node.y + node.height / 2;
+                            endX = child.x;
+                            endY = child.y + child.height / 2;
+                        }
+
+                        // Draw curved connection
+                        if (isVertical) {
+                            var dy = endY - startY;
+                            svg += '<path d="M ' + startX + ' ' + startY + ' ' +
+                                   'C ' + startX + ' ' + (startY + dy * 0.4) + ', ' +
+                                   endX + ' ' + (startY + dy * 0.6) + ', ' +
+                                   endX + ' ' + endY + '" ' +
+                                   'stroke="' + theme.connection + '" stroke-width="2" fill="none" />';
+                        } else {
+                            var dx = endX - startX;
+                            svg += '<path d="M ' + startX + ' ' + startY + ' ' +
+                                   'C ' + (startX + dx * 0.4) + ' ' + startY + ', ' +
+                                   (startX + dx * 0.6) + ' ' + endY + ', ' +
+                                   endX + ' ' + endY + '" ' +
+                                   'stroke="' + theme.connection + '" stroke-width="2" fill="none" />';
+                        }
+
+                        drawNode(child);
+                    }
+
+                    // Draw the node rectangle
+                    svg += '<rect x="' + node.x + '" y="' + node.y + '" ' +
+                           'width="' + node.width + '" height="' + node.height + '" ' +
+                           'rx="6" ry="6" fill="' + fillColor + '" ' +
+                           'stroke="#fff" stroke-width="1.5" filter="url(#dropShadow)" />';
+
+                    // Add the text
+                    var fontSize = node.level === 1 ? 18 : 14;
+                    var fontWeight = node.level === 1 ? 'bold' : 'normal';
+
+                    svg += '<text x="' + (node.x + node.width / 2) + '" y="' + (node.y + node.height / 2) + '" ' +
+                           'font-family="Arial, sans-serif" font-size="' + fontSize + '" font-weight="' + fontWeight + '" ' +
+                           'fill="white" text-anchor="middle" dominant-baseline="middle">' +
+                           escapeXml(node.text) + '</text>';
+                }
+
+                // Start with the root
+                drawNode(rootNode);
+
+                svg += '</svg>';
+                return svg;
+            }
+
+            // Generate mindmap from markdown
+            function generateMindMap() {
+                loadingIndicator.textContent = 'Generating mindmap...';
+                loadingIndicator.style.display = 'block';
+                mindmapContainer.innerHTML = '';
+                statusMessage.className = '';
+                statusMessage.textContent = '';
+                statusMessage.style.display = 'none';
+
+                var markdown = markdownInput.value.trim();
+
+                if (!markdown) {
+                    statusMessage.textContent = 'Please enter some markdown content.';
+                    statusMessage.className = 'status-error';
+                    statusMessage.style.display = 'block';
+                    loadingIndicator.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    // Parse markdown
+                    var rootNode = parseMindmap(markdown);
+
+                    if (!rootNode) {
+                        statusMessage.textContent = 'Could not parse the markdown. Make sure it starts with a # heading.';
+                        statusMessage.className = 'status-error';
+                        statusMessage.style.display = 'block';
+                        loadingIndicator.style.display = 'none';
+                        return;
+                    }
+
+                    // Apply layout
+                    var isVertical = layoutType.value === 'vertical';
+                    applyLayout(rootNode, isVertical);
+
+                    // Render mindmap
+                    var theme = colorThemes[themeSelector.value];
+                    var svg = renderMindmap(rootNode, theme, isVertical);
+
+                    // Display mindmap
+                    mindmapContainer.innerHTML = svg;
+                    mindmapContainer.dataset.svgContent = svg;
+
+                    // Enable export button
+                    exportBtn.disabled = false;
+
+                    // Show success message
+                    statusMessage.textContent = 'MindMap generated successfully!';
+                    statusMessage.className = 'status-success';
+                    statusMessage.style.display = 'block';
+                } catch (error) {
+                    console.error('Error generating mindmap:', error);
+                    statusMessage.textContent = 'Error generating mindmap: ' + error.message;
+                    statusMessage.className = 'status-error';
+                    statusMessage.style.display = 'block';
+                }
+
+                loadingIndicator.style.display = 'none';
+            }
+
+            // Export mindmap
+            function exportMindMap() {
+                var svgContent = mindmapContainer.dataset.svgContent;
+
+                if (!svgContent) {
+                    statusMessage.textContent = 'No mindmap to export. Generate one first.';
+                    statusMessage.className = 'status-error';
+                    statusMessage.style.display = 'block';
+                    return;
+                }
+
+                var format = exportFormat.value;
+                var rootTextMatch = svgContent.match(/<text[^>]*>([^<]+)<\/text>/);
+                var fileName = rootTextMatch ?
+                    rootTextMatch[1].replace(/[^\w\s]/g, '').replace(/\s+/g, '_').toLowerCase() :
+                    'mindmap';
+
+                if (format === 'svg') {
+                    // Create link to download SVG
+                    var blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                    var url = URL.createObjectURL(blob);
+
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName + '.svg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    statusMessage.textContent = 'SVG exported successfully!';
+                    statusMessage.className = 'status-success';
+                    statusMessage.style.display = 'block';
+                } else if (format === 'png') {
+                    // Convert SVG to PNG
+                    var img = new Image();
+                    img.onload = function() {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+
+                        var ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+
+                        canvas.toBlob(function(blob) {
+                            var url = URL.createObjectURL(blob);
+
+                            var a = document.createElement('a');
+                            a.href = url;
+                            a.download = fileName + '.png';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+
+                            statusMessage.textContent = 'PNG exported successfully!';
+                            statusMessage.className = 'status-success';
+                            statusMessage.style.display = 'block';
+                        });
+                    };
+
+                    var svgBlob = new Blob([svgContent], {type: 'image/svg+xml'});
+                    var url = URL.createObjectURL(svgBlob);
+                    img.src = url;
+                }
+            }
+
+            // Add event listeners
+            generateBtn.addEventListener('click', generateMindMap);
+            exportBtn.addEventListener('click', exportMindMap);
+
+            // Generate initial mindmap
+            generateMindMap();
+        });
+    </script>
+</body>
+</html>
