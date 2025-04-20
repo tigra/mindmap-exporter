@@ -372,7 +372,9 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         }
 
-        var childY = y + nodeSize.height + 60;
+        var parentPadding = 30;
+
+        var childY = y + nodeSize.height + parentPadding;
         var totalWidth = 0;
         var maxChildHeight = 0;
 
@@ -388,11 +390,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Center parent horizontally
-        node.x = x - (nodeSize.width / 2) + ((totalWidth - childPadding - nodeSize.width) / 2);
+//        node.x = x - (nodeSize.width / 2) + ((totalWidth - childPadding - nodeSize.width) / 2);
+        node.x = x + ((totalWidth - childPadding - nodeSize.width) / 2);
 
         return {
             width: Math.max(nodeSize.width, totalWidth - childPadding),
-            height: nodeSize.height + 60 + maxChildHeight
+            height: nodeSize.height + parentPadding + maxChildHeight
         };
     }
 

@@ -109,6 +109,7 @@ class MindmapRenderer {
             svg += this._drawNodeShape(node);
             svg += this._drawNodeText(node, true); // true = text is within a box
         } else {
+            svg += this._drawNodeShape(node); // TODO remove
             // For levels 4+, draw just the text (no box)
             svg += this._drawNodeText(node, false); // false = text is standalone
         }
@@ -149,8 +150,8 @@ class MindmapRenderer {
         // For child level 4+, connections should end at the start of text
         if (child.level > 3) {
             if (this.isVertical) {
-                endX = child.x;
-                endY = child.y + (child.height / 2);
+                endX = child.x + child.width / 2;
+                endY = child.y  ;
             } else {
                 endX = child.x;
                 endY = child.y + (child.height / 2);
