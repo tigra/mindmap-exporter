@@ -4,155 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Obsidian MindMap Exporter</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f7;
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            grid-gap: 20px;
-            height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .sidebar {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
-        .preview {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .preview-content {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background-color: #f8f8f8;
-            background-image:
-              linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
-              linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
-              linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
-              linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-        }
-
-        h1 {
-            font-size: 24px;
-            margin: 0 0 20px 0;
-            color: #2a2a2a;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        textarea {
-            width: 100%;
-            height: 200px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: monospace;
-            resize: vertical;
-            margin-bottom: 10px;
-        }
-
-        button {
-            background-color: #7E57C2;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: #6A45B0;
-        }
-
-        .controls {
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            border-top: 1px solid #eee;
-        }
-
-        select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .settings-section {
-            background: #f9f9f9;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .settings-section h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        #mindmap-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        #status-message {
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-
-        .status-success {
-            background-color: #e8f5e9;
-            color: #1b5e20;
-            display: block !important;
-        }
-
-        .status-error {
-            background-color: #ffebee;
-            color: #b71c1c;
-            display: block !important;
-        }
-
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: #666;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
     <div class="sidebar">
@@ -225,8 +77,28 @@
             var exportFormat = document.getElementById('export-format');
 
             // Sample data
-            markdownInput.value = "# Project Planning\n## Research\n### Market Analysis\n### Technical Feasibility\n## Design\n### UI/UX Design\n### System Architecture\n## Development\n### Frontend\n### Backend\n## Testing";
-
+            markdownInput.value = `# Project Planning
+## Research
+- bullet 1
+   - subbullet 1
+   - subbullet 2
+### Market Analysis
+### Technical Feasibility
+## Design
+### UI/UX Design
+### System Architecture
+#### Class Diagram
+#### Deployment Diagram
+- bullet 1
+   - subbullet 1
+   - subbullet 2
+## Development
+### Frontend
+- bullet 1
+   - subbullet 1
+   - subbullet 2
+### Backend
+## Testing`;
             // Color themes
             var colorThemes = {
                 default: {
@@ -278,23 +150,46 @@
                 var lines = markdown.split('\n');
                 var root = { text: '', children: [], level: 0 };
                 var stack = [root];
+                var currentHeadingLevel = 0;
 
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i].trim();
                     if (!line) continue;
 
-                    // Count # characters to determine level
+                    var node;
                     var level = 0;
-                    for (var j = 0; j < line.length; j++) {
-                        if (line[j] === '#') level++;
-                        else break;
+                    var text = '';
+
+                    // Check if it's a heading
+                    if (line.startsWith('#')) {
+                        // Count # characters to determine level
+                        for (var j = 0; j < line.length; j++) {
+                            if (line[j] === '#') level++;
+                            else break;
+                        }
+
+                        // Extract text
+                        text = line.substring(level).trim();
+                        currentHeadingLevel = level;
+                    }
+                    // Check if it's a bullet point
+                    else if (line.startsWith('-')) {
+                        // Get raw line to calculate actual indentation
+                        var rawLine = lines[i];
+                        var indentLength = rawLine.length - rawLine.trimLeft().length;
+                        var bulletDepth = Math.floor(indentLength / 2); // Assuming 2 spaces per level
+
+                        // Bullet points should be children of the current heading
+                        level = currentHeadingLevel + bulletDepth + 1;
+
+                        // Extract text
+                        text = line.substring(1).trim(); // Remove the '-' character
+                    } else {
+                        continue; // Skip lines that aren't headings or bullet points
                     }
 
-                    // Extract text
-                    var text = line.substring(level).trim();
-
                     // Create node
-                    var node = { text: text, children: [], level: level };
+                    node = { text: text, children: [], level: level };
 
                     // Find the parent node
                     while (stack.length > 1 && stack[stack.length - 1].level >= level) {
@@ -421,138 +316,193 @@
                 }
             }
 
-            // Render the mindmap as SVG
+            // MindmapRenderer class for SVG generation
+            class MindmapRenderer {
+                constructor(rootNode, theme, isVertical) {
+                    this.rootNode = rootNode;
+                    this.theme = theme;
+                    this.isVertical = isVertical;
+                    this.minX = Infinity;
+                    this.minY = Infinity;
+                    this.maxX = -Infinity;
+                    this.maxY = -Infinity;
+                    this.padding = 20;
+                }
+
+                // Find the bounds of the entire mindmap
+                findBounds() {
+                    this._findBoundsRecursive(this.rootNode);
+
+                    // Add padding
+                    this.minX -= this.padding;
+                    this.minY -= this.padding;
+                    this.maxX += this.padding;
+                    this.maxY += this.padding;
+
+                    this.width = this.maxX - this.minX;
+                    this.height = this.maxY - this.minY;
+                }
+
+                _findBoundsRecursive(node) {
+                    this.minX = Math.min(this.minX, node.x);
+                    this.minY = Math.min(this.minY, node.y);
+                    this.maxX = Math.max(this.maxX, node.x + node.width);
+                    this.maxY = Math.max(this.maxY, node.y + node.height);
+
+                    for (let i = 0; i < node.children.length; i++) {
+                        this._findBoundsRecursive(node.children[i]);
+                    }
+                }
+
+                // Create SVG container with proper dimensions
+                createSvgContainer() {
+                    return `<svg xmlns="http://www.w3.org/2000/svg"
+                                width="${this.width}"
+                                height="${this.height}"
+                                viewBox="${this.minX} ${this.minY} ${this.width} ${this.height}">`;
+                }
+
+                // Create gradient and filter definitions
+                createDefs() {
+                    let defs = '<defs>';
+
+                    // Root node gradient
+                    defs += this._createGradient('rootGradient', this.theme.root[0], this.theme.root[1]);
+
+                    // Level 1 gradient
+                    defs += this._createGradient('level1Gradient', this.theme.level1[0], this.theme.level1[1]);
+
+                    // Level 2 gradient
+                    defs += this._createGradient('level2Gradient', this.theme.level2[0], this.theme.level2[1]);
+
+                    // Level 3 gradient
+                    defs += this._createGradient('level3Gradient', this.theme.level3[0], this.theme.level3[1]);
+
+                    // Drop shadow filter
+                    defs += `<filter id="dropShadow">
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+                                <feOffset dx="2" dy="2" result="offsetblur"/>
+                                <feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer>
+                                <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+                            </filter>`;
+
+                    defs += '</defs>';
+                    return defs;
+                }
+
+                _createGradient(id, color1, color2) {
+                    return `<linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:${color1};stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:${color2};stop-opacity:1" />
+                            </linearGradient>`;
+                }
+
+                // Get fill color based on node level
+                getFillColor(level) {
+                    if (level === 1) return "url(#rootGradient)";
+                    if (level === 2) return "url(#level1Gradient)";
+                    if (level === 3) return "url(#level2Gradient)";
+                    return "url(#level3Gradient)";
+                }
+
+                // Draw all nodes starting from root
+                drawNodes() {
+                    return this._drawNodeRecursive(this.rootNode);
+                }
+
+                _drawNodeRecursive(node) {
+                    let svg = '';
+
+                    // Draw connections to children first
+                    for (let i = 0; i < node.children.length; i++) {
+                        const child = node.children[i];
+                        svg += this._drawConnection(node, child);
+                        // Recursively draw child nodes
+                        svg += this._drawNodeRecursive(child);
+                    }
+
+                    // Draw the node itself
+                    svg += this._drawNodeShape(node);
+                    svg += this._drawNodeText(node);
+
+                    return svg;
+                }
+
+                _drawConnection(parent, child) {
+                    let startX, startY, endX, endY;
+
+                    if (this.isVertical) {
+                        startX = parent.x + parent.width / 2;
+                        startY = parent.y + parent.height;
+                        endX = child.x + child.width / 2;
+                        endY = child.y;
+
+                        const dy = endY - startY;
+                        return `<path d="M ${startX} ${startY}
+                                       C ${startX} ${startY + dy * 0.4},
+                                         ${endX} ${startY + dy * 0.6},
+                                         ${endX} ${endY}"
+                                 stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
+                    } else {
+                        startX = parent.x + parent.width;
+                        startY = parent.y + parent.height / 2;
+                        endX = child.x;
+                        endY = child.y + child.height / 2;
+
+                        const dx = endX - startX;
+                        return `<path d="M ${startX} ${startY}
+                                       C ${startX + dx * 0.4} ${startY},
+                                         ${startX + dx * 0.6} ${endY},
+                                         ${endX} ${endY}"
+                                 stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
+                    }
+                }
+
+                _drawNodeShape(node) {
+                    const fillColor = this.getFillColor(node.level);
+                    return `<rect x="${node.x}" y="${node.y}"
+                                  width="${node.width}" height="${node.height}"
+                                  rx="6" ry="6" fill="${fillColor}"
+                                  stroke="#fff" stroke-width="1.5" filter="url(#dropShadow)" />`;
+                }
+
+                _drawNodeText(node) {
+                    const fontSize = node.level === 1 ? 18 : 14;
+                    const fontWeight = node.level === 1 ? 'bold' : 'normal';
+
+                    return `<text x="${node.x + node.width / 2}" y="${node.y + node.height / 2}"
+                                  font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="${fontWeight}"
+                                  fill="white" text-anchor="middle" dominant-baseline="middle">
+                                  ${this._escapeXml(node.text)}
+                            </text>`;
+                }
+
+                _escapeXml(text) {
+                    return text
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&apos;');
+                }
+
+                // Generate the complete SVG
+                generateSvg() {
+                    this.findBounds();
+
+                    let svg = this.createSvgContainer();
+                    svg += this.createDefs();
+                    svg += this.drawNodes();
+                    svg += '</svg>';
+
+                    return svg;
+                }
+            }
+
+            // The main function now just creates a renderer and calls generateSvg
             function renderMindmap(rootNode, theme, isVertical) {
-                // Find bounds
-                var minX = Infinity;
-                var minY = Infinity;
-                var maxX = -Infinity;
-                var maxY = -Infinity;
-
-                function findBounds(node) {
-                    minX = Math.min(minX, node.x);
-                    minY = Math.min(minY, node.y);
-                    maxX = Math.max(maxX, node.x + node.width);
-                    maxY = Math.max(maxY, node.y + node.height);
-
-                    for (var i = 0; i < node.children.length; i++) {
-                        findBounds(node.children[i]);
-                    }
-                }
-
-                findBounds(rootNode);
-
-                // Add padding
-                var padding = 30;
-                minX -= padding;
-                minY -= padding;
-                maxX += padding;
-                maxY += padding;
-
-                var width = maxX - minX;
-                var height = maxY - minY;
-
-                // Create SVG
-                var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="' + minX + ' ' + minY + ' ' + width + ' ' + height + '">';
-
-                // Add definitions for gradients
-                svg += '<defs>';
-                svg += '<linearGradient id="rootGradient" x1="0%" y1="0%" x2="100%" y2="100%">' +
-                       '<stop offset="0%" style="stop-color:' + theme.root[0] + ';stop-opacity:1" />' +
-                       '<stop offset="100%" style="stop-color:' + theme.root[1] + ';stop-opacity:1" />' +
-                       '</linearGradient>';
-
-                svg += '<linearGradient id="level1Gradient" x1="0%" y1="0%" x2="100%" y2="100%">' +
-                       '<stop offset="0%" style="stop-color:' + theme.level1[0] + ';stop-opacity:1" />' +
-                       '<stop offset="100%" style="stop-color:' + theme.level1[1] + ';stop-opacity:1" />' +
-                       '</linearGradient>';
-
-                svg += '<linearGradient id="level2Gradient" x1="0%" y1="0%" x2="100%" y2="100%">' +
-                       '<stop offset="0%" style="stop-color:' + theme.level2[0] + ';stop-opacity:1" />' +
-                       '<stop offset="100%" style="stop-color:' + theme.level2[1] + ';stop-opacity:1" />' +
-                       '</linearGradient>';
-
-                svg += '<linearGradient id="level3Gradient" x1="0%" y1="0%" x2="100%" y2="100%">' +
-                       '<stop offset="0%" style="stop-color:' + theme.level3[0] + ';stop-opacity:1" />' +
-                       '<stop offset="100%" style="stop-color:' + theme.level3[1] + ';stop-opacity:1" />' +
-                       '</linearGradient>';
-
-                svg += '<filter id="dropShadow">' +
-                       '<feGaussianBlur in="SourceAlpha" stdDeviation="2"/>' +
-                       '<feOffset dx="2" dy="2" result="offsetblur"/>' +
-                       '<feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer>' +
-                       '<feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>' +
-                       '</filter>';
-
-                svg += '</defs>';
-
-                // Draw nodes and connections
-                function drawNode(node) {
-                    // Select fill color based on level
-                    var fillColor;
-                    if (node.level === 1) fillColor = "url(#rootGradient)";
-                    else if (node.level === 2) fillColor = "url(#level1Gradient)";
-                    else if (node.level === 3) fillColor = "url(#level2Gradient)";
-                    else fillColor = "url(#level3Gradient)";
-
-                    // Draw connections to children
-                    for (var i = 0; i < node.children.length; i++) {
-                        var child = node.children[i];
-                        var startX, startY, endX, endY;
-
-                        if (isVertical) {
-                            startX = node.x + node.width / 2;
-                            startY = node.y + node.height;
-                            endX = child.x + child.width / 2;
-                            endY = child.y;
-                        } else {
-                            startX = node.x + node.width;
-                            startY = node.y + node.height / 2;
-                            endX = child.x;
-                            endY = child.y + child.height / 2;
-                        }
-
-                        // Draw curved connection
-                        if (isVertical) {
-                            var dy = endY - startY;
-                            svg += '<path d="M ' + startX + ' ' + startY + ' ' +
-                                   'C ' + startX + ' ' + (startY + dy * 0.4) + ', ' +
-                                   endX + ' ' + (startY + dy * 0.6) + ', ' +
-                                   endX + ' ' + endY + '" ' +
-                                   'stroke="' + theme.connection + '" stroke-width="2" fill="none" />';
-                        } else {
-                            var dx = endX - startX;
-                            svg += '<path d="M ' + startX + ' ' + startY + ' ' +
-                                   'C ' + (startX + dx * 0.4) + ' ' + startY + ', ' +
-                                   (startX + dx * 0.6) + ' ' + endY + ', ' +
-                                   endX + ' ' + endY + '" ' +
-                                   'stroke="' + theme.connection + '" stroke-width="2" fill="none" />';
-                        }
-
-                        drawNode(child);
-                    }
-
-                    // Draw the node rectangle
-                    svg += '<rect x="' + node.x + '" y="' + node.y + '" ' +
-                           'width="' + node.width + '" height="' + node.height + '" ' +
-                           'rx="6" ry="6" fill="' + fillColor + '" ' +
-                           'stroke="#fff" stroke-width="1.5" filter="url(#dropShadow)" />';
-
-                    // Add the text
-                    var fontSize = node.level === 1 ? 18 : 14;
-                    var fontWeight = node.level === 1 ? 'bold' : 'normal';
-
-                    svg += '<text x="' + (node.x + node.width / 2) + '" y="' + (node.y + node.height / 2) + '" ' +
-                           'font-family="Arial, sans-serif" font-size="' + fontSize + '" font-weight="' + fontWeight + '" ' +
-                           'fill="white" text-anchor="middle" dominant-baseline="middle">' +
-                           escapeXml(node.text) + '</text>';
-                }
-
-                // Start with the root
-                drawNode(rootNode);
-
-                svg += '</svg>';
-                return svg;
+                const renderer = new MindmapRenderer(rootNode, theme, isVertical);
+                return renderer.generateSvg();
             }
 
             // Generate mindmap from markdown
