@@ -119,64 +119,68 @@ class MindmapRenderer {
     _drawConnection(parent, child) {
         let startX, startY, endX, endY;
 
-        if (this.isVertical) {
-            // Handle connections differently for level 4+ child nodes
-            if (child.level > 3) {
-                startX = parent.x + parent.width / 2;
-                startY = parent.y + parent.height;
-                // For text-only nodes, position at the text center
-                endX = child.x + (child.width / 2);
-                endY = child.y + (child.height / 2);
+        // For parent level 4+, connections should start from the end of text
+        if (parent.level > 3) {
+            // Calculate approximate text width based on content
+            const textLength = parent.text.length;
+            const avgCharWidth = parent.level === 1 ? 12 : 8; // Estimated width per character
+            const textWidth = Math.min(textLength * avgCharWidth, parent.width);
 
-                // Draw line directly to text
-                const dy = endY - startY;
-                return `<path d="M ${startX} ${startY}
-                               C ${startX} ${startY + dy * 0.4},
-                                 ${endX - 20} ${startY + dy * 0.6},
-                                 ${endX - 10} ${endY}"
-                         stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
+            if (this.isVertical) {
+                // For vertical layout, connect from bottom of text
+                startX = parent.x + textWidth / 2;
+                startY = parent.y + parent.height;
             } else {
-                startX = parent.x + parent.width / 2;
-                startY = parent.y + parent.height;
-                endX = child.x + child.width / 2;
-                endY = child.y;
-
-                const dy = endY - startY;
-                return `<path d="M ${startX} ${startY}
-                               C ${startX} ${startY + dy * 0.4},
-                                 ${endX} ${startY + dy * 0.6},
-                                 ${endX} ${endY}"
-                         stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
+                // For horizontal layout, connect from right end of text
+                startX = parent.x + textWidth;
+                startY = parent.y + parent.height / 2;
             }
         } else {
-            // Handle connections differently for level 4+ child nodes
-            if (child.level > 3) {
-                startX = parent.x + parent.width;
-                startY = parent.y + parent.height / 2;
-                // For text-only nodes, position at the text center
-                endX = child.x;
-                endY = child.y + (child.height / 2);
-
-                // Draw line directly to text
-                const dx = endX - startX;
-                return `<path d="M ${startX} ${startY}
-                               C ${startX + dx * 0.4} ${startY},
-                                 ${startX + dx * 0.7} ${endY},
-                                 ${endX - 5} ${endY}"
-                         stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
+            // For boxed nodes (levels 1-3), connect from the box edge
+            if (this.isVertical) {
+                startX = parent.x + parent.width / 2;
+                startY = parent.y + parent.height;
             } else {
                 startX = parent.x + parent.width;
                 startY = parent.y + parent.height / 2;
+            }
+        }
+
+        // For child level 4+, connections should end at the start of text
+        if (child.level > 3) {
+            if (this.isVertical) {
+                endX = child.x;
+                endY = child.y + (child.height / 2);
+            } else {
+                endX = child.x;
+                endY = child.y + (child.height / 2);
+            }
+        } else {
+            // For boxed nodes (levels 1-3), connect to the box edge
+            if (this.isVertical) {
+                endX = child.x + child.width / 2;
+                endY = child.y;
+            } else {
                 endX = child.x;
                 endY = child.y + child.height / 2;
-
-                const dx = endX - startX;
-                return `<path d="M ${startX} ${startY}
-                               C ${startX + dx * 0.4} ${startY},
-                                 ${startX + dx * 0.6} ${endY},
-                                 ${endX} ${endY}"
-                         stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
             }
+        }
+
+        // Draw the curved connection
+        if (this.isVertical) {
+            const dy = endY - startY;
+            return `<path d="M ${startX} ${startY}
+                           C ${startX} ${startY + dy * 0.4},
+                             ${endX} ${startY + dy * 0.6},
+                             ${endX} ${endY}"
+                     stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
+        } else {
+            const dx = endX - startX;
+            return `<path d="M ${startX} ${startY}
+                           C ${startX + dx * 0.4} ${startY},
+                             ${startX + dx * 0.6} ${endY},
+                             ${endX} ${endY}"
+                     stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
         }
     }
 
