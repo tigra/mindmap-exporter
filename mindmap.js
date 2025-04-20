@@ -17,12 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
 - bullet 1
     - subbullet 1, a very long bullet point, and even with its own subbullets
         - subsub 1
-           - 2
+           - 2222222222222
               - 3
-                - 4
+                - 44444444444444444444444444444444444444444
+                - 5555555555
         - subsub 2
     - subbullet 2
         - subsub, again
+            - 1111111
+            - 2222222222222 2222222222
+               - 333333
+                 - 3
 ### Market Analysis
 ### Technical Feasibility
 ## Design
@@ -313,8 +318,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.removeChild(temp);
 
         return {
-            width: Math.max(width, 50),
-            height: Math.max(height, 30)
+            width: Math.max(width, 0),
+            height: Math.max(height, 0)
         };
     }
 
@@ -360,7 +365,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Apply vertical layout
     function layoutVertical(node, x, y) {
         var nodeSize = getNodeSize(node.text, node.level === 1);
-        node.x = x - (nodeSize.width / 2);
+        // the entire branch left top corner is (x, y)
+        // initially place the parent at this position
+        node.x = x;
         node.y = y;
         node.width = nodeSize.width;
         node.height = nodeSize.height;
@@ -388,15 +395,34 @@ document.addEventListener('DOMContentLoaded', function() {
             totalWidth += childSize.width + childPadding;
             maxChildHeight = Math.max(maxChildHeight, childSize.height);
         }
+        totalWidth -= childPadding;
 
-        // Center parent horizontally
-//        node.x = x - (nodeSize.width / 2) + ((totalWidth - childPadding - nodeSize.width) / 2);
-        node.x = x + ((totalWidth - childPadding - nodeSize.width) / 2);
+        // Depending on total size of children and the size of parent, adjust them relatively to x
+        parentShift = Math.max(totalWidth, nodeSize.width)/2 - nodeSize.width / 2;
+        if (totalWidth < nodeSize.width) {
+            parentShift = 0;
+            childShift = (nodeSize.width - totalWidth) / 2;
+        } else {
+            parentShift = (totalWidth - nodeSize.width) / 2;
+            childShift = 0;
+        }
+        node.x = x + parentShift;
+        for (var i = 0; i < node.children.length; i++) {
+            adjustPositionRecursive(node.children[i], childShift, 0);
+        }
 
         return {
-            width: Math.max(nodeSize.width, totalWidth - childPadding),
+            width: Math.max(nodeSize.width, totalWidth),
             height: nodeSize.height + parentPadding + maxChildHeight
         };
+    }
+
+    function adjustPositionRecursive(node, deltaX, deltaY) {
+        node.x += deltaX;
+        node.y += deltaY;
+        for (var i = 0; i < node.children.length; i++) {
+            adjustPositionRecursive(node.children[i], deltaX, deltaY);
+        }
     }
 
     // Apply layout based on selected type

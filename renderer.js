@@ -109,7 +109,7 @@ class MindmapRenderer {
             svg += this._drawNodeShape(node);
             svg += this._drawNodeText(node, true); // true = text is within a box
         } else {
-            svg += this._drawNodeShape(node); // TODO remove
+//            svg += this._drawNodeShape(node); // TODO remove
             // For levels 4+, draw just the text (no box)
             svg += this._drawNodeText(node, false); // false = text is standalone
         }
