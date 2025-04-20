@@ -176,7 +176,7 @@ select {
     justify-content: center;
     font-weight: bold;
     font-size: 18px;
-    cursor: pointer;
+    cursor: help;
     z-index: 100;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s;
@@ -196,12 +196,18 @@ select {
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
     z-index: 99;
     width: 280px;
-    display: none;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0s 0.3s;
+    pointer-events: none;
 }
 
-.help-tooltip.visible {
-    display: block;
-    animation: fadeIn 0.3s;
+.help-button:hover + .help-tooltip,
+.help-tooltip:hover {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s;
+    pointer-events: auto;
 }
 
 .help-tooltip-content {
@@ -224,22 +230,4 @@ select {
     margin-bottom: 5px;
     font-size: 14px;
     color: #555;
-}
-
-.close-tooltip {
-    position: absolute;
-    top: 8px;
-    right: 10px;
-    font-size: 20px;
-    color: #999;
-    cursor: pointer;
-}
-
-.close-tooltip:hover {
-    color: #333;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
 }

@@ -151,33 +151,36 @@ document.addEventListener('DOMContentLoaded', function() {
     function initHelpButton() {
         const helpButton = document.getElementById('help-button');
         const helpTooltip = document.getElementById('help-tooltip');
-        const closeTooltip = document.querySelector('.close-tooltip');
 
-        // Toggle tooltip visibility when help button is clicked
-        helpButton.addEventListener('click', () => {
-            helpTooltip.classList.toggle('visible');
-        });
+        let tooltipTimeout;
 
-        // Close tooltip when X is clicked
-        closeTooltip.addEventListener('click', () => {
-            helpTooltip.classList.remove('visible');
-        });
+        // When moving out of the tooltip or button, start a timer to hide the tooltip
+        function startHideTimer() {
+            tooltipTimeout = setTimeout(() => {
+                helpTooltip.style.visibility = 'hidden';
+                helpTooltip.style.opacity = '0';
+            }, 300); // Delay in milliseconds before hiding
+        }
 
-        // Close tooltip when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!helpTooltip.contains(e.target) && e.target !== helpButton) {
-                helpTooltip.classList.remove('visible');
+        // If moving back over the tooltip or button, cancel the timer
+        function cancelHideTimer() {
+            if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = null;
             }
+        }
+
+        // Attach event listeners for mouse movements
+        helpButton.addEventListener('mouseenter', () => {
+            cancelHideTimer();
+            helpTooltip.style.visibility = 'visible';
+            helpTooltip.style.opacity = '1';
         });
 
-        // Close tooltip when ESC key is pressed
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                helpTooltip.classList.remove('visible');
-            }
-        });
+        helpButton.addEventListener('mouseleave', startHideTimer);
+        helpTooltip.addEventListener('mouseenter', cancelHideTimer);
+        helpTooltip.addEventListener('mouseleave', startHideTimer);
     }
-
 
     // Function to initialize the mindmap container for scrolling
     function initMindmapContainer() {

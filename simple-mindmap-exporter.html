@@ -8,8 +8,9 @@
 </head>
 <body>
     <div class="sidebar">
-        <h1>Obsidian MindMap Exporter</h1>
-
+        <h1>Markdown MindMap Exporter</h1>
+        <ul><small>Convert your Markdown (e.g. edited in Obsidian, with Enhancing Mindmap plugin, or elsewhere)
+            with headings and bullet points to a mindmap!</small></ul>
         <div>
             <label for="markdown-input">Paste Your MindMap Markdown:</label>
             <textarea id="markdown-input" placeholder="# Root Topic&#10;## Subtopic 1&#10;### Detail 1.1&#10;## Subtopic 2"></textarea>
@@ -55,17 +56,18 @@
         <div class="preview-content">
             <div id="mindmap-container"></div>
             <div class="loading" id="loading-indicator">Generate a mindmap to preview</div>
-            <div id="help-button" class="help-button" title="Navigation Help">?</div>
+            <div id="help-button" class="help-button">?</div>
             <div id="help-tooltip" class="help-tooltip">
                 <div class="help-tooltip-content">
                     <h3>Navigation Controls</h3>
                     <ul>
-                        <li><strong>Scroll:</strong> Mouse wheel to scroll vertically</li>
-                        <li><strong>Horizontal Scroll:</strong> Shift + Mouse wheel</li>
-                        <li><strong>Pan:</strong> Middle-click drag or Ctrl + left-click drag</li>
-                        <li><strong>Zoom in/out:</strong> Ctrl + Mouse wheel up/down</li>
+                       <li><strong>Scroll:</strong> Mouse wheel to scroll vertically or Arrow keys</li>
+                       <li><strong>Horizontal Scroll:</strong> Shift + Mouse wheel or Shift + Arrow keys</li>
+                       <li><strong>Pan:</strong> Middle-click drag or Ctrl + left-click drag</li>
+                       <li><strong>Zoom in/out:</strong> Ctrl + Mouse wheel up/down</li>
+                       <li><strong>Faster Scroll:</strong> Page Up/Down keys</li>
+                       <li><strong>Jump to Edges:</strong> Home/End keys</li>
                     </ul>
-                    <div class="close-tooltip">&times;</div>
                 </div>
             </div>
         </div>
