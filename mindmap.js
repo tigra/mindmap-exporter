@@ -194,13 +194,65 @@ document.addEventListener('DOMContentLoaded', function() {
             container.style.cursor = 'auto';
         });
 
+        // Zoom state tracking
+        let currentZoom = 1.0;
+        const minZoom = 0.3;
+        const maxZoom = 3.0;
+
         // Handle wheel events for zooming
         container.addEventListener('wheel', (e) => {
             if (e.ctrlKey) {
+                // Prevent the default zoom of the entire page
                 e.preventDefault();
-                // You could implement zoom functionality here
-                // This would require scaling the SVG
+
+                // Determine zoom direction
+                const delta = e.deltaY < 0 ? 0.1 : -0.1;
+                const newZoom = Math.min(maxZoom, Math.max(minZoom, currentZoom + delta));
+
+                // If zoom didn't change (at limits), don't proceed
+                if (newZoom === currentZoom) return;
+
+                // Get SVG element
+                const svg = container.querySelector('svg');
+                if (!svg) return;
+
+                // Get mouse position relative to container
+                const rect = container.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                // Get scroll position before zoom
+                const scrollXBeforeZoom = container.scrollLeft;
+                const scrollYBeforeZoom = container.scrollTop;
+
+                // Scale SVG
+                svg.style.transformOrigin = '0 0';
+                svg.style.transform = `scale(${newZoom})`;
+
+                // Calculate new scroll position to keep mouse over the same point
+                const scrollXAfterZoom = (scrollXBeforeZoom + mouseX) * (newZoom / currentZoom) - mouseX;
+                const scrollYAfterZoom = (scrollYBeforeZoom + mouseY) * (newZoom / currentZoom) - mouseY;
+
+                // Update scroll position
+                container.scrollLeft = scrollXAfterZoom;
+                container.scrollTop = scrollYAfterZoom;
+
+                // Update current zoom
+                currentZoom = newZoom;
+
+                // Update status or display zoom level (optional)
+                const zoomPercent = Math.round(newZoom * 100);
+                const statusMessage = document.getElementById('status-message');
+                if (statusMessage) {
+                    statusMessage.textContent = `Zoom: ${zoomPercent}%`;
+                    // Clear the status message after a delay
+                    clearTimeout(statusMessage.timeout);
+                    statusMessage.timeout = setTimeout(() => {
+                        statusMessage.textContent = '';
+                    }, 1500);
+                }
             }
+            // If not holding Ctrl, let the default scroll behavior happen
         });
     }
 
