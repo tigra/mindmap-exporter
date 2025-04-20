@@ -111,11 +111,24 @@ select {
     font-size: 16px;
 }
 
+/* This is the scrollable container for the mindmap */
 #mindmap-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto; /* Enable scrolling */
+  padding: 20px; /* Add some padding around the mindmap */
+}
+
+/* Make sure SVG inside container can be larger than viewport */
+#mindmap-container svg {
+  display: block; /* Remove any default inline behavior */
+  margin: 0 auto; /* Center the SVG if smaller than container */
+  min-width: min-content; /* Allow SVG to be smaller than container if needed */
+  max-width: none; /* Allow SVG to be larger than container */
+  max-height: none; /* Allow SVG to be larger than container */
 }
 
 #status-message {

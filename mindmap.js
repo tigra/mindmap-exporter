@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
 - bullet 1
     - subbullet 1, a very long bullet point, and even with its own subbullets
         - subsub 1
+           - 2
+              - 3
+                - 4
         - subsub 2
     - subbullet 2
         - subsub, again
@@ -142,6 +145,63 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         return root.children.length > 0 ? root.children[0] : null;
+    }
+
+    // Function to initialize the mindmap container for scrolling
+    function initMindmapContainer() {
+        const container = document.getElementById('mindmap-container');
+
+        // Set up panning functionality
+        let isPanning = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        // Mouse events for panning (middle-click or ctrl+click)
+        container.addEventListener('mousedown', (e) => {
+            // Only initiate panning with middle mouse button or ctrl+left click
+            if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
+                e.preventDefault();
+                isPanning = true;
+                startX = e.pageX - container.offsetLeft;
+                startY = e.pageY - container.offsetTop;
+                scrollLeft = container.scrollLeft;
+                scrollTop = container.scrollTop;
+
+                // Change cursor to indicate panning
+                container.style.cursor = 'grabbing';
+            }
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            e.preventDefault();
+
+            const x = e.pageX - container.offsetLeft;
+            const y = e.pageY - container.offsetTop;
+            const walkX = (x - startX) * 1.5; // Adjust for faster/slower panning
+            const walkY = (y - startY) * 1.5;
+
+            container.scrollLeft = scrollLeft - walkX;
+            container.scrollTop = scrollTop - walkY;
+        });
+
+        container.addEventListener('mouseup', () => {
+            isPanning = false;
+            container.style.cursor = 'auto';
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isPanning = false;
+            container.style.cursor = 'auto';
+        });
+
+        // Handle wheel events for zooming
+        container.addEventListener('wheel', (e) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                // You could implement zoom functionality here
+                // This would require scaling the SVG
+            }
+        });
     }
 
     // Calculate dimensions of a node based on text
@@ -384,6 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners
     generateBtn.addEventListener('click', generateMindMap);
     exportBtn.addEventListener('click', exportMindMap);
+    initMindmapContainer();
 
     // Generate initial mindmap
     generateMindMap();
