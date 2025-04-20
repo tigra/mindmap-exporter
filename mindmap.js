@@ -147,6 +147,38 @@ document.addEventListener('DOMContentLoaded', function() {
         return root.children.length > 0 ? root.children[0] : null;
     }
 
+    // Set up help button functionality
+    function initHelpButton() {
+        const helpButton = document.getElementById('help-button');
+        const helpTooltip = document.getElementById('help-tooltip');
+        const closeTooltip = document.querySelector('.close-tooltip');
+
+        // Toggle tooltip visibility when help button is clicked
+        helpButton.addEventListener('click', () => {
+            helpTooltip.classList.toggle('visible');
+        });
+
+        // Close tooltip when X is clicked
+        closeTooltip.addEventListener('click', () => {
+            helpTooltip.classList.remove('visible');
+        });
+
+        // Close tooltip when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!helpTooltip.contains(e.target) && e.target !== helpButton) {
+                helpTooltip.classList.remove('visible');
+            }
+        });
+
+        // Close tooltip when ESC key is pressed
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                helpTooltip.classList.remove('visible');
+            }
+        });
+    }
+
+
     // Function to initialize the mindmap container for scrolling
     function initMindmapContainer() {
         const container = document.getElementById('mindmap-container');
@@ -496,6 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners
     generateBtn.addEventListener('click', generateMindMap);
     exportBtn.addEventListener('click', exportMindMap);
+    initHelpButton();
     initMindmapContainer();
 
     // Generate initial mindmap
