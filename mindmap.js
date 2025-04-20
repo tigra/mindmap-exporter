@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentHeadingLevel = level;
             }
             // Check if it's a bullet point
-            else if (line.startsWith('-')) {
+            else if (line.startsWith('-') || line.startsWith('*')) {
                 // Get raw line to calculate actual indentation
                 var rawLine = lines[i];
                 var indentLength = rawLine.length - rawLine.trimLeft().length;
