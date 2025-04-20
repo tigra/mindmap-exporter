@@ -186,9 +186,10 @@ class MindmapRenderer {
 
     _drawNodeShape(node) {
         const fillColor = this.getFillColor(node.level);
+        var rounding = 18;
         return `<rect x="${node.x}" y="${node.y}"
                       width="${node.width}" height="${node.height}"
-                      rx="6" ry="6" fill="${fillColor}"
+                      rx="${rounding}" ry="${rounding}" fill="${fillColor}"
                       stroke="#fff" stroke-width="1.5" filter="url(#dropShadow)" />`;
     }
 

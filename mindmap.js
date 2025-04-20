@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function getNodeSize(text, isRoot) {
         var fontSize = isRoot ? 18 : 14;
         var fontWeight = isRoot ? 'bold' : 'normal';
-        var padding = isRoot ? 20 : 15;
+        var padding = isRoot ? 20 : 10;
 
         // Create temporary element to measure text
         var temp = document.createElement('div');
@@ -313,8 +313,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.removeChild(temp);
 
         return {
-            width: Math.max(width, 100),
-            height: Math.max(height, 40)
+            width: Math.max(width, 50),
+            height: Math.max(height, 30)
         };
     }
 
@@ -337,21 +337,23 @@ document.addEventListener('DOMContentLoaded', function() {
         var totalHeight = 0;
         var maxChildWidth = 0;
 
+        var childPadding = 20
+
         // Position children
         for (var i = 0; i < node.children.length; i++) {
             var child = node.children[i];
             var childSize = layoutHorizontal(child, childX, y + totalHeight);
 
-            totalHeight += childSize.height + 30;
+            totalHeight += childSize.height + childPadding;
             maxChildWidth = Math.max(maxChildWidth, childSize.width);
         }
 
         // Center parent vertically
-        node.y = y - (nodeSize.height / 2) + ((totalHeight - 30 - nodeSize.height) / 2);
+        node.y = y - (nodeSize.height / 2) + ((totalHeight - childPadding - nodeSize.height) / 2);
 
         return {
             width: nodeSize.width + 80 + maxChildWidth,
-            height: Math.max(nodeSize.height, totalHeight - 30)
+            height: Math.max(nodeSize.height, totalHeight - childPadding)
         };
     }
 
@@ -374,20 +376,22 @@ document.addEventListener('DOMContentLoaded', function() {
         var totalWidth = 0;
         var maxChildHeight = 0;
 
+        var childPadding = 30;
+
         // Position children
         for (var i = 0; i < node.children.length; i++) {
             var child = node.children[i];
             var childSize = layoutVertical(child, x + totalWidth, childY);
 
-            totalWidth += childSize.width + 30;
+            totalWidth += childSize.width + childPadding;
             maxChildHeight = Math.max(maxChildHeight, childSize.height);
         }
 
         // Center parent horizontally
-        node.x = x - (nodeSize.width / 2) + ((totalWidth - 30 - nodeSize.width) / 2);
+        node.x = x - (nodeSize.width / 2) + ((totalWidth - childPadding - nodeSize.width) / 2);
 
         return {
-            width: Math.max(nodeSize.width, totalWidth - 30),
+            width: Math.max(nodeSize.width, totalWidth - childPadding),
             height: nodeSize.height + 60 + maxChildHeight
         };
     }
