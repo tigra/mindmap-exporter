@@ -91,65 +91,100 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/'/g, '&apos;');
     }
 
-    // Parse mindmap markdown
+    /**
+     * Represents a node in the mindmap structure
+     */
+    class Node {
+      /**
+       * Create a new Node
+       * @param {string} text - The text content of the node
+       * @param {number} level - The hierarchy level of the node
+       */
+      constructor(text = '', level = 0) {
+        this.text = text;
+        this.level = level;
+        this.children = [];
+      }
+
+      /**
+       * Add a child node to this node
+       * @param {Node} childNode - The child node to add
+       */
+      addChild(childNode) {
+        this.children.push(childNode);
+      }
+
+      /**
+       * Check if this node has any children
+       * @return {boolean} True if the node has children
+       */
+      hasChildren() {
+        return this.children.length > 0;
+      }
+    }
+
+    /**
+     * Parse markdown text into a mindmap structure
+     * @param {string} markdown - The markdown text to parse
+     * @return {Node|null} The root node of the mindmap, or null if no valid nodes were found
+     */
     function parseMindmap(markdown) {
-        var lines = markdown.split('\n');
-        var root = { text: '', children: [], level: 0 };
-        var stack = [root];
-        var currentHeadingLevel = 0;
+      const lines = markdown.split('\n');
+      const root = new Node('', 0);
+      const stack = [root];
+      let currentHeadingLevel = 0;
 
-        for (var i = 0; i < lines.length; i++) {
-            var line = lines[i].trim();
-            if (!line) continue;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
 
-            var node;
-            var level = 0;
-            var text = '';
+        let level = 0;
+        let text = '';
 
-            // Check if it's a heading
-            if (line.startsWith('#')) {
-                // Count # characters to determine level
-                for (var j = 0; j < line.length; j++) {
-                    if (line[j] === '#') level++;
-                    else break;
-                }
+        // Check if it's a heading
+        if (line.startsWith('#')) {
+          // Count # characters to determine level
+          for (let j = 0; j < line.length; j++) {
+            if (line[j] === '#') level++;
+            else break;
+          }
 
-                // Extract text
-                text = line.substring(level).trim();
-                currentHeadingLevel = level;
-            }
-            // Check if it's a bullet point
-            else if (line.startsWith('-') || line.startsWith('*')) {
-                // Get raw line to calculate actual indentation
-                var rawLine = lines[i];
-                var indentLength = rawLine.length - rawLine.trimLeft().length;
-                var bulletDepth = Math.floor(indentLength / 2); // Assuming 2 spaces per level
+          // Extract text
+          text = line.substring(level).trim();
+          currentHeadingLevel = level;
+        }
+        // Check if it's a bullet point
+        else if (line.startsWith('-') || line.startsWith('*')) {
+          // Get raw line to calculate actual indentation
+          const rawLine = lines[i];
+          const indentLength = rawLine.length - rawLine.trimLeft().length;
+          const bulletDepth = Math.floor(indentLength / 2); // Assuming 2 spaces per level
 
-                // Bullet points should be children of the current heading
-                level = currentHeadingLevel + bulletDepth + 1;
+          // Bullet points should be children of the current heading
+          level = currentHeadingLevel + bulletDepth + 1;
 
-                // Extract text
-                text = line.substring(1).trim(); // Remove the '-' character
-            } else {
-                continue; // Skip lines that aren't headings or bullet points
-            }
-
-            // Create node
-            node = { text: text, children: [], level: level };
-
-            // Find the parent node
-            while (stack.length > 1 && stack[stack.length - 1].level >= level) {
-                stack.pop();
-            }
-
-            // Add to parent
-            stack[stack.length - 1].children.push(node);
-
-            // Add to stack
-            stack.push(node);
+          // Extract text
+          text = line.substring(1).trim(); // Remove the '-' character
+        } else {
+          continue; // Skip lines that aren't headings or bullet points
         }
 
-        return root.children.length > 0 ? root.children[0] : null;
+        // Create node
+        const node = new Node(text, level);
+
+        // Find the parent node
+        while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+          stack.pop();
+        }
+
+        // Add to parent
+        stack[stack.length - 1].addChild(node);
+
+        // Add to stack
+        stack.push(node);
+      }
+
+      return root.hasChildren() ? root.children[0] : null;
     }
 
     // Set up help button functionality
@@ -343,7 +378,8 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         }
 
-        var childX = x + nodeSize.width + 80;
+        const parentPadding = 80;
+        var childX = x + nodeSize.width + parentPadding;
         var totalHeight = 0;
         var maxChildWidth = 0;
 
@@ -362,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
         node.y = y - (nodeSize.height / 2) + ((totalHeight - childPadding - nodeSize.height) / 2);
 
         return {
-            width: nodeSize.width + 80 + maxChildWidth,
+            width: nodeSize.width + parentPadding + maxChildWidth,
             height: Math.max(nodeSize.height, totalHeight - childPadding)
         };
     }
