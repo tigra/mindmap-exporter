@@ -1,38 +1,225 @@
 /**
+in * Represents styling for a specific level in the mindmap
+ */
+class LevelStyle {
+  /**
+   * Create a new LevelStyle
+   * @param {Object} options - Configuration options for this level style
+   */
+  constructor(options = {}) {
+    // Font settings
+    this.fontSize = options.fontSize || 14;
+    this.fontWeight = options.fontWeight || 'normal';
+    this.fontFamily = options.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+    // Padding and spacing
+    this.verticalPadding = options.verticalPadding || 10;
+    this.horizontalPadding = options.horizontalPadding || 10;
+    this.parentPadding = options.parentPadding || 30;
+    this.childPadding = options.childPadding || 20;
+
+    // Layout type
+    this.layoutType = options.layoutType || 'horizontal';
+
+    // Colors and appearance
+    this.backgroundColor = options.backgroundColor || '#ffffff';
+    this.textColor = options.textColor || '#000000';
+    this.borderColor = options.borderColor || '#cccccc';
+    this.borderWidth = options.borderWidth || 1;
+    this.borderRadius = options.borderRadius || 5;
+  }
+
+  /**
+   * Get the appropriate layout for this level style
+   * @return {Layout} The layout instance
+   */
+  getLayout() {
+    console.log(this.layoutType);
+    if (this.layoutType === 'vertical') {
+      return new VerticalLayout(this.parentPadding, this.childPadding);
+    } else {
+      return new HorizontalLayout(this.parentPadding, this.childPadding);
+    }
+  }
+
+  setLayoutType(layoutType) {
+    this.layoutType = layoutType;
+    console.log('set to ... ' + this.layoutType);
+  }
+}
+
+/**
+ * Manages styles for the entire mindmap
+ */
+class Style {
+  /**
+   * Create a new Style
+   */
+  constructor() {
+    // Define default styles for different levels
+    this.levelStyles = {
+      // Root level
+      1: new LevelStyle({
+        fontSize: 18,
+        fontWeight: 'bold',
+        verticalPadding: 20,
+        horizontalPadding: 20,
+        parentPadding: 80,
+        childPadding: 20,
+        layoutType: 'horizontal',
+        backgroundColor: '#f5f5f5',
+        borderColor: '#aaaaaa',
+        borderWidth: 2
+      }),
+
+      // Second level
+      2: new LevelStyle({
+        fontSize: 16,
+        fontWeight: 'bold',
+        layoutType: 'horizontal',
+        parentPadding: 60,
+        childPadding: 20
+      }),
+
+      // Third level
+      3: new LevelStyle({
+        fontSize: 14,
+        parentPadding: 40,
+        layoutType: 'horizontal'
+      }),
+
+      // Fourth level and beyond
+      4: new LevelStyle({
+        fontSize: 12,
+        horizontalPadding: 5,
+        verticalPadding: 5,
+        parentPadding: 30,
+        childPadding: 15,
+        layoutType: 'horizontal'
+      })
+    };
+
+    // Default style for any level not explicitly defined
+    this.defaultLevelStyle = new LevelStyle();
+  }
+
+  /**
+   * Get the appropriate style for a specific level
+   * @param {number} level - The level to get style for
+   * @return {LevelStyle} The level style
+   */
+  getLevelStyle(level) {
+    // If we have a specific style for this level, return it
+    if (this.levelStyles[level]) {
+      return this.levelStyles[level];
+    }
+
+    // For levels >= 4, return the level 4 style
+    if (level >= 4 && this.levelStyles[4]) {
+      return this.levelStyles[4];
+    }
+
+    // Otherwise return the default style
+    return this.defaultLevelStyle;
+  }
+
+  /**
+   * Configure the style with custom settings
+   * @param {Object} options - Style configuration options
+   */
+  configure(options = {}) {
+    if (options.levelStyles) {
+      // Merge provided level styles with existing ones
+      for (const [level, styleOptions] of Object.entries(options.levelStyles)) {
+        this.levelStyles[level] = new LevelStyle({
+          ...(this.levelStyles[level] || this.defaultLevelStyle),
+          ...styleOptions
+        });
+      }
+    }
+
+    if (options.defaultStyle) {
+      this.defaultLevelStyle = new LevelStyle(options.defaultStyle);
+    }
+  }
+
+ /**
+   * Change the layout type globally for all level styles
+   * @param {string} layoutType - The layout type to set ('horizontal' or 'vertical')
+   * @param {Object} options - Additional options
+   * @param {Array<number>} options.excludeLevels - Array of level numbers to exclude from the change
+   * @param {Object} options.customPadding - Custom padding values for different layout types
+   */
+  setGlobalLayoutType(layoutType, options = {}) {
+    if (layoutType !== 'horizontal' && layoutType !== 'vertical') {
+      throw new Error('Layout type must be either "horizontal" or "vertical"');
+    }
+
+    const excludeLevels = options.excludeLevels || [];
+    const customPadding = options.customPadding || {};
+
+    // Update default level style
+    if (!excludeLevels.includes(0)) {
+      this.defaultLevelStyle.layoutType = layoutType;
+
+      // Adjust padding values based on the layout type if needed
+      if (customPadding.default) {
+        if (customPadding.default.parentPadding) {
+          this.defaultLevelStyle.parentPadding = customPadding.default.parentPadding;
+        }
+        if (customPadding.default.childPadding) {
+          this.defaultLevelStyle.childPadding = customPadding.default.childPadding;
+        }
+      }
+    }
+
+    // Update all specific level styles
+    for (const level in this.levelStyles) {
+      if (excludeLevels.includes(parseInt(level))) {
+        continue;
+      }
+
+      this.levelStyles[level].layoutType = layoutType;
+
+      // Adjust padding values based on the layout type if needed
+      if (customPadding[level]) {
+        if (customPadding[level].parentPadding) {
+          this.levelStyles[level].parentPadding = customPadding[level].parentPadding;
+        }
+        if (customPadding[level].childPadding) {
+          this.levelStyles[level].childPadding = customPadding[level].childPadding;
+        }
+      }
+    }
+
+    return this; // Allow method chaining
+  }
+}
+
+/**
  * Base Layout class that handles common functionality
  */
 class Layout {
   /**
-   * Calculate dimensions of a node based on text
+   * Calculate dimensions of a node based on text and level style
    * @param {string} text - The text content of the node
-   * @param {boolean} isRoot - Whether this node is a root node
-   * @param {number} depth - The depth of the node in the tree
+   * @param {LevelStyle} levelStyle - The style for this node's level
    * @return {Object} The calculated width and height
    */
-  getNodeSize(text, isRoot, depth) {
-    const fontSize = isRoot ? 18 : 14;
-    const fontWeight = isRoot ? 'bold' : 'normal';
-    const verticalPadding = isRoot ? 20 : 10;
-    let horizontalPadding = isRoot ? 20 : 10;
-
-    if (depth >= 4) {
-      horizontalPadding = 0;
-      // TODO padding is not taken into account properly when rendering, have to unite layout and rendering
-    }
-
+  getNodeSize(text, levelStyle) {
     // Create temporary element to measure text
     const temp = document.createElement('div');
     temp.style.position = 'absolute';
     temp.style.visibility = 'hidden';
-    temp.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
-    temp.style.fontSize = fontSize + 'px';
-    temp.style.fontWeight = fontWeight;
+    temp.style.fontFamily = levelStyle.fontFamily;
+    temp.style.fontSize = levelStyle.fontSize + 'px';
+    temp.style.fontWeight = levelStyle.fontWeight;
     temp.style.whiteSpace = 'nowrap';
     temp.textContent = text;
 
     document.body.appendChild(temp);
-    const width = temp.offsetWidth + (horizontalPadding * 2);
-    const height = temp.offsetHeight + (verticalPadding * 2);
+    const width = temp.offsetWidth + (levelStyle.horizontalPadding * 2);
+    const height = temp.offsetHeight + (levelStyle.verticalPadding * 2);
     document.body.removeChild(temp);
 
     return {
@@ -60,9 +247,10 @@ class Layout {
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate
    * @param {number} y - The y coordinate
+   * @param {Style} style - The style to apply
    * @return {Object} The size of the laid out subtree
    */
-  applyLayout(node, x, y) {
+  applyLayout(node, x, y, style) {
     throw new Error('Method applyLayout must be implemented by subclasses');
   }
 }
@@ -87,14 +275,29 @@ class HorizontalLayout extends Layout {
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate
    * @param {number} y - The y coordinate
+   * @param {Style} style - The style to apply
    * @return {Object} The size of the laid out subtree
    */
-  applyLayout(node, x, y) {
-    const nodeSize = this.getNodeSize(node.text, node.level === 1, node.level);
+  applyLayout(node, x, y, style) {
+    const levelStyle = style.getLevelStyle(node.level);
+    const nodeSize = this.getNodeSize(node.text, levelStyle);
+
     node.x = x;
     node.y = y - (nodeSize.height / 2);
     node.width = nodeSize.width;
     node.height = nodeSize.height;
+
+    // Apply style properties to the node for rendering later
+    node.style = {
+      fontSize: levelStyle.fontSize,
+      fontWeight: levelStyle.fontWeight,
+      fontFamily: levelStyle.fontFamily,
+      backgroundColor: levelStyle.backgroundColor,
+      textColor: levelStyle.textColor,
+      borderColor: levelStyle.borderColor,
+      borderWidth: levelStyle.borderWidth,
+      borderRadius: levelStyle.borderRadius
+    };
 
     if (node.children.length === 0) {
       return {
@@ -110,7 +313,13 @@ class HorizontalLayout extends Layout {
     // Position children
     for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i];
-      const childSize = this.applyLayout(child, childX, y + totalHeight);
+
+      // Get the appropriate layout for the child's level
+      const childLevelStyle = style.getLevelStyle(child.level);
+      const childLayout = childLevelStyle.getLayout();
+      console.log(i);
+
+      const childSize = childLayout.applyLayout(child, childX, y + totalHeight, style);
 
       totalHeight += childSize.height + this.childPadding;
       maxChildWidth = Math.max(maxChildWidth, childSize.width);
@@ -146,16 +355,31 @@ class VerticalLayout extends Layout {
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate
    * @param {number} y - The y coordinate
+   * @param {Style} style - The style to apply
    * @return {Object} The size of the laid out subtree
    */
-  applyLayout(node, x, y) {
-    const nodeSize = this.getNodeSize(node.text, node.level === 1, node.level);
+  applyLayout(node, x, y, style) {
+    const levelStyle = style.getLevelStyle(node.level);
+    const nodeSize = this.getNodeSize(node.text, levelStyle);
+
     // the entire branch left top corner is (x, y)
     // initially place the parent at this position
     node.x = x;
     node.y = y;
     node.width = nodeSize.width;
     node.height = nodeSize.height;
+
+    // Apply style properties to the node for rendering later
+    node.style = {
+      fontSize: levelStyle.fontSize,
+      fontWeight: levelStyle.fontWeight,
+      fontFamily: levelStyle.fontFamily,
+      backgroundColor: levelStyle.backgroundColor,
+      textColor: levelStyle.textColor,
+      borderColor: levelStyle.borderColor,
+      borderWidth: levelStyle.borderWidth,
+      borderRadius: levelStyle.borderRadius
+    };
 
     if (node.children.length === 0) {
       return {
@@ -171,7 +395,13 @@ class VerticalLayout extends Layout {
     // Position children
     for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i];
-      const childSize = this.applyLayout(child, x + totalWidth, childY);
+
+      // Get the appropriate layout for the child's level
+      const childLevelStyle = style.getLevelStyle(child.level);
+      console.log(i);
+      const childLayout = childLevelStyle.getLayout();
+
+      const childSize = childLayout.applyLayout(child, x + totalWidth, childY, style);
 
       totalWidth += childSize.width + this.childPadding;
       maxChildHeight = Math.max(maxChildHeight, childSize.height);
@@ -202,7 +432,7 @@ class VerticalLayout extends Layout {
 }
 
 /**
- * Represents a node in the mindmap structure
+ * Node class for the mindmap
  */
 class Node {
   /**
@@ -214,6 +444,11 @@ class Node {
     this.text = text;
     this.level = level;
     this.children = [];
+    this.x = 0;
+    this.y = 0;
+    this.width = 0;
+    this.height = 0;
+    this.style = {};
   }
 
   /**
@@ -232,3 +467,30 @@ class Node {
     return this.children.length > 0;
   }
 }
+
+// Example usage:
+/*
+// Create a style instance with default settings
+const mindmapStyle = new Style();
+
+// Optionally customize the style
+mindmapStyle.configure({
+  levelStyles: {
+    1: {
+      backgroundColor: '#e9f7fe',
+      borderColor: '#4a90e2'
+    }
+  }
+});
+
+// Create root node
+const rootNode = new Node('Root Concept', 1);
+
+// Add children
+const child1 = new Node('Child 1', 2);
+rootNode.addChild(child1);
+
+// Apply layout with style
+const layout = mindmapStyle.getLevelStyle(1).getLayout();
+layout.applyLayout(rootNode, 50, 50, mindmapStyle);
+*/

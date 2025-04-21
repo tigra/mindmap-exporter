@@ -330,20 +330,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Apply layout
-            let layout, isVertical;
+            const mindmapStyle = new Style();
+            mindmapStyle.setGlobalLayoutType(layoutType.value);
+            // Apply layout with style
+            const layout = mindmapStyle.getLevelStyle(1).getLayout();
+            layout.applyLayout(rootNode, 0, 0, mindmapStyle);
+
             if (layoutType.value === 'vertical') {
-                layout = new VerticalLayout();
                 isVertical = true;
             } else {
-                layout = new HorizontalLayout();
                 isVertical = false;
             }
-            layout.applyLayout(rootNode, 0, 0);
+
 
             // Render mindmap
             var theme = colorThemes[themeSelector.value];
             var svg = renderMindmap(rootNode, theme, isVertical);
+            // TODO move remaining layout related responsibilities from Renderer to Layout
 
             // Display mindmap
             mindmapContainer.innerHTML = svg;
