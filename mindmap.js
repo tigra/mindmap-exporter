@@ -297,10 +297,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Calculate dimensions of a node based on text
-    function getNodeSize(text, isRoot) {
+    function getNodeSize(text, isRoot, layout, depth) {
         var fontSize = isRoot ? 18 : 14;
         var fontWeight = isRoot ? 'bold' : 'normal';
-        var padding = isRoot ? 20 : 10;
+        var verticalPadding = isRoot ? 20 : 10;
+        var horizontalPadding = isRoot ? 20 : 10;
+        if (depth >= 4) {
+            horizontalPadding = 0;
+            // TODO padding is not taken into account properly when rendering, have to unite layout and rendering
+        }
 
         // Create temporary element to measure text
         var temp = document.createElement('div');
@@ -313,8 +318,8 @@ document.addEventListener('DOMContentLoaded', function() {
         temp.textContent = text;
 
         document.body.appendChild(temp);
-        var width = temp.offsetWidth + (padding * 2);
-        var height = temp.offsetHeight + (padding * 2);
+        var width = temp.offsetWidth + (horizontalPadding * 2);
+        var height = temp.offsetHeight + (verticalPadding * 2);
         document.body.removeChild(temp);
 
         return {
@@ -325,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Apply horizontal layout
     function layoutHorizontal(node, x, y) {
-        var nodeSize = getNodeSize(node.text, node.level === 1);
+        var nodeSize = getNodeSize(node.text, node.level === 1, 'horizontal', node.level);
         node.x = x;
         node.y = y - (nodeSize.height / 2);
         node.width = nodeSize.width;
@@ -364,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Apply vertical layout
     function layoutVertical(node, x, y) {
-        var nodeSize = getNodeSize(node.text, node.level === 1);
+        var nodeSize = getNodeSize(node.text, node.level === 1, 'vertical', node.level);
         // the entire branch left top corner is (x, y)
         // initially place the parent at this position
         node.x = x;
