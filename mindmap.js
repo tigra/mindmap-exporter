@@ -331,19 +331,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Calculate dimensions of a node based on text
-    function getNodeSize(text, isRoot, layout, depth) {
-        var fontSize = isRoot ? 18 : 14;
-        var fontWeight = isRoot ? 'bold' : 'normal';
-        var verticalPadding = isRoot ? 20 : 10;
-        var horizontalPadding = isRoot ? 20 : 10;
+    /**
+     * Base Layout class that handles common functionality
+     */
+    class Layout {
+      /**
+       * Calculate dimensions of a node based on text
+       * @param {string} text - The text content of the node
+       * @param {boolean} isRoot - Whether this node is a root node
+       * @param {number} depth - The depth of the node in the tree
+       * @return {Object} The calculated width and height
+       */
+      getNodeSize(text, isRoot, depth) {
+        const fontSize = isRoot ? 18 : 14;
+        const fontWeight = isRoot ? 'bold' : 'normal';
+        const verticalPadding = isRoot ? 20 : 10;
+        let horizontalPadding = isRoot ? 20 : 10;
+
         if (depth >= 4) {
-            horizontalPadding = 0;
-            // TODO padding is not taken into account properly when rendering, have to unite layout and rendering
+          horizontalPadding = 0;
+          // TODO padding is not taken into account properly when rendering, have to unite layout and rendering
         }
 
         // Create temporary element to measure text
-        var temp = document.createElement('div');
+        const temp = document.createElement('div');
         temp.style.position = 'absolute';
         temp.style.visibility = 'hidden';
         temp.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
@@ -353,59 +364,125 @@ document.addEventListener('DOMContentLoaded', function() {
         temp.textContent = text;
 
         document.body.appendChild(temp);
-        var width = temp.offsetWidth + (horizontalPadding * 2);
-        var height = temp.offsetHeight + (verticalPadding * 2);
+        const width = temp.offsetWidth + (horizontalPadding * 2);
+        const height = temp.offsetHeight + (verticalPadding * 2);
         document.body.removeChild(temp);
 
         return {
-            width: Math.max(width, 0),
-            height: Math.max(height, 0)
+          width: Math.max(width, 0),
+          height: Math.max(height, 0)
         };
+      }
+
+      /**
+       * Adjust position of node and all its children recursively
+       * @param {Node} node - The node to adjust
+       * @param {number} deltaX - Horizontal adjustment
+       * @param {number} deltaY - Vertical adjustment
+       */
+      adjustPositionRecursive(node, deltaX, deltaY) {
+        node.x += deltaX;
+        node.y += deltaY;
+        for (let i = 0; i < node.children.length; i++) {
+          this.adjustPositionRecursive(node.children[i], deltaX, deltaY);
+        }
+      }
+
+      /**
+       * Apply layout to a node and its children
+       * @param {Node} node - The node to layout
+       * @param {number} x - The x coordinate
+       * @param {number} y - The y coordinate
+       * @return {Object} The size of the laid out subtree
+       */
+      applyLayout(node, x, y) {
+        throw new Error('Method applyLayout must be implemented by subclasses');
+      }
     }
 
-    // Apply horizontal layout
-    function layoutHorizontal(node, x, y) {
-        var nodeSize = getNodeSize(node.text, node.level === 1, 'horizontal', node.level);
+    /**
+     * Horizontal layout implementation
+     */
+    class HorizontalLayout extends Layout {
+      /**
+       * Create a new HorizontalLayout
+       * @param {number} parentPadding - Padding between parent and children
+       * @param {number} childPadding - Padding between siblings
+       */
+      constructor(parentPadding = 80, childPadding = 20) {
+        super();
+        this.parentPadding = parentPadding;
+        this.childPadding = childPadding;
+      }
+
+      /**
+       * Apply horizontal layout to a node and its children
+       * @param {Node} node - The node to layout
+       * @param {number} x - The x coordinate
+       * @param {number} y - The y coordinate
+       * @return {Object} The size of the laid out subtree
+       */
+      applyLayout(node, x, y) {
+        const nodeSize = this.getNodeSize(node.text, node.level === 1, node.level);
         node.x = x;
         node.y = y - (nodeSize.height / 2);
         node.width = nodeSize.width;
         node.height = nodeSize.height;
 
         if (node.children.length === 0) {
-            return {
-                width: nodeSize.width,
-                height: nodeSize.height
-            };
+          return {
+            width: nodeSize.width,
+            height: nodeSize.height
+          };
         }
 
-        const parentPadding = 80;
-        var childX = x + nodeSize.width + parentPadding;
-        var totalHeight = 0;
-        var maxChildWidth = 0;
-
-        var childPadding = 20
+        const childX = x + nodeSize.width + this.parentPadding;
+        let totalHeight = 0;
+        let maxChildWidth = 0;
 
         // Position children
-        for (var i = 0; i < node.children.length; i++) {
-            var child = node.children[i];
-            var childSize = layoutHorizontal(child, childX, y + totalHeight);
+        for (let i = 0; i < node.children.length; i++) {
+          const child = node.children[i];
+          const childSize = this.applyLayout(child, childX, y + totalHeight);
 
-            totalHeight += childSize.height + childPadding;
-            maxChildWidth = Math.max(maxChildWidth, childSize.width);
+          totalHeight += childSize.height + this.childPadding;
+          maxChildWidth = Math.max(maxChildWidth, childSize.width);
         }
 
         // Center parent vertically
-        node.y = y - (nodeSize.height / 2) + ((totalHeight - childPadding - nodeSize.height) / 2);
+        node.y = y - (nodeSize.height / 2) + ((totalHeight - this.childPadding - nodeSize.height) / 2);
 
         return {
-            width: nodeSize.width + parentPadding + maxChildWidth,
-            height: Math.max(nodeSize.height, totalHeight - childPadding)
+          width: nodeSize.width + this.parentPadding + maxChildWidth,
+          height: Math.max(nodeSize.height, totalHeight - this.childPadding)
         };
+      }
     }
 
-    // Apply vertical layout
-    function layoutVertical(node, x, y) {
-        var nodeSize = getNodeSize(node.text, node.level === 1, 'vertical', node.level);
+    /**
+     * Vertical layout implementation
+     */
+    class VerticalLayout extends Layout {
+      /**
+       * Create a new VerticalLayout
+       * @param {number} parentPadding - Padding between parent and children
+       * @param {number} childPadding - Padding between siblings
+       */
+      constructor(parentPadding = 30, childPadding = 30) {
+        super();
+        this.parentPadding = parentPadding;
+        this.childPadding = childPadding;
+      }
+
+      /**
+       * Apply vertical layout to a node and its children
+       * @param {Node} node - The node to layout
+       * @param {number} x - The x coordinate
+       * @param {number} y - The y coordinate
+       * @return {Object} The size of the laid out subtree
+       */
+      applyLayout(node, x, y) {
+        const nodeSize = this.getNodeSize(node.text, node.level === 1, node.level);
         // the entire branch left top corner is (x, y)
         // initially place the parent at this position
         node.x = x;
@@ -414,65 +491,47 @@ document.addEventListener('DOMContentLoaded', function() {
         node.height = nodeSize.height;
 
         if (node.children.length === 0) {
-            return {
-                width: nodeSize.width,
-                height: nodeSize.height
-            };
+          return {
+            width: nodeSize.width,
+            height: nodeSize.height
+          };
         }
 
-        var parentPadding = 30;
-
-        var childY = y + nodeSize.height + parentPadding;
-        var totalWidth = 0;
-        var maxChildHeight = 0;
-
-        var childPadding = 30;
+        const childY = y + nodeSize.height + this.parentPadding;
+        let totalWidth = 0;
+        let maxChildHeight = 0;
 
         // Position children
-        for (var i = 0; i < node.children.length; i++) {
-            var child = node.children[i];
-            var childSize = layoutVertical(child, x + totalWidth, childY);
+        for (let i = 0; i < node.children.length; i++) {
+          const child = node.children[i];
+          const childSize = this.applyLayout(child, x + totalWidth, childY);
 
-            totalWidth += childSize.width + childPadding;
-            maxChildHeight = Math.max(maxChildHeight, childSize.height);
+          totalWidth += childSize.width + this.childPadding;
+          maxChildHeight = Math.max(maxChildHeight, childSize.height);
         }
-        totalWidth -= childPadding;
+        totalWidth -= this.childPadding;
 
         // Depending on total size of children and the size of parent, adjust them relatively to x
-        parentShift = Math.max(totalWidth, nodeSize.width)/2 - nodeSize.width / 2;
+        let parentShift = 0;
+        let childShift = 0;
+
         if (totalWidth < nodeSize.width) {
-            parentShift = 0;
-            childShift = (nodeSize.width - totalWidth) / 2;
+          childShift = (nodeSize.width - totalWidth) / 2;
         } else {
-            parentShift = (totalWidth - nodeSize.width) / 2;
-            childShift = 0;
+          parentShift = (totalWidth - nodeSize.width) / 2;
         }
+
         node.x = x + parentShift;
-        for (var i = 0; i < node.children.length; i++) {
-            adjustPositionRecursive(node.children[i], childShift, 0);
+
+        for (let i = 0; i < node.children.length; i++) {
+          this.adjustPositionRecursive(node.children[i], childShift, 0);
         }
 
         return {
-            width: Math.max(nodeSize.width, totalWidth),
-            height: nodeSize.height + parentPadding + maxChildHeight
+          width: Math.max(nodeSize.width, totalWidth),
+          height: nodeSize.height + this.parentPadding + maxChildHeight
         };
-    }
-
-    function adjustPositionRecursive(node, deltaX, deltaY) {
-        node.x += deltaX;
-        node.y += deltaY;
-        for (var i = 0; i < node.children.length; i++) {
-            adjustPositionRecursive(node.children[i], deltaX, deltaY);
-        }
-    }
-
-    // Apply layout based on selected type
-    function applyLayout(rootNode, isVertical) {
-        if (isVertical) {
-            return layoutVertical(rootNode, 0, 0);
-        } else {
-            return layoutHorizontal(rootNode, 0, 0);
-        }
+      }
     }
 
     // Generate mindmap from markdown
@@ -507,8 +566,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Apply layout
-            var isVertical = layoutType.value === 'vertical';
-            applyLayout(rootNode, isVertical);
+            let layout, isVertical;
+            if (layoutType.value === 'vertical') {
+                layout = new VerticalLayout();
+                isVertical = true;
+            } else {
+                layout = new HorizontalLayout();
+                isVertical = false;
+            }
+            layout.applyLayout(rootNode, 0, 0);
 
             // Render mindmap
             var theme = colorThemes[themeSelector.value];
