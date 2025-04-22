@@ -330,35 +330,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const mindmapStyle = new Style();
-//            mindmapStyle.configure({
-//              levelStyles: {
-//                1: {
-//                  backgroundColor: '#e9f7fe',
-//                  borderColor: '#4a90e2',
-////                  layoutType: 'vertical'
-//                  layoutType: 'horizontal'
-//                },
-//                2: {
-//                    layoutType: 'vertical'
-//                }
-//              }
-//            });
-            mindmapStyle.setGlobalLayoutType(layoutType.value);
-            // Apply layout with style
-            const layout = mindmapStyle.getLevelStyle(1).getLayout();
-            layout.applyLayout(rootNode, 0, 0, mindmapStyle);
+            const stylePresetSelect = document.getElementById('style-preset');
+            var style = new Style();
+            const presetName = stylePresetSelect.value;
+            style = MindmapStylePresets.applyPreset(presetName, style);
+            style.setGlobalLayoutType(layoutType.value);
 
-            if (layoutType.value === 'vertical') {
-                isVertical = true;
-            } else {
-                isVertical = false;
-            }
+            const layout = style.getLevelStyle(1).getLayout();
+            layout.applyLayout(rootNode, 0, 0, style);
 
-
-            // Render mindmap
-//            var theme = colorThemes[themeSelector.value];
-            var svg = renderMindmap(rootNode, mindmapStyle);
+            var svg = renderMindmap(rootNode, style);
             // TODO move remaining layout related responsibilities from Renderer to Layout
 
             // Display mindmap
