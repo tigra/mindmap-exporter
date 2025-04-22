@@ -331,6 +331,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const mindmapStyle = new Style();
+//            mindmapStyle.configure({
+//              levelStyles: {
+//                1: {
+//                  backgroundColor: '#e9f7fe',
+//                  borderColor: '#4a90e2',
+////                  layoutType: 'vertical'
+//                  layoutType: 'horizontal'
+//                },
+//                2: {
+//                    layoutType: 'vertical'
+//                }
+//              }
+//            });
             mindmapStyle.setGlobalLayoutType(layoutType.value);
             // Apply layout with style
             const layout = mindmapStyle.getLevelStyle(1).getLayout();
@@ -344,8 +357,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
             // Render mindmap
-            var theme = colorThemes[themeSelector.value];
-            var svg = renderMindmap(rootNode, theme, isVertical);
+//            var theme = colorThemes[themeSelector.value];
+            var svg = renderMindmap(rootNode, mindmapStyle);
             // TODO move remaining layout related responsibilities from Renderer to Layout
 
             // Display mindmap

@@ -1,9 +1,15 @@
-// MindmapRenderer class for SVG generation
+/**
+ * MindmapRenderer class for SVG generation
+ */
 class MindmapRenderer {
-    constructor(rootNode, theme, isVertical) {
+    /**
+     * Create a new MindmapRenderer
+     * @param {Node} rootNode - The root node of the mindmap
+     * @param {Style} style - The style object for the mindmap
+     */
+    constructor(rootNode, style) {
         this.rootNode = rootNode;
-        this.theme = theme;
-        this.isVertical = isVertical;
+        this.style = style;
         this.minX = Infinity;
         this.minY = Infinity;
         this.maxX = -Infinity;
@@ -11,7 +17,9 @@ class MindmapRenderer {
         this.padding = 30;
     }
 
-    // Find the bounds of the entire mindmap
+    /**
+     * Find the bounds of the entire mindmap
+     */
     findBounds() {
         this._findBoundsRecursive(this.rootNode);
 
@@ -25,6 +33,11 @@ class MindmapRenderer {
         this.height = this.maxY - this.minY;
     }
 
+    /**
+     * Recursively find bounds for node and its children
+     * @private
+     * @param {Node} node - The node to process
+     */
     _findBoundsRecursive(node) {
         this.minX = Math.min(this.minX, node.x);
         this.minY = Math.min(this.minY, node.y);
@@ -36,7 +49,10 @@ class MindmapRenderer {
         }
     }
 
-    // Create SVG container with proper dimensions
+    /**
+     * Create SVG container with proper dimensions
+     * @return {string} SVG container element
+     */
     createSvgContainer() {
         return `<svg xmlns="http://www.w3.org/2000/svg"
                     width="${this.width}"
@@ -44,21 +60,38 @@ class MindmapRenderer {
                     viewBox="${this.minX} ${this.minY} ${this.width} ${this.height}">`;
     }
 
-    // Create gradient and filter definitions
+    /**
+     * Create gradient and filter definitions
+     * @return {string} SVG defs element with gradients and filters
+     */
     createDefs() {
         let defs = '<defs>';
 
-        // Root node gradient
-        defs += this._createGradient('rootGradient', this.theme.root[0], this.theme.root[1]);
+        // Create gradients for different levels
+        const gradients = [];
+        const levelCount = 4; // Maximum number of distinct level styles to create gradients for
 
-        // Level 1 gradient
-        defs += this._createGradient('level1Gradient', this.theme.level1[0], this.theme.level1[1]);
+        for (let i = 1; i <= levelCount; i++) {
+            const levelStyle = this.style.getLevelStyle(i);
+            if (levelStyle && levelStyle.backgroundColor) {
+                // If the background is already a gradient or uses special format, skip
+                if (levelStyle.backgroundColor.startsWith('url') ||
+                    levelStyle.backgroundColor.startsWith('linear-gradient')) {
+                    continue;
+                }
 
-        // Level 2 gradient
-        defs += this._createGradient('level2Gradient', this.theme.level2[0], this.theme.level2[1]);
+                // Create a gradient variant of the background color
+                const baseColor = levelStyle.backgroundColor;
+                const lightColor = this._lightenColor(baseColor, 30);
+                const darkColor = this._darkenColor(baseColor, 10);
 
-        // Level 3 gradient
-        defs += this._createGradient('level3Gradient', this.theme.level3[0], this.theme.level3[1]);
+                defs += this._createGradient(`level${i}Gradient`, lightColor, darkColor);
+                gradients.push(i);
+            }
+        }
+
+        // Store the gradients for use in node rendering
+        this.gradients = gradients;
 
         // Drop shadow filter
         defs += `<filter id="dropShadow">
@@ -72,6 +105,14 @@ class MindmapRenderer {
         return defs;
     }
 
+    /**
+     * Create a linear gradient definition
+     * @private
+     * @param {string} id - The gradient ID
+     * @param {string} color1 - The start color
+     * @param {string} color2 - The end color
+     * @return {string} SVG linearGradient element
+     */
     _createGradient(id, color1, color2) {
         return `<linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" style="stop-color:${color1};stop-opacity:1" />
@@ -79,21 +120,40 @@ class MindmapRenderer {
                 </linearGradient>`;
     }
 
-    // Get fill color based on node level
-    getFillColor(level) {
-        if (level === 1) return "url(#rootGradient)";
-        if (level === 2) return "url(#level1Gradient)";
-        if (level === 3) return "url(#level2Gradient)";
-        return "url(#level3Gradient)";
+    /**
+     * Get fill color based on node level and style
+     * @param {Node} node - The node to get fill color for
+     * @return {string} Fill color or gradient
+     */
+    getFillColor(node) {
+        const levelStyle = this.style.getLevelStyle(node.level);
+
+        // If this level has a gradient created, use it
+        if (this.gradients && this.gradients.includes(node.level)) {
+            return `url(#level${node.level}Gradient)`;
+        }
+
+        // Otherwise use the background color from the style
+        return levelStyle.backgroundColor || '#f5f5f5';
     }
 
-    // Draw all nodes starting from root
+    /**
+     * Draw all nodes starting from root
+     * @return {string} SVG elements for all nodes
+     */
     drawNodes() {
         return this._drawNodeRecursive(this.rootNode);
     }
 
+    /**
+     * Recursively draw a node and its children
+     * @private
+     * @param {Node} node - The node to draw
+     * @return {string} SVG elements for the node and its children
+     */
     _drawNodeRecursive(node) {
         let svg = '';
+        const levelStyle = this.style.getLevelStyle(node.level);
 
         // Draw connections to children first
         for (let i = 0; i < node.children.length; i++) {
@@ -103,123 +163,126 @@ class MindmapRenderer {
             svg += this._drawNodeRecursive(child);
         }
 
-        // Draw the node based on its level
-        if (node.level <= 3) {
-            // For levels 1-3, draw a box with text
-            svg += this._drawNodeShape(node);
-            svg += this._drawNodeText(node, true); // true = text is within a box
+        // Draw the node based on its nodeType
+        if (levelStyle.nodeType === 'text-only') {
+            // For text-only nodes, draw just the text
+            svg += this._drawNodeText(node, false);
         } else {
-//            svg += this._drawNodeShape(node); // TODO remove
-            // For levels 4+, draw just the text (no box)
-            svg += this._drawNodeText(node, false); // false = text is standalone
+            // For box nodes, draw both shape and text
+            svg += this._drawNodeShape(node);
+            svg += this._drawNodeText(node, true);
         }
 
         return svg;
     }
 
+    /**
+     * Draw a connection between parent and child nodes
+     * @private
+     * @param {Node} parent - The parent node
+     * @param {Node} child - The child node
+     * @return {string} SVG path element for the connection
+     */
     _drawConnection(parent, child) {
-        let startX, startY, endX, endY;
+        const parentStyle = this.style.getLevelStyle(parent.level);
+        const childStyle = this.style.getLevelStyle(child.level);
 
-        // For parent level 4+, connections should start from the end of text
-        if (parent.level > 3) {
-            // Calculate approximate text width based on content
-            const textLength = parent.text.length;
-            const avgCharWidth = parent.level === 1 ? 12 : 8; // Estimated width per character
-            const textWidth = Math.min(textLength * avgCharWidth, parent.width);
+        const parentLayout = parentStyle.getLayout();
+        const childLayout = childStyle.getLayout();
 
-            if (this.isVertical) {
-                // For vertical layout, connect from bottom of text
-                startX = parent.x + textWidth / 2;
-                startY = parent.y + parent.height;
-            } else {
-                // For horizontal layout, connect from right end of text
-                startX = parent.x + textWidth;
-                startY = parent.y + parent.height / 2;
-            }
+        const startPoint = parentLayout.getParentConnectionPoint(parent, parentStyle);
+        const endPoint = childLayout.getChildConnectionPoint(child, childStyle);
+
+        // Determine the curve control points based on connection directions
+        let path = '';
+
+        // Check if it's a vertical or horizontal connection
+        const isVerticalLayout = parentLayout instanceof VerticalLayout;
+
+        if (isVerticalLayout) {
+            // For vertical layout, create a curve that bends vertically
+            const dy = endPoint.y - startPoint.y;
+            path = `M ${startPoint.x} ${startPoint.y}
+                   C ${startPoint.x} ${startPoint.y + dy * 0.4},
+                     ${endPoint.x} ${startPoint.y + dy * 0.6},
+                     ${endPoint.x} ${endPoint.y}`;
         } else {
-            // For boxed nodes (levels 1-3), connect from the box edge
-            if (this.isVertical) {
-                startX = parent.x + parent.width / 2;
-                startY = parent.y + parent.height;
-            } else {
-                startX = parent.x + parent.width;
-                startY = parent.y + parent.height / 2;
-            }
+            // For horizontal layout, create a curve that bends horizontally
+            const dx = endPoint.x - startPoint.x;
+            path = `M ${startPoint.x} ${startPoint.y}
+                   C ${startPoint.x + dx * 0.4} ${startPoint.y},
+                     ${startPoint.x + dx * 0.6} ${endPoint.y},
+                     ${endPoint.x} ${endPoint.y}`;
         }
 
-        // For child level 4+, connections should end at the start of text
-        if (child.level > 3) {
-            if (this.isVertical) {
-                endX = child.x + child.width / 2;
-                endY = child.y  ;
-            } else {
-                endX = child.x;
-                endY = child.y + (child.height / 2);
-            }
-        } else {
-            // For boxed nodes (levels 1-3), connect to the box edge
-            if (this.isVertical) {
-                endX = child.x + child.width / 2;
-                endY = child.y;
-            } else {
-                endX = child.x;
-                endY = child.y + child.height / 2;
-            }
-        }
+        // Get connection color from style
+        const connectionColor = parentStyle.connectionColor || '#666';
+        const connectionWidth = parentStyle.connectionWidth || 2;
 
-        // Draw the curved connection
-        if (this.isVertical) {
-            const dy = endY - startY;
-            return `<path d="M ${startX} ${startY}
-                           C ${startX} ${startY + dy * 0.4},
-                             ${endX} ${startY + dy * 0.6},
-                             ${endX} ${endY}"
-                     stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
-        } else {
-            const dx = endX - startX;
-            return `<path d="M ${startX} ${startY}
-                           C ${startX + dx * 0.4} ${startY},
-                             ${startX + dx * 0.6} ${endY},
-                             ${endX} ${endY}"
-                     stroke="${this.theme.connection}" stroke-width="2" fill="none" />`;
-        }
+        return `<path d="${path}" stroke="${connectionColor}" stroke-width="${connectionWidth}" fill="none" />`;
     }
 
+    /**
+     * Draw the shape for a node
+     * @private
+     * @param {Node} node - The node to draw shape for
+     * @return {string} SVG rect element for the node shape
+     */
     _drawNodeShape(node) {
-        const fillColor = this.getFillColor(node.level);
-        var rounding = 18;
+        const levelStyle = this.style.getLevelStyle(node.level);
+        const fillColor = this.getFillColor(node);
+        const borderRadius = levelStyle.borderRadius || 5;
+        const borderColor = levelStyle.borderColor || '#fff';
+        const borderWidth = levelStyle.borderWidth || 1.5;
+
         return `<rect x="${node.x}" y="${node.y}"
                       width="${node.width}" height="${node.height}"
-                      rx="${rounding}" ry="${rounding}" fill="${fillColor}"
-                      stroke="#fff" stroke-width="1.5" filter="url(#dropShadow)" />`;
+                      rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}"
+                      stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)" />`;
     }
 
+    /**
+     * Draw text for a node
+     * @private
+     * @param {Node} node - The node to draw text for
+     * @param {boolean} insideBox - Whether the text is inside a box
+     * @return {string} SVG text element
+     */
     _drawNodeText(node, insideBox) {
-        const fontSize = node.level === 1 ? 18 : 14;
-        const fontWeight = node.level === 1 ? 'bold' : 'normal';
-        let x, y, fill;
+        const levelStyle = this.style.getLevelStyle(node.level);
+        const fontSize = levelStyle.fontSize || 14;
+        const fontWeight = levelStyle.fontWeight || 'normal';
+        const fontFamily = levelStyle.fontFamily || 'Arial, sans-serif';
+
+        let x, y, fill, textAnchor;
 
         if (insideBox) {
             // Text inside a box (centered)
             x = node.x + node.width / 2;
             y = node.y + node.height / 2;
-            fill = "white"; // White text on colored background
+            fill = levelStyle.textColor || "white";
+            textAnchor = "middle";
         } else {
             // Standalone text (no box)
             x = node.x;
             y = node.y + node.height / 2;
-            fill = "#333"; // Dark text directly on background
+            fill = levelStyle.textColor || "#333";
+            textAnchor = "start";
         }
 
-        const textAnchor = insideBox ? "middle" : "start";
-
         return `<text x="${x}" y="${y}"
-                      font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="${fontWeight}"
+                      font-family="${fontFamily}" font-size="${fontSize}px" font-weight="${fontWeight}"
                       fill="${fill}" text-anchor="${textAnchor}" dominant-baseline="middle">
                       ${this._escapeXml(node.text)}
                 </text>`;
     }
 
+    /**
+     * Escape XML special characters
+     * @private
+     * @param {string} text - The text to escape
+     * @return {string} Escaped text
+     */
     _escapeXml(text) {
         return text
             .replace(/&/g, '&amp;')
@@ -229,7 +292,66 @@ class MindmapRenderer {
             .replace(/'/g, '&apos;');
     }
 
-    // Generate the complete SVG
+    /**
+     * Lighten a color
+     * @private
+     * @param {string} color - The base color in hex format
+     * @param {number} percent - The percentage to lighten
+     * @return {string} Lightened color in hex format
+     */
+    _lightenColor(color, percent) {
+        // Remove # if present
+        color = color.replace('#', '');
+
+        // Parse the hex values
+        const r = parseInt(color.substring(0, 2), 16);
+        const g = parseInt(color.substring(2, 4), 16);
+        const b = parseInt(color.substring(4, 6), 16);
+
+        // Lighten the colors
+        const newR = Math.min(255, r + (255 - r) * (percent / 100));
+        const newG = Math.min(255, g + (255 - g) * (percent / 100));
+        const newB = Math.min(255, b + (255 - b) * (percent / 100));
+
+        // Convert back to hex
+        return '#' +
+            Math.round(newR).toString(16).padStart(2, '0') +
+            Math.round(newG).toString(16).padStart(2, '0') +
+            Math.round(newB).toString(16).padStart(2, '0');
+    }
+
+    /**
+     * Darken a color
+     * @private
+     * @param {string} color - The base color in hex format
+     * @param {number} percent - The percentage to darken
+     * @return {string} Darkened color in hex format
+     */
+    _darkenColor(color, percent) {
+        // Remove # if present
+        color = color.replace('#', '');
+
+        // Parse the hex values
+        const r = parseInt(color.substring(0, 2), 16);
+        const g = parseInt(color.substring(2, 4), 16);
+        const b = parseInt(color.substring(4, 6), 16);
+
+        // Darken the colors
+        const newR = Math.max(0, r - (r * (percent / 100)));
+        const newG = Math.max(0, g - (g * (percent / 100)));
+        const newB = Math.max(0, b - (b * (percent / 100)));
+
+        // Convert back to hex
+        return '#' +
+            Math.round(newR).toString(16).padStart(2, '0') +
+            Math.round(newG).toString(16).padStart(2, '0') +
+            Math.round(newB).toString(16).padStart(2, '0');
+    }
+
+    /**
+     * Generate the complete SVG
+     * @return {string} Complete SVG document
+     */
     generateSvg() {
         this.findBounds();
 
@@ -242,8 +364,13 @@ class MindmapRenderer {
     }
 }
 
-// The main function now just creates a renderer and calls generateSvg
-function renderMindmap(rootNode, theme, isVertical) {
-    const renderer = new MindmapRenderer(rootNode, theme, isVertical);
+/**
+ * Create and render a mindmap
+ * @param {Node} rootNode - The root node of the mindmap
+ * @param {Style} style - The style object for the mindmap
+ * @return {string} SVG representation of the mindmap
+ */
+function renderMindmap(rootNode, style) {
+    const renderer = new MindmapRenderer(rootNode, style);
     return renderer.generateSvg();
 }

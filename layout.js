@@ -1,5 +1,22 @@
 /**
-in * Represents styling for a specific level in the mindmap
+ * Represents a connection point on a node with position and direction
+ */
+class ConnectionPoint {
+  /**
+   * Create a connection point
+   * @param {number} x - X coordinate of the connection point
+   * @param {number} y - Y coordinate of the connection point
+   * @param {string} direction - Direction of the connection ('top', 'right', 'bottom', 'left')
+   */
+  constructor(x, y, direction) {
+    this.x = x;
+    this.y = y;
+    this.direction = direction;
+  }
+}
+
+/**
+ * Represents styling for a specific level in the mindmap
  */
 class LevelStyle {
   /**
@@ -27,6 +44,7 @@ class LevelStyle {
     this.borderColor = options.borderColor || '#cccccc';
     this.borderWidth = options.borderWidth || 1;
     this.borderRadius = options.borderRadius || 5;
+    this.nodeType = options.nodeType || 'box';
   }
 
   /**
@@ -69,7 +87,8 @@ class Style {
         layoutType: 'horizontal',
         backgroundColor: '#f5f5f5',
         borderColor: '#aaaaaa',
-        borderWidth: 2
+        borderWidth: 2,
+        nodeType: 'box'
       }),
 
       // Second level
@@ -78,14 +97,16 @@ class Style {
         fontWeight: 'bold',
         layoutType: 'horizontal',
         parentPadding: 60,
-        childPadding: 20
+        childPadding: 20,
+        nodeType: 'box'
       }),
 
       // Third level
       3: new LevelStyle({
         fontSize: 14,
         parentPadding: 40,
-        layoutType: 'horizontal'
+        layoutType: 'horizontal',
+        nodeType: 'box'
       }),
 
       // Fourth level and beyond
@@ -95,7 +116,8 @@ class Style {
         verticalPadding: 5,
         parentPadding: 30,
         childPadding: 15,
-        layoutType: 'horizontal'
+        layoutType: 'horizontal',
+        nodeType: 'text-only'
       })
     };
 
@@ -253,6 +275,26 @@ class Layout {
   applyLayout(node, x, y, style) {
     throw new Error('Method applyLayout must be implemented by subclasses');
   }
+
+  /**
+   * Get the connection point for a parent node connecting to its children
+   * @param {Node} node - The parent node
+   * @param {LevelStyle} levelStyle - The style for this node's level
+   * @return {ConnectionPoint} The connection point
+   */
+  getParentConnectionPoint(node, levelStyle) {
+    throw new Error('Method getParentConnectionPoint must be implemented by subclasses');
+  }
+
+  /**
+   * Get the connection point for a child node connecting to its parent
+   * @param {Node} node - The child node
+   * @param {LevelStyle} levelStyle - The style for this node's level
+   * @return {ConnectionPoint} The connection point
+   */
+  getChildConnectionPoint(node, levelStyle) {
+    throw new Error('Method getChildConnectionPoint must be implemented by subclasses');
+  }
 }
 
 /**
@@ -333,6 +375,67 @@ class HorizontalLayout extends Layout {
       height: Math.max(nodeSize.height, totalHeight - this.childPadding)
     };
   }
+
+  /**
+   * Get the connection point for a parent node in horizontal layout
+   * @param {Node} node - The parent node
+   * @param {LevelStyle} levelStyle - The style for this node's level
+   * @return {ConnectionPoint} The connection point
+   */
+//  getParentConnectionPoint(node, levelStyle) {
+//    // In horizontal layout, parent connects from its right side
+//    const x = node.x + node.width;
+//    const y = node.y + node.height / 2;
+//
+//    // If this is a text-only node (typically for deeper levels)
+//    if (levelStyle.nodeType === 'text-only') {
+//      // Text width may be less than the allocated node width
+//      const textWidth = this._estimateTextWidth(node.text, levelStyle);
+//      return new ConnectionPoint(node.x + textWidth, y, 'right');
+//    }
+//
+//    return new ConnectionPoint(x, y, 'right');
+//  }
+
+    getParentConnectionPoint(node, levelStyle) {
+      // For text-only nodes, use the exact text dimensions
+      if (levelStyle.nodeType === 'text-only') {
+        // Use the same measurement technique as in getNodeSize
+        const textSize = this.getNodeSize(node.text, levelStyle);
+        return new ConnectionPoint(node.x + textSize.width, node.y + textSize.height / 2, 'right');
+      }
+
+      // For box nodes, use the box dimensions
+      return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'right');
+    }
+
+  /**
+   * Get the connection point for a child node in horizontal layout
+   * @param {Node} node - The child node
+   * @param {LevelStyle} levelStyle - The style for this node's level
+   * @return {ConnectionPoint} The connection point
+   */
+  getChildConnectionPoint(node, levelStyle) {
+    // In horizontal layout, child connects on its left side
+    const x = node.x;
+    const y = node.y + node.height / 2;
+
+    return new ConnectionPoint(x, y, 'left');
+  }
+
+  /**
+   * Helper method to estimate text width based on content and style
+   * @private
+   * @param {string} text - The text content
+   * @param {LevelStyle} levelStyle - The style with font information
+   * @return {number} Estimated text width
+   */
+  _estimateTextWidth(text, levelStyle) {
+    // Rough estimate based on character count and font size
+    const avgCharWidth = levelStyle.fontSize * 0.6;
+    return text.length * avgCharWidth;
+  }
+
 }
 
 /**
@@ -428,6 +531,34 @@ class VerticalLayout extends Layout {
       width: Math.max(nodeSize.width, totalWidth),
       height: nodeSize.height + this.parentPadding + maxChildHeight
     };
+  }
+
+  /**
+   * Get the connection point for a parent node in vertical layout
+   * @param {Node} node - The parent node
+   * @param {LevelStyle} levelStyle - The style for this node's level
+   * @return {ConnectionPoint} The connection point
+   */
+  getParentConnectionPoint(node, levelStyle) {
+    // In vertical layout, parent connects from its bottom
+    const x = node.x + node.width / 2;
+    const y = node.y + node.height;
+
+    return new ConnectionPoint(x, y, 'bottom');
+  }
+
+  /**
+   * Get the connection point for a child node in vertical layout
+   * @param {Node} node - The child node
+   * @param {LevelStyle} levelStyle - The style for this node's level
+   * @return {ConnectionPoint} The connection point
+   */
+  getChildConnectionPoint(node, levelStyle) {
+    // In vertical layout, child connects on its top
+    const x = node.x + node.width / 2;
+    const y = node.y;
+
+    return new ConnectionPoint(x, y, 'top');
   }
 }
 
