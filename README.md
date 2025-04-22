@@ -1,5 +1,7 @@
 # Simple Markdown to Mindmap converter
 
+[Try it online](https://tigra.github.io/simple-mindmap-exporter.html)
+
 Convert your Markdown (e.g. edited in Obsidian, with Enhancing Mindmap plugin, or elsewhere) with headings and bullet points to a mindmap (.png, .svg).
 
 ## HOWTO
