@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var mindmapContainer = document.getElementById('mindmap-container');
     var loadingIndicator = document.getElementById('loading-indicator');
     var statusMessage = document.getElementById('status-message');
-    var themeSelector = document.getElementById('theme-selector');
     var layoutType = document.getElementById('layout-type');
     var exportFormat = document.getElementById('export-format');
 
