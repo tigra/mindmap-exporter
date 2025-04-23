@@ -341,7 +341,8 @@ class HorizontalLayout extends Layout {
       borderRadius: levelStyle.borderRadius
     };
 
-    if (node.children.length === 0) {
+    // If the node has no children or is collapsed, return its dimensions
+    if (node.children.length === 0 || node.collapsed) {
       return {
         width: nodeSize.width,
         height: nodeSize.height
@@ -359,7 +360,6 @@ class HorizontalLayout extends Layout {
       // Get the appropriate layout for the child's level
       const childLevelStyle = style.getLevelStyle(child.level);
       const childLayout = childLevelStyle.getLayout();
-      console.log(i);
 
       const childSize = childLayout.applyLayout(child, childX, y + totalHeight, style);
 
@@ -375,27 +375,6 @@ class HorizontalLayout extends Layout {
       height: Math.max(nodeSize.height, totalHeight - this.childPadding)
     };
   }
-
-  /**
-   * Get the connection point for a parent node in horizontal layout
-   * @param {Node} node - The parent node
-   * @param {LevelStyle} levelStyle - The style for this node's level
-   * @return {ConnectionPoint} The connection point
-   */
-//  getParentConnectionPoint(node, levelStyle) {
-//    // In horizontal layout, parent connects from its right side
-//    const x = node.x + node.width;
-//    const y = node.y + node.height / 2;
-//
-//    // If this is a text-only node (typically for deeper levels)
-//    if (levelStyle.nodeType === 'text-only') {
-//      // Text width may be less than the allocated node width
-//      const textWidth = this._estimateTextWidth(node.text, levelStyle);
-//      return new ConnectionPoint(node.x + textWidth, y, 'right');
-//    }
-//
-//    return new ConnectionPoint(x, y, 'right');
-//  }
 
     getParentConnectionPoint(node, levelStyle) {
       // For text-only nodes, use the exact text dimensions
@@ -422,20 +401,6 @@ class HorizontalLayout extends Layout {
 
     return new ConnectionPoint(x, y, 'left');
   }
-
-  /**
-   * Helper method to estimate text width based on content and style
-   * @private
-   * @param {string} text - The text content
-   * @param {LevelStyle} levelStyle - The style with font information
-   * @return {number} Estimated text width
-   */
-  _estimateTextWidth(text, levelStyle) {
-    // Rough estimate based on character count and font size
-    const avgCharWidth = levelStyle.fontSize * 0.6;
-    return text.length * avgCharWidth;
-  }
-
 }
 
 /**
@@ -484,7 +449,7 @@ class VerticalLayout extends Layout {
       borderRadius: levelStyle.borderRadius
     };
 
-    if (node.children.length === 0) {
+    if (node.children.length === 0 || node.collapsed) {
       return {
         width: nodeSize.width,
         height: nodeSize.height
@@ -570,8 +535,9 @@ class Node {
    * Create a new Node
    * @param {string} text - The text content of the node
    * @param {number} level - The hierarchy level of the node
+   * @param {boolean} collapsed - Whether the node is collapsed by default
    */
-  constructor(text = '', level = 0) {
+  constructor(text = '', level = 0, collapsed = false) {
     this.text = text;
     this.level = level;
     this.children = [];
@@ -580,6 +546,20 @@ class Node {
     this.width = 0;
     this.height = 0;
     this.style = {};
+    this.collapsed = collapsed;
+    this.id = 'node_' + Node.generateUniqueId();
+  }
+
+  /**
+   * Generate a unique ID for the node
+   * @private
+   * @return {string} A unique ID
+   */
+  static generateUniqueId() {
+    if (!Node.lastId) {
+      Node.lastId = 0;
+    }
+    return ++Node.lastId;
   }
 
   /**
@@ -596,6 +576,28 @@ class Node {
    */
   hasChildren() {
     return this.children.length > 0;
+  }
+
+  /**
+   * Toggle the collapsed state of this node
+   */
+  toggleCollapse() {
+    this.collapsed = !this.collapsed;
+    console.log(this.id, this.collapsed);
+  }
+
+  /**
+   * Expand this node (set collapsed to false)
+   */
+  expand() {
+    this.collapsed = false;
+  }
+
+  /**
+   * Collapse this node (set collapsed to true)
+   */
+  collapse() {
+    this.collapsed = true;
   }
 }
 

@@ -1,5 +1,5 @@
 /**
- * MindmapRenderer class for SVG generation
+ * MindmapRenderer class for SVG generation with interactive expand/collapse
  */
 class MindmapRenderer {
     /**
@@ -15,12 +15,18 @@ class MindmapRenderer {
         this.maxX = -Infinity;
         this.maxY = -Infinity;
         this.padding = 30;
+        this.nodeMap = new Map(); // Store references to nodes by id
     }
 
     /**
      * Find the bounds of the entire mindmap
      */
     findBounds() {
+        this.minX = Infinity;
+        this.minY = Infinity;
+        this.maxX = -Infinity;
+        this.maxY = -Infinity;
+
         this._findBoundsRecursive(this.rootNode);
 
         // Add padding
@@ -44,8 +50,14 @@ class MindmapRenderer {
         this.maxX = Math.max(this.maxX, node.x + node.width);
         this.maxY = Math.max(this.maxY, node.y + node.height);
 
-        for (let i = 0; i < node.children.length; i++) {
-            this._findBoundsRecursive(node.children[i]);
+        // Store node reference in the map
+        this.nodeMap.set(node.id, node);
+
+        // Only process children if not collapsed
+        if (!node.collapsed) {
+            for (let i = 0; i < node.children.length; i++) {
+                this._findBoundsRecursive(node.children[i]);
+            }
         }
     }
 
@@ -155,12 +167,14 @@ class MindmapRenderer {
         let svg = '';
         const levelStyle = this.style.getLevelStyle(node.level);
 
-        // Draw connections to children first
-        for (let i = 0; i < node.children.length; i++) {
-            const child = node.children[i];
-            svg += this._drawConnection(node, child);
-            // Recursively draw child nodes
-            svg += this._drawNodeRecursive(child);
+        // Only draw connections to children if not collapsed
+        if (!node.collapsed) {
+            for (let i = 0; i < node.children.length; i++) {
+                const child = node.children[i];
+                svg += this._drawConnection(node, child);
+                // Recursively draw child nodes
+                svg += this._drawNodeRecursive(child);
+            }
         }
 
         // Draw the node based on its nodeType
@@ -171,6 +185,11 @@ class MindmapRenderer {
             // For box nodes, draw both shape and text
             svg += this._drawNodeShape(node);
             svg += this._drawNodeText(node, true);
+        }
+
+        // Add collapsible indicator if node has children
+        if (node.hasChildren()) {
+            svg += this._drawCollapseIndicator(node);
         }
 
         return svg;
@@ -238,7 +257,8 @@ class MindmapRenderer {
         return `<rect x="${node.x}" y="${node.y}"
                       width="${node.width}" height="${node.height}"
                       rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}"
-                      stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)" />`;
+                      stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)"
+                      id="${node.id}_rect" class="node-shape" />`;
     }
 
     /**
@@ -271,10 +291,56 @@ class MindmapRenderer {
         }
 
         return `<text x="${x}" y="${y}"
+                      id="${node.id}_text"
                       font-family="${fontFamily}" font-size="${fontSize}px" font-weight="${fontWeight}"
-                      fill="${fill}" text-anchor="${textAnchor}" dominant-baseline="middle">
+                      fill="${fill}" text-anchor="${textAnchor}" dominant-baseline="middle"
+                      class="node-text" pointer-events="none">
                       ${this._escapeXml(node.text)}
                 </text>`;
+    }
+
+    /**
+     * Draw the collapse/expand indicator for a node
+     * @private
+     * @param {Node} node - The node to draw indicator for
+     * @return {string} SVG elements for the indicator
+     */
+    _drawCollapseIndicator(node) {
+        const levelStyle = this.style.getLevelStyle(node.level);
+        const parentLayout = levelStyle.getLayout();
+        const isVerticalLayout = parentLayout instanceof VerticalLayout;
+
+        // Get the connection point where the indicator should be placed
+        const connectionPoint = parentLayout.getParentConnectionPoint(node, levelStyle);
+        const radius = 6;
+
+        // Determine position based on layout direction
+        let indicatorX, indicatorY;
+
+        if (isVerticalLayout) {
+            indicatorX = connectionPoint.x;
+            indicatorY = connectionPoint.y + 6;
+        } else {
+            indicatorX = connectionPoint.x + 6;
+            indicatorY = connectionPoint.y;
+        }
+
+        // Draw different icons based on collapsed state
+        const fillColor = this._darkenColor(this.getFillColor(node), 10);
+        let icon;
+
+        if (node.collapsed) {
+            // Plus icon for collapsed nodes
+            icon = `<circle cx="${indicatorX}" cy="${indicatorY}" r="${radius}" fill="${fillColor}" stroke="#666" stroke-width="1" />
+                    <line x1="${indicatorX - 3}" y1="${indicatorY}" x2="${indicatorX + 3}" y2="${indicatorY}" stroke="#fff" stroke-width="1.5" />
+                    <line x1="${indicatorX}" y1="${indicatorY - 3}" x2="${indicatorX}" y2="${indicatorY + 3}" stroke="#fff" stroke-width="1.5" />`;
+        } else {
+            // Minus icon for expanded nodes
+            icon = `<circle cx="${indicatorX}" cy="${indicatorY}" r="${radius}" fill="${fillColor}" stroke="#666" stroke-width="1" />
+                    <line x1="${indicatorX - 3}" y1="${indicatorY}" x2="${indicatorX + 3}" y2="${indicatorY}" stroke="#fff" stroke-width="1.5" />`;
+        }
+
+        return `<g class="collapse-indicator" id="${node.id}_indicator" ondblclick="toggleNodeCollapse('${node.id}')">${icon}</g>`;
     }
 
     /**
@@ -348,6 +414,63 @@ class MindmapRenderer {
             Math.round(newB).toString(16).padStart(2, '0');
     }
 
+//    /**
+//     * Add JavaScript functionality to the SVG
+//     * @return {string} SVG script element with interaction code
+//     */
+//    createInteractiveScript() {
+//        return `<script type="text/javascript">
+//            <![CDATA[
+//                // Store node references in a global map for interactivity
+//                const nodeMap = new Map();
+//
+//                // Function to handle node collapse/expand
+//                function toggleNodeCollapse(nodeId) {
+//                    // Get the node data
+//                    const node = nodeMap.get(nodeId);
+//                    if (!node) return;
+//
+//                    // Toggle the collapsed state
+//                    node.collapsed = !node.collapsed;
+//
+//                    // Trigger redraw of the mindmap
+//                    redrawMindmap();
+//                }
+//
+//                // Function to redraw the mindmap after state changes
+//                function redrawMindmap() {
+//                    if (typeof onMindmapStateChanged === 'function') {
+//                        onMindmapStateChanged();
+//                    }
+//                }
+//
+//                // Initialize node map with the node data
+//                ${this._generateNodeMapInitCode()}
+//            ]]>
+//        </script>`;
+//    }
+
+//    /**
+//     * Generate code to initialize node map in SVG script
+//     * @private
+//     * @return {string} JavaScript code for initializing node map
+//     */
+//    _generateNodeMapInitCode() {
+//        let code = '';
+//        this.nodeMap.forEach((node, id) => {
+//            code += `
+//                nodeMap.set("${id}", {
+//                    id: "${id}",
+//                    text: "${this._escapeXml(node.text)}",
+//                    level: ${node.level},
+//                    collapsed: ${node.collapsed},
+//                    hasChildren: ${node.children.length > 0}
+//                });
+//            `;
+//        });
+//        return code;
+//    }
+
     /**
      * Generate the complete SVG
      * @return {string} Complete SVG document
@@ -358,10 +481,42 @@ class MindmapRenderer {
         let svg = this.createSvgContainer();
         svg += this.createDefs();
         svg += this.drawNodes();
+//        svg += this.createInteractiveScript();
         svg += '</svg>';
 
         return svg;
     }
+
+    addEventListener(elem, event, nodeId) {
+        if (elem != null) {
+            elem.addEventListener(event, function() {
+                console.log(`double-clicked`, nodeId);
+                console.log(`double-clicked:`, nodeMap[nodeId]);
+                nodeMap[nodeId].toggleCollapse();
+                let svg = renderer.generateSvg();
+                mindmapContainer.innerHTML = svg;
+                mindmapContainer.dataset.svgContent = svg;
+                renderer.addNodeListeners();
+            });
+        }
+    }
+
+    addNodeListeners() {
+        console.log(this.nodeMap);
+        this.nodeMap.forEach((node, nodeId) => {
+            console.log(nodeId);
+            this.addEventListener(document.getElementById(nodeId + "_rect"), 'dblclick', nodeId);
+            this.addEventListener(document.getElementById(nodeId + "_indicator"), 'dblclick', nodeId);
+            this.addEventListener(document.getElementById(nodeId + "_indicator"), 'click', nodeId);
+
+        });
+        console.log("addNodeListeners() ended.");
+    }
+
+    getNodeMap() {
+        return this.nodeMap;
+    }
+
 }
 
 /**
@@ -370,7 +525,7 @@ class MindmapRenderer {
  * @param {Style} style - The style object for the mindmap
  * @return {string} SVG representation of the mindmap
  */
-function renderMindmap(rootNode, style) {
-    const renderer = new MindmapRenderer(rootNode, style);
-    return renderer.generateSvg();
-}
+//function renderMindmap(rootNode, style) {
+//    const renderer = new MindmapRenderer(rootNode, style);
+//    return renderer.generateSvg();
+//}

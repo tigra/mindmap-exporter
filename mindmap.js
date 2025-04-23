@@ -1,10 +1,13 @@
 // Wait for the DOM to be fully loaded
+var nodeMap = {};
+var mindmapContainer;
+var renderer;
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     var markdownInput = document.getElementById('markdown-input');
     var generateBtn = document.getElementById('generate-btn');
     var exportBtn = document.getElementById('export-btn');
-    var mindmapContainer = document.getElementById('mindmap-container');
+    mindmapContainer = document.getElementById('mindmap-container');
     var loadingIndicator = document.getElementById('loading-indicator');
     var statusMessage = document.getElementById('status-message');
     var layoutType = document.getElementById('layout-type');
@@ -338,12 +341,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const layout = style.getLevelStyle(1).getLayout();
             layout.applyLayout(rootNode, 0, 0, style);
 
-            var svg = renderMindmap(rootNode, style);
-            // TODO move remaining layout related responsibilities from Renderer to Layout
+             renderer = new MindmapRenderer(rootNode, style);
+
+            // Generate SVG string
+            const svg = renderer.generateSvg();
 
             // Display mindmap
             mindmapContainer.innerHTML = svg;
             mindmapContainer.dataset.svgContent = svg;
+
+            renderer.addNodeListeners();
+
+            console.log(renderer.getNodeMap());
+
+            renderer.nodeMap.forEach((node, nodeId) => {
+                console.log('copying', nodeId);
+                console.log('value', renderer.node);
+                nodeMap[nodeId] = node;
+            })
+            console.log('node map:', nodeMap);
 
             // Enable export button
             exportBtn.disabled = false;
@@ -360,6 +376,97 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         loadingIndicator.style.display = 'none';
+    }
+
+
+    /**
+     * Create and render a mindmap
+     * @param {Node} rootNode - The root node of the mindmap
+     * @param {Style} style - The style object for the mindmap
+     * @param {Object} options - Additional render options
+     * @param {Function} options.onStateChanged - Callback when node states change
+     * @return {string} SVG representation of the mindmap
+     */
+    function renderMindmap(rootNode, style, options = {}) {
+        const renderer = new MindmapRenderer(rootNode, style);
+
+        // Generate SVG string
+        const svgString = renderer.generateSvg();
+
+        for (var nodeId in renderer.nodeMap)
+            newMap[nodeId] = renderer.nodeMap[nodeId];
+        console.log('node map:', nodeMap);
+
+        // If a container element is provided, add the SVG to it
+        if (options.container) {
+            const container = typeof options.container === 'string'
+                ? document.getElementById(options.container)
+                : options.container;
+
+            if (container) {
+                container.innerHTML = svgString;
+
+                // Set up global callback for state changes if provided
+                if (typeof options.onStateChanged === 'function') {
+                    window.onMindmapStateChanged = function() {
+                        // Re-render the mindmap with the updated node states
+                        container.innerHTML = renderer.generateSvg();
+
+                        // Call the user's callback
+                        options.onStateChanged(rootNode);
+                    };
+                }
+            }
+        }
+
+        return svgString;
+    }
+
+    /**
+     * Create a wrapper HTML for mindmap with additional UI controls
+     * @param {string} svgString - SVG string representation of the mindmap
+     * @param {Object} options - Additional UI options
+     * @return {string} HTML with the mindmap and controls
+     */
+    function createMindmapUI(svgString, options = {}) {
+        const containerId = options.containerId || 'mindmap-container';
+        const title = options.title || 'Mindmap';
+
+        return `
+        <div class="mindmap-ui">
+            <div class="mindmap-header">
+                <h2>${title}</h2>
+                ${options.showControls ? `
+                <div class="mindmap-controls">
+                    <button onclick="expandAll()">Expand All</button>
+                    <button onclick="collapseAll()">Collapse All</button>
+                </div>
+                ` : ''}
+            </div>
+            <div id="${containerId}" class="mindmap-container">
+                ${svgString}
+            </div>
+            ${options.showControls ? `
+            <script>
+                function expandAll() {
+                    nodeMap.forEach(node => {
+                        node.collapsed = false;
+                    });
+                    redrawMindmap();
+                }
+
+                function collapseAll() {
+                    nodeMap.forEach(node => {
+                        if (node.level > 1) { // Don't collapse the root node
+                            node.collapsed = true;
+                        }
+                    });
+                    redrawMindmap();
+                }
+            </script>
+            ` : ''}
+        </div>
+        `;
     }
 
     // Export mindmap
