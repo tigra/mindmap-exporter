@@ -27,7 +27,7 @@ class LevelStyle {
     // Font settings
     this.fontSize = options.fontSize || 14;
     this.fontWeight = options.fontWeight || 'normal';
-    this.fontFamily = options.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+    this.fontFamily = options.fontFamily || '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif';
 
     // Padding and spacing
     this.verticalPadding = options.verticalPadding || 10;

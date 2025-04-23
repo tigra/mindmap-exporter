@@ -414,63 +414,6 @@ class MindmapRenderer {
             Math.round(newB).toString(16).padStart(2, '0');
     }
 
-//    /**
-//     * Add JavaScript functionality to the SVG
-//     * @return {string} SVG script element with interaction code
-//     */
-//    createInteractiveScript() {
-//        return `<script type="text/javascript">
-//            <![CDATA[
-//                // Store node references in a global map for interactivity
-//                const nodeMap = new Map();
-//
-//                // Function to handle node collapse/expand
-//                function toggleNodeCollapse(nodeId) {
-//                    // Get the node data
-//                    const node = nodeMap.get(nodeId);
-//                    if (!node) return;
-//
-//                    // Toggle the collapsed state
-//                    node.collapsed = !node.collapsed;
-//
-//                    // Trigger redraw of the mindmap
-//                    redrawMindmap();
-//                }
-//
-//                // Function to redraw the mindmap after state changes
-//                function redrawMindmap() {
-//                    if (typeof onMindmapStateChanged === 'function') {
-//                        onMindmapStateChanged();
-//                    }
-//                }
-//
-//                // Initialize node map with the node data
-//                ${this._generateNodeMapInitCode()}
-//            ]]>
-//        </script>`;
-//    }
-
-//    /**
-//     * Generate code to initialize node map in SVG script
-//     * @private
-//     * @return {string} JavaScript code for initializing node map
-//     */
-//    _generateNodeMapInitCode() {
-//        let code = '';
-//        this.nodeMap.forEach((node, id) => {
-//            code += `
-//                nodeMap.set("${id}", {
-//                    id: "${id}",
-//                    text: "${this._escapeXml(node.text)}",
-//                    level: ${node.level},
-//                    collapsed: ${node.collapsed},
-//                    hasChildren: ${node.children.length > 0}
-//                });
-//            `;
-//        });
-//        return code;
-//    }
-
     /**
      * Generate the complete SVG
      * @return {string} Complete SVG document
@@ -481,7 +424,6 @@ class MindmapRenderer {
         let svg = this.createSvgContainer();
         svg += this.createDefs();
         svg += this.drawNodes();
-//        svg += this.createInteractiveScript();
         svg += '</svg>';
 
         return svg;
@@ -518,14 +460,3 @@ class MindmapRenderer {
     }
 
 }
-
-/**
- * Create and render a mindmap
- * @param {Node} rootNode - The root node of the mindmap
- * @param {Style} style - The style object for the mindmap
- * @return {string} SVG representation of the mindmap
- */
-//function renderMindmap(rootNode, style) {
-//    const renderer = new MindmapRenderer(rootNode, style);
-//    return renderer.generateSvg();
-//}
