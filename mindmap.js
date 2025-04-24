@@ -1,3 +1,6 @@
+//import Node from './model/node.js';
+//import { Style } from './layout.js';
+
 // Wait for the DOM to be fully loaded
 var nodeMap = {};
 var mindmapContainer;
@@ -93,69 +96,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/'/g, '&apos;');
     }
 
-    /**
-     * Parse markdown text into a mindmap structure
-     * @param {string} markdown - The markdown text to parse
-     * @return {Node|null} The root node of the mindmap, or null if no valid nodes were found
-     */
-    function parseMindmap(markdown) {
-      const lines = markdown.split('\n');
-      const root = new Node('', 0);
-      const stack = [root];
-      let currentHeadingLevel = 0;
-
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        let level = 0;
-        let text = '';
-
-        // Check if it's a heading
-        if (line.startsWith('#')) {
-          // Count # characters to determine level
-          for (let j = 0; j < line.length; j++) {
-            if (line[j] === '#') level++;
-            else break;
-          }
-
-          // Extract text
-          text = line.substring(level).trim();
-          currentHeadingLevel = level;
-        }
-        // Check if it's a bullet point
-        else if (line.startsWith('-') || line.startsWith('*')) {
-          // Get raw line to calculate actual indentation
-          const rawLine = lines[i];
-          const indentLength = rawLine.length - rawLine.trimLeft().length;
-          const bulletDepth = Math.floor(indentLength / 2); // Assuming 2 spaces per level
-
-          // Bullet points should be children of the current heading
-          level = currentHeadingLevel + bulletDepth + 1;
-
-          // Extract text
-          text = line.substring(1).trim(); // Remove the '-' character
-        } else {
-          continue; // Skip lines that aren't headings or bullet points
-        }
-
-        // Create node
-        const node = new Node(text, level);
-
-        // Find the parent node
-        while (stack.length > 1 && stack[stack.length - 1].level >= level) {
-          stack.pop();
-        }
-
-        // Add to parent
-        stack[stack.length - 1].addChild(node);
-
-        // Add to stack
-        stack.push(node);
-      }
-
-      return root.hasChildren() ? root.children[0] : null;
-    }
 
     // Set up help button functionality
     function initHelpButton() {
@@ -322,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Parse markdown
-            var rootNode = parseMindmap(markdown);
+            var rootNode = enhancedParseMindmap(markdown);
 
             if (!rootNode) {
                 statusMessage.textContent = 'Could not parse the markdown. Make sure it starts with a # heading.';

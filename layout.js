@@ -1,4 +1,4 @@
-import Node from 'model/node.js';
+//import Node from './model/node.js';
 
 
 /**
@@ -530,29 +530,4 @@ class VerticalLayout extends Layout {
   }
 }
 
-// Example usage:
-/*
-// Create a style instance with default settings
-const mindmapStyle = new Style();
-
-// Optionally customize the style
-mindmapStyle.configure({
-  levelStyles: {
-    1: {
-      backgroundColor: '#e9f7fe',
-      borderColor: '#4a90e2'
-    }
-  }
-});
-
-// Create root node
-const rootNode = new Node('Root Concept', 1);
-
-// Add children
-const child1 = new Node('Child 1', 2);
-rootNode.addChild(child1);
-
-// Apply layout with style
-const layout = mindmapStyle.getLevelStyle(1).getLayout();
-layout.applyLayout(rootNode, 50, 50, mindmapStyle);
-*/
+//export default Style;

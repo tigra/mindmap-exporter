@@ -1,3 +1,5 @@
+// model/node.js
+
 /**
  * Node class for the mindmap
  */
@@ -54,7 +56,6 @@ class Node {
    */
   toggleCollapse() {
     this.collapsed = !this.collapsed;
-    console.log(this.id, this.collapsed);
   }
 
   /**
@@ -71,3 +72,11 @@ class Node {
     this.collapsed = true;
   }
 }
+
+// For backward compatibility, export to window object if in browser
+if (typeof window !== 'undefined') {
+  window.Node = Node;
+}
+
+// Also export as module for modern usage
+//export default Node;

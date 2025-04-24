@@ -1,3 +1,5 @@
+//import Node from './model/node.js';
+
 /**
  * MindmapRenderer class for SVG generation with interactive expand/collapse
  */
