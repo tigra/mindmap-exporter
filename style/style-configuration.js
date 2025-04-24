@@ -1,10 +1,12 @@
+// src/style/style-configuration.js
+
 /**
  * Represents styling for a specific level in the mindmap
  */
-class LevelStyle {
+class StyleConfiguration {
   /**
-   * Create a new LevelStyle
-   * @param {Object} options - Configuration options for this level style
+   * Create a new StyleConfiguration
+   * @param {Object} options - Configuration options for this style
    */
   constructor(options = {}) {
     // Font settings
@@ -28,6 +30,8 @@ class LevelStyle {
     this.borderWidth = options.borderWidth || 1;
     this.borderRadius = options.borderRadius || 5;
     this.nodeType = options.nodeType || 'box';
+    this.connectionColor = options.connectionColor || '#666666';
+    this.connectionWidth = options.connectionWidth || 2;
   }
 
   /**
@@ -35,16 +39,38 @@ class LevelStyle {
    * @return {Layout} The layout instance
    */
   getLayout() {
-    console.log(this.layoutType);
-    if (this.layoutType === 'vertical') {
+   if (this.layoutType === 'vertical') {
       return new VerticalLayout(this.parentPadding, this.childPadding);
     } else {
       return new HorizontalLayout(this.parentPadding, this.childPadding);
     }
   }
 
+  /**
+   * Get the appropriate layout type for this style
+   * @return {string} The layout type
+   */
+  getLayoutType() {
+    return this.layoutType;
+  }
+
+
+
+  /**
+   * Set the layout type for this style
+   * @param {string} layoutType - The layout type to set ('horizontal' or 'vertical')
+   */
   setLayoutType(layoutType) {
+    if (layoutType !== 'horizontal' && layoutType !== 'vertical') {
+      throw new Error('Layout type must be either "horizontal" or "vertical"');
+    }
     this.layoutType = layoutType;
-    console.log('set to ... ' + this.layoutType);
   }
 }
+
+// For backward compatibility
+if (typeof window !== 'undefined') {
+  window.StyleConfiguration = StyleConfiguration;
+}
+
+//export default StyleConfiguration;

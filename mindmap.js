@@ -273,11 +273,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const stylePresetSelect = document.getElementById('style-preset');
-            var style = new Style();
-            const presetName = stylePresetSelect.value;
-            style = MindmapStylePresets.applyPreset(presetName, style);
-            style.setGlobalLayoutType(layoutType.value);
 
+            var style = window.styleManager || new Style();
+            const presetName = stylePresetSelect.value;
+            MindmapStylePresets.applyPreset(presetName, style);
+
+            style.setGlobalLayoutType(layoutType.value);
             const layout = style.getLevelStyle(1).getLayout();
             layout.applyLayout(rootNode, 0, 0, style);
 
@@ -293,13 +294,6 @@ document.addEventListener('DOMContentLoaded', function() {
             renderer.addNodeListeners();
 
             console.log(renderer.getNodeMap());
-
-            renderer.nodeMap.forEach((node, nodeId) => {
-                console.log('copying', nodeId);
-                console.log('value', renderer.node);
-                nodeMap[nodeId] = node;
-            })
-            console.log('node map:', nodeMap);
 
             // Enable export button
             exportBtn.disabled = false;

@@ -6,6 +6,9 @@
 // Initialize the model
 const mindmapModel = new MindmapModel();
 
+// Initialize style manager
+const styleManager = new StyleManager();
+
 // For backward compatibility with the global nodeMap currently used
 window.updateNodeMap = function() {
   window.nodeMap = {};

@@ -448,7 +448,7 @@ class MindmapRenderer {
     addNodeListeners() {
         console.log(this.nodeMap);
         this.nodeMap.forEach((node, nodeId) => {
-            console.log(nodeId);
+//            console.log(nodeId);
             this.addEventListener(document.getElementById(nodeId + "_rect"), 'dblclick', nodeId);
             this.addEventListener(document.getElementById(nodeId + "_indicator"), 'dblclick', nodeId);
             this.addEventListener(document.getElementById(nodeId + "_indicator"), 'click', nodeId);
