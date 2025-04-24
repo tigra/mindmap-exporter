@@ -34,17 +34,29 @@ class StyleConfiguration {
     this.connectionWidth = options.connectionWidth || 2;
   }
 
-  /**
-   * Get the appropriate layout for this level style
-   * @return {Layout} The layout instance
-   */
-  getLayout() {
-   if (this.layoutType === 'vertical') {
-      return new VerticalLayout(this.parentPadding, this.childPadding);
-    } else {
-      return new HorizontalLayout(this.parentPadding, this.childPadding);
+    /**
+     * Get the appropriate layout for this level style
+     * @return {Layout} The layout instance
+     */
+    getLayout() {
+      // Import here to avoid circular dependencies
+      const LayoutFactory = window.LayoutFactory || (typeof require !== 'undefined' ? require('../layout/layout-factory').default : null);
+
+      if (LayoutFactory) {
+        return LayoutFactory.createLayout(
+          this.layoutType,
+          this.parentPadding,
+          this.childPadding
+        );
+      } else {
+        // Fallback for backward compatibility
+        if (this.layoutType === 'vertical') {
+          return new window.VerticalLayout(this.parentPadding, this.childPadding);
+        } else {
+          return new window.HorizontalLayout(this.parentPadding, this.childPadding);
+        }
+      }
     }
-  }
 
   /**
    * Get the appropriate layout type for this style
