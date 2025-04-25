@@ -52,7 +52,7 @@ class MindmapController {
    * @param {string} layoutType - The new layout type
    */
   handleLayoutChange(layoutType) {
-//  console.log('h')
+  console.log('handleLayoutChange(', layoutType);
     this.styleManager.setGlobalLayoutType(layoutType);
     this.renderer.render(this.container);
   }

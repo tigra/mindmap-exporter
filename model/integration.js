@@ -1,44 +1,53 @@
-// src/model/integration.js
+// Update src/model/integration.js to provide full backward compatibility
 
-//import Node from './node.js';
-//import MindmapModel from './mindmap-model.js';
+//import MindmapApp from '../app.js';
 
-// Initialize the model
-const mindmapModel = new MindmapModel();
+// Initialize the application
+const app = new MindmapApp();
 
-// Initialize style manager
-const styleManager = new StyleManager();
-
-const renderer = new MindmapRenderer(mindmapModel, styleManager);
-
-// For backward compatibility with the global nodeMap currently used
-window.updateNodeMap = function() {
-  window.nodeMap = {};
-  mindmapModel.nodeMap.forEach((node, id) => {
-    window.nodeMap[id] = node;
-  });
-};
-
-// Function to be used in place of the original parseMindmap
-window.enhancedParseMindmap = function(markdown) {
-  const rootNode = mindmapModel.parseFromMarkdown(markdown);
-  window.updateNodeMap();
-  return rootNode;
-};
-
+// Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
-  const container = document.getElementById('mindmap-container');
-  if (container) {
-    controller = new MindmapController(mindmapModel, renderer, styleManager, container);
+  // Try to initialize the application
+  app.initialize();
+  console.log('app initialized', app);
 
-    // Make it available globally for backward compatibility
-    window.mindmapController = controller;
+  // Define global compatibility functions
+  window.parseMindmap = function(markdown) {
+    if (window.mindmapModel) {
+      return window.mindmapModel.parseFromMarkdown(markdown);
+    }
+    return null;
+  };
 
-    // Initialize the controller
-    controller.initialize();
-    console.log('initialized controller', controller);
+  window.toggleNodeCollapse = function(nodeId) {
+    if (window.mindmapController) {
+      window.mindmapController.handleNodeEvent(nodeId, 'toggle');
+    }
+  };
+
+  // If the old generateMindMap function exists, preserve it but have it use our new system
+  if (typeof window.generateMindMap === 'function') {
+    const originalGenerateMindMap = window.generateMindMap;
+    window.generateMindMap = function() {
+      if (window.mindmapApp) {
+        window.mindmapApp.handleGenerate();
+      } else {
+        originalGenerateMindMap();
+      }
+    };
+  }
+
+  // Same for export function
+  if (typeof window.exportMindMap === 'function') {
+    const originalExportMindMap = window.exportMindMap;
+    window.exportMindMap = function() {
+      if (window.mindmapApp) {
+        window.mindmapApp.handleExport();
+      } else {
+        originalExportMindMap();
+      }
+    };
   }
 });
 
-// Export for future module usage
-//export { mindmapModel };
+//export default app;
