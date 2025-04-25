@@ -22,4 +22,4 @@ if (typeof window !== 'undefined') {
   window.ConnectionPoint = ConnectionPoint;
 }
 
-//export default ConnectionPoint;
+export default ConnectionPoint;

@@ -1,7 +1,7 @@
 // src/layout/horizontal-layout.js
 
-//import Layout from './layout.js';
-//import ConnectionPoint from './connection-point.js';
+import Layout from './layout.js';
+import ConnectionPoint from './connection-point.js';
 
 /**
  * Horizontal layout implementation
@@ -134,4 +134,4 @@ if (typeof window !== 'undefined') {
   window.HorizontalLayout = HorizontalLayout;
 }
 
-//export default HorizontalLayout;
+export default HorizontalLayout;

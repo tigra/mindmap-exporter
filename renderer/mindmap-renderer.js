@@ -1,6 +1,6 @@
 // src/renderer/mindmap-renderer.js
 
-//import eventBridge from '../utils/event-bridge.js';
+import eventBridge from '../utils/event-bridge.js';
 
 /**
  * MindmapRenderer class for SVG generation with interactive expand/collapse
@@ -487,4 +487,4 @@ if (typeof window !== 'undefined') {
   window.MindmapRenderer = MindmapRenderer;
 }
 
-//export default MindmapRenderer;
+export default MindmapRenderer;

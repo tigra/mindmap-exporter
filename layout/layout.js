@@ -1,7 +1,7 @@
 // src/layout/layout.js
 
-//import ConnectionPoint from './connection-point.js';
-//import textMetrics from '../utils/text-metrics.js';
+import ConnectionPoint from './connection-point.js';
+import textMetrics from '../utils/text-metrics.js';
 
 /**
  * Base Layout class that handles common functionality
@@ -80,4 +80,4 @@ if (typeof window !== 'undefined') {
   window.BaseLayout = Layout;
 }
 
-//export default Layout;
+export default Layout;

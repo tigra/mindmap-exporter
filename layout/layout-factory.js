@@ -1,7 +1,7 @@
 // src/layout/layout-factory.js
 
-//import HorizontalLayout from './horizontal-layout.js';
-//import VerticalLayout from './vertical-layout.js';
+import HorizontalLayout from './horizontal-layout.js';
+import VerticalLayout from './vertical-layout.js';
 
 /**
  * Factory for creating appropriate layouts
@@ -28,4 +28,4 @@ if (typeof window !== 'undefined') {
   window.LayoutFactory = LayoutFactory;
 }
 
-//export default LayoutFactory;
+export default LayoutFactory;

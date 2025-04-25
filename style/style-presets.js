@@ -580,3 +580,5 @@ class MindmapStylePresets {
         return style;
     }
 }
+
+export default MindmapStylePresets;

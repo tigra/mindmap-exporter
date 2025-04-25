@@ -50,4 +50,4 @@ if (typeof window !== 'undefined') {
   window.textMetrics = textMetrics;
 }
 
-//export default textMetrics;
+export default textMetrics;

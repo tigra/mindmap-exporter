@@ -1,6 +1,6 @@
 // src/model/mindmap-model.js
 
-//import Node from './node.js';
+import Node from './node.js';
 
 /**
  * MindmapModel class for managing mindmap data structure
@@ -145,4 +145,8 @@ if (typeof window !== 'undefined') {
   };
 }
 
-//export default MindmapModel;
+if (window !== null) {
+    window.MindmapModel = MindmapModel;
+}
+
+export default MindmapModel;

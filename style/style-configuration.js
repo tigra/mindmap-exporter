@@ -1,4 +1,5 @@
 // src/style/style-configuration.js
+import LayoutFactory from '../layout/layout-factory.js';
 
 /**
  * Represents styling for a specific level in the mindmap
@@ -48,14 +49,15 @@ class StyleConfiguration {
           this.parentPadding,
           this.childPadding
         );
-      } else {
-        // Fallback for backward compatibility
-        if (this.layoutType === 'vertical') {
-          return new window.VerticalLayout(this.parentPadding, this.childPadding);
-        } else {
-          return new window.HorizontalLayout(this.parentPadding, this.childPadding);
-        }
       }
+//      else {
+//        // Fallback for backward compatibility
+//        if (this.layoutType === 'vertical') {
+//          return new window.VerticalLayout(this.parentPadding, this.childPadding);
+//        } else {
+//          return new window.HorizontalLayout(this.parentPadding, this.childPadding);
+//        }
+//      }
     }
 
   /**
@@ -85,4 +87,4 @@ if (typeof window !== 'undefined') {
   window.StyleConfiguration = StyleConfiguration;
 }
 
-//export default StyleConfiguration;
+export default StyleConfiguration;

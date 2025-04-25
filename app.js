@@ -1,10 +1,13 @@
 // src/app.js
 
-//import MindmapModel from './model/mindmap-model.js';
-//import StyleManager from './style/style-manager.js';
+import MindmapModel from './model/mindmap-model.js';
+import StyleManager from './style/style-manager.js';
+import MindmapStylePresets from './style/style-presets.js';
 //import StylePresetsAdapter from './style/style-presets-adapter.js';
-//import MindmapRenderer from './renderer/mindmap-renderer.js';
-//import MindmapController from './controller/mindmap-controller.js';
+import MindmapRenderer from './renderer/mindmap-renderer.js';
+import MindmapController from './controller/mindmap-controller.js';
+
+//StyleManager = window.StyleManager;
 
 /**
  * Main application class for the mindmap
@@ -125,7 +128,7 @@ class MindmapApp {
     // Parse markdown
     this.model.parseFromMarkdown(markdown);
 
-            var style = window.styleManager || new Style();
+            var style = window.styleManager;
             const presetName = this.stylePreset.value;
             MindmapStylePresets.applyPreset(presetName, style);
 
@@ -186,4 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
   app.initialize();
 });
 
-//export default MindmapApp;
+if (window !== null) {
+    window.MindmapApp = MindmapApp;
+}
+
+export default MindmapApp;

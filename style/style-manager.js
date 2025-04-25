@@ -1,6 +1,6 @@
 // src/style/style-manager.js
 
-//import StyleConfiguration from './style-configuration.js';
+import StyleConfiguration from './style-configuration.js';
 
 /**
  * Manages styles for the entire mindmap
@@ -164,4 +164,4 @@ if (typeof window !== 'undefined') {
   window.styleManager = new StyleManager();
 }
 
-//export default StyleManager;
+export default StyleManager;

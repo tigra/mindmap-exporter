@@ -46,4 +46,4 @@ if (typeof window !== 'undefined') {
   window.mindmapEventBridge = eventBridge;
 }
 
-//export default eventBridge;
+export default eventBridge;

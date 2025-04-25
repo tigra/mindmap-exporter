@@ -1,7 +1,7 @@
 // src/layout/vertical-layout.js
 
-//import Layout from './layout.js';
-//import ConnectionPoint from './connection-point.js';
+import Layout from './layout.js';
+import ConnectionPoint from './connection-point.js';
 
 /**
  * Vertical layout implementation
@@ -144,4 +144,4 @@ if (typeof window !== 'undefined') {
   window.VerticalLayout = VerticalLayout;
 }
 
-//export default VerticalLayout;
+export default VerticalLayout;

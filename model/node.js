@@ -79,4 +79,4 @@ if (typeof window !== 'undefined') {
 }
 
 // Also export as module for modern usage
-//export default Node;
+export default Node;
