@@ -10,7 +10,7 @@ class MindmapModel {
    * Create a new MindmapModel
    */
   constructor() {
-    this.rootNode = null;
+    this.rootNode = new Node();
     this.nodeMap = new Map(); // Map of node ID to node instance
   }
 

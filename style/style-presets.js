@@ -29,8 +29,11 @@ class MindmapStylePresets {
      * @return {Style} The configured style object
      */
     static applyPreset(presetName, style) {
+        console.log('applyPreset(', presetName);
+        console.log('style', style);
         const presets = MindmapStylePresets.getPresets();
         if (presets[presetName]) {
+            console.log("found");
             return presets[presetName](style);
         }
         // Default to the default style if preset not found

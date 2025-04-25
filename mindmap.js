@@ -4,7 +4,7 @@
 // Wait for the DOM to be fully loaded
 var nodeMap = {};
 var mindmapContainer;
-var renderer;
+//var renderer;
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     var markdownInput = document.getElementById('markdown-input');
@@ -86,15 +86,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Helper function to escape XML in SVG text
-    function escapeXml(text) {
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&apos;');
-    }
+//    // Helper function to escape XML in SVG text
+//    function escapeXml(text) {
+//        return text
+//            .replace(/&/g, '&amp;')
+//            .replace(/</g, '&lt;')
+//            .replace(/>/g, '&gt;')
+//            .replace(/"/g, '&quot;')
+//            .replace(/'/g, '&apos;');
+//    }
 
 
     // Set up help button functionality
@@ -282,18 +282,43 @@ document.addEventListener('DOMContentLoaded', function() {
             const layout = style.getLevelStyle(1).getLayout();
             layout.applyLayout(rootNode, 0, 0, style);
 
-             renderer = new MindmapRenderer(rootNode, style);
+//             renderer = new MindmapRenderer(rootNode, style);
 
             // Generate SVG string
-            const svg = renderer.generateSvg();
+//            const svg = renderer.generateSvg();
 
             // Display mindmap
-            mindmapContainer.innerHTML = svg;
-            mindmapContainer.dataset.svgContent = svg;
+//            mindmapContainer.innerHTML = svg;
+//            mindmapContainer.dataset.svgContent = svg;
 
-            renderer.addNodeListeners();
+//            renderer.addNodeListeners();
 
-            console.log(renderer.getNodeMap());
+//            var style = window.styleManager || new Style();
+//            const presetName = stylePresetSelect.value;
+//            MindmapStylePresets.applyPreset(presetName, style);
+
+//            style.setGlobalLayoutType(layoutType.value);
+//            const layout = style.getLevelStyle(1).getLayout();
+//            layout.applyLayout(rootNode, 0, 0, style);
+
+//             renderer = new MindmapRenderer(rootNode, style);
+
+            // Generate SVG string
+//            const svg = renderer.generateSvg();
+//
+//            // Display mindmap
+//            mindmapContainer.innerHTML = svg;
+//            mindmapContainer.dataset.svgContent = svg;
+//
+//            renderer.addNodeListeners();
+
+//              console.log('controller', window.mindmapController);
+              window.mindmapController.handleStyleChange(stylePresetSelect.value);
+              window.mindmapController.handleLayoutChange(layoutType.value);
+
+//              mindmapController.renderMindmap();
+
+//            console.log(renderer.getNodeMap());
 
             // Enable export button
             exportBtn.disabled = false;
@@ -472,7 +497,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listeners
     generateBtn.addEventListener('click', generateMindMap);
-    exportBtn.addEventListener('click', exportMindMap);
+//    exportBtn.addEventListener('click', exportMindMap);
+    exportBtn.addEventListener('click', function() {
+//      if (window.mindmapController) {
+        const format = document.getElementById('export-format').value;
+        const rootTextMatch = mindmapContainer.dataset.svgContent.match(/<text[^>]*>([^<]+)<\/text>/);
+        const fileName = rootTextMatch ?
+          rootTextMatch[1].replace(/[^\w\s]/g, '').replace(/\s+/g, '_').toLowerCase() :
+          'mindmap';
+
+        if (format === 'svg') {
+          window.mindmapController.exportToSVG(fileName + '.svg');
+        } else if (format === 'png') {
+          window.mindmapController.exportToPNG(fileName + '.png');
+        }
+//      } else {
+//        // Fallback to old export function
+//        exportMindMap();
+//      }
+    });
     initHelpButton();
     initMindmapContainer();
 
