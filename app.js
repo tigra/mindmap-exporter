@@ -206,15 +206,15 @@ class MindmapApp {
     if (this.stylePreset) {
       this.controller.handleStyleChange(this.stylePreset.value);
       // TODO make it steerable through the UI
-      style.configure({
-        levelStyles: {
-            1: {boundingBox: true},
-            2: {boundingBox: true},
-            3: {boundingBox: true},
-            4: {boundingBox: true}
-        },
-        default: {boundingBox: true},
-      });
+//      style.configure({
+//        levelStyles: {
+//            1: {boundingBox: true},
+//            2: {boundingBox: true},
+//            3: {boundingBox: true},
+//            4: {boundingBox: true}
+//        },
+//        default: {boundingBox: true},
+//      });
     }
 
     // Apply layout type
