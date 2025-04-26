@@ -31,7 +31,117 @@ class MindmapController {
   initialize() {
     // Initial render
     this.renderer.render(this.container);
+    this.initMindmapContainer();
   }
+
+    // Function to initialize the mindmap container for scrolling
+  initMindmapContainer() {
+        const container = this.container;
+
+        // Set up panning functionality
+        let isPanning = false;
+        let startX, startY, scrollLeft, scrollTop;
+
+        // Mouse events for panning (middle-click or ctrl+click)
+        container.addEventListener('mousedown', (e) => {
+            // Only initiate panning with middle mouse button or ctrl+left click
+            if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
+                e.preventDefault();
+                isPanning = true;
+                startX = e.pageX - container.offsetLeft;
+                startY = e.pageY - container.offsetTop;
+                scrollLeft = container.scrollLeft;
+                scrollTop = container.scrollTop;
+
+                // Change cursor to indicate panning
+                container.style.cursor = 'grabbing';
+            }
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            e.preventDefault();
+
+            const x = e.pageX - container.offsetLeft;
+            const y = e.pageY - container.offsetTop;
+            const walkX = (x - startX) * 1.5; // Adjust for faster/slower panning
+            const walkY = (y - startY) * 1.5;
+
+            container.scrollLeft = scrollLeft - walkX;
+            container.scrollTop = scrollTop - walkY;
+        });
+
+        container.addEventListener('mouseup', () => {
+            isPanning = false;
+            container.style.cursor = 'auto';
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isPanning = false;
+            container.style.cursor = 'auto';
+        });
+
+        // Zoom state tracking
+        let currentZoom = 1.0;
+        const minZoom = 0.3;
+        const maxZoom = 3.0;
+
+        // Handle wheel events for zooming
+        container.addEventListener('wheel', (e) => {
+            if (e.ctrlKey) {
+                // Prevent the default zoom of the entire page
+                e.preventDefault();
+
+                // Determine zoom direction
+                const delta = e.deltaY < 0 ? 0.1 : -0.1;
+                const newZoom = Math.min(maxZoom, Math.max(minZoom, currentZoom + delta));
+
+                // If zoom didn't change (at limits), don't proceed
+                if (newZoom === currentZoom) return;
+
+                // Get SVG element
+                const svg = container.querySelector('svg');
+                if (!svg) return;
+
+                // Get mouse position relative to container
+                const rect = container.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                // Get scroll position before zoom
+                const scrollXBeforeZoom = container.scrollLeft;
+                const scrollYBeforeZoom = container.scrollTop;
+
+                // Scale SVG
+                svg.style.transformOrigin = '0 0';
+                svg.style.transform = `scale(${newZoom})`;
+
+                // Calculate new scroll position to keep mouse over the same point
+                const scrollXAfterZoom = (scrollXBeforeZoom + mouseX) * (newZoom / currentZoom) - mouseX;
+                const scrollYAfterZoom = (scrollYBeforeZoom + mouseY) * (newZoom / currentZoom) - mouseY;
+
+                // Update scroll position
+                container.scrollLeft = scrollXAfterZoom;
+                container.scrollTop = scrollYAfterZoom;
+
+                // Update current zoom
+                currentZoom = newZoom;
+
+                // Update status or display zoom level (optional)
+                const zoomPercent = Math.round(newZoom * 100);
+                const statusMessage = document.getElementById('status-message');
+                if (statusMessage) {
+                    statusMessage.textContent = `Zoom: ${zoomPercent}%`;
+                    // Clear the status message after a delay
+                    clearTimeout(statusMessage.timeout);
+                    statusMessage.timeout = setTimeout(() => {
+                        statusMessage.textContent = '';
+                    }, 1500);
+                }
+            }
+            // If not holding Ctrl, let the default scroll behavior happen
+        });
+    }
 
   /**
    * Handle node events
