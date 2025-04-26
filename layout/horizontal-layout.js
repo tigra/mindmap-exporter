@@ -65,7 +65,13 @@ class HorizontalLayout extends Layout {
     }
 
     // Calculate child X position based on direction
-    const childX = x + (directionMultiplier * (nodeSize.width + this.parentPadding));
+    var childX
+    if (this.direction === 'right') {
+       childX = x + nodeSize.width + this.parentPadding
+    } else {
+       childX = x - this.parentPadding;
+    }
+//    const childX = x + (directionMultiplier * (nodeSize.width));
 //    const childX = x + (directionMultiplier *  this.parentPadding);
 
     let totalHeight = 0;
@@ -88,10 +94,6 @@ class HorizontalLayout extends Layout {
         childDirection
       );
 
-//      var childShift = 0;
-//      if (this.direction === 'left') {
-//        childShift = - 0.5* childLayout.getNodeSize(child.text, childLevelStyle);
-//      }
       const childSize = childLayout.applyLayout(child, childX, y + totalHeight, style);
 
       totalHeight += childSize.height + this.childPadding;
@@ -105,10 +107,6 @@ class HorizontalLayout extends Layout {
     if (totalHeight > nodeSize.height) {
       node.y = y - (nodeSize.height / 2) + ((totalHeight - nodeSize.height) / 2);
     }
-
-//    for (let i = 0; i < node.children.length; i++) {
-//      this.adjustPositionRecursive(node.children[i], childShift, 0);
-//    }
 
     for (let i = 0; i < node.children.length; i++) {
       if (this.direction === 'left') {

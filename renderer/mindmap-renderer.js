@@ -172,7 +172,9 @@ class MindmapRenderer {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     // TODO configure / style these thingies:
 //    svg += `<circle r="5" cx="${node.x}" cy="${node.y}" fill="red" />`
-//    svg += this._drawBoundingBox(node);
+    if (levelStyle.boundingBox) {
+       svg += this._drawBoundingBox(node);
+    }
     // Only draw connections to children if not collapsed
     if (!node.collapsed) {
       for (let i = 0; i < node.children.length; i++) {
@@ -253,7 +255,7 @@ class MindmapRenderer {
             return `<rect x="${node.boundingBox.x}" y="${node.boundingBox.y}"
                           width="${node.boundingBox.width}" height="${node.boundingBox.height}"
                           rx="2" ry="2" fill="#101010" fill-opacity="0.05"
-                          stroke="#00A000" stroke-width="1" filter="url(#dropShadow)"
+                          stroke="#001000" stroke-width="1" filter="url(#dropShadow)"
                           id="${node.id}_bbox" class="node-shape" />`;
         } else {
             console.log('no bounding box!');
@@ -343,12 +345,13 @@ class MindmapRenderer {
 
     // Check if it's a vertical or horizontal layout
     const isVerticalLayout = connectionPoint.direction === 'bottom' || connectionPoint.direction === 'top';
+    const directionMultiplier = (connectionPoint.direction === 'bottom' || connectionPoint.direction === 'right') ? 1 : -1;
 
     if (isVerticalLayout) {
       indicatorX = connectionPoint.x;
-      indicatorY = connectionPoint.y + 6;
+      indicatorY = connectionPoint.y + directionMultiplier * radius;
     } else {
-      indicatorX = connectionPoint.x + 6;
+      indicatorX = connectionPoint.x + directionMultiplier * radius;
       indicatorY = connectionPoint.y;
     }
 
