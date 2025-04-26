@@ -21,6 +21,9 @@ class Node {
     this.style = {};
     this.collapsed = collapsed;
     this.id = 'node_' + Node.generateUniqueId();
+    this.boundingBox = {
+        x: 0, y: 0, width: 0, height: 0
+    };
   }
 
   /**

@@ -561,7 +561,7 @@ class MindmapStylePresets {
                     borderColor: '#fdd835',
                     borderRadius: 25,
                     nodeType: 'box',
-                    connectionColor: '#fff176'
+                    connectionColor: '#d0d075'
                 },
                 4: {
                     fontSize: 12,

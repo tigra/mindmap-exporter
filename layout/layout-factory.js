@@ -12,13 +12,18 @@ class LayoutFactory {
    * @param {string} type - The layout type ('horizontal' or 'vertical')
    * @param {number} parentPadding - Padding between parent and children
    * @param {number} childPadding - Padding between siblings
+   * @param {string} direction - Direction of layout ('right', 'left', 'down', or 'up')
    * @return {Layout} The created layout instance
    */
-  static createLayout(type, parentPadding, childPadding) {
+  static createLayout(type, parentPadding, childPadding, direction) {
     if (type === 'vertical') {
-      return new VerticalLayout(parentPadding, childPadding);
+      // Default direction for vertical layout is 'down'
+      const verticalDirection = direction === 'up' ? 'up' : 'down';
+      return new VerticalLayout(parentPadding, childPadding, verticalDirection);
     } else {
-      return new HorizontalLayout(parentPadding, childPadding);
+      // Default direction for horizontal layout is 'right'
+      const horizontalDirection = direction === 'left' ? 'left' : 'right';
+      return new HorizontalLayout(parentPadding, childPadding, horizontalDirection);
     }
   }
 }

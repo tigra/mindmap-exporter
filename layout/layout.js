@@ -37,6 +37,10 @@ class Layout {
   adjustPositionRecursive(node, deltaX, deltaY) {
     node.x += deltaX;
     node.y += deltaY;
+    if (node.boundingBox) {
+        node.boundingBox.x += deltaX;
+        node.boundingBox.y += deltaY;
+    }
     for (let i = 0; i < node.children.length; i++) {
       this.adjustPositionRecursive(node.children[i], deltaX, deltaY);
     }

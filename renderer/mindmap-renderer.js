@@ -170,7 +170,9 @@ class MindmapRenderer {
   _drawNodeRecursive(node) {
     let svg = '';
     const levelStyle = this.styleManager.getLevelStyle(node.level);
-
+    // TODO configure / style these thingies:
+//    svg += `<circle r="5" cx="${node.x}" cy="${node.y}" fill="red" />`
+//    svg += this._drawBoundingBox(node);
     // Only draw connections to children if not collapsed
     if (!node.collapsed) {
       for (let i = 0; i < node.children.length; i++) {
@@ -245,6 +247,20 @@ class MindmapRenderer {
     return `<path d="${path}" stroke="${connectionColor}" stroke-width="${connectionWidth}" fill="none" />`;
   }
 
+    _drawBoundingBox(node) {
+        if (node.boundingBox) {
+            console.log(node.boundingBox);
+            return `<rect x="${node.boundingBox.x}" y="${node.boundingBox.y}"
+                          width="${node.boundingBox.width}" height="${node.boundingBox.height}"
+                          rx="2" ry="2" fill="#101010" fill-opacity="0.05"
+                          stroke="#00A000" stroke-width="1" filter="url(#dropShadow)"
+                          id="${node.id}_bbox" class="node-shape" />`;
+        } else {
+            console.log('no bounding box!');
+            return '';
+        }
+    }
+
   /**
    * Draw the shape for a node
    * @private
@@ -257,13 +273,18 @@ class MindmapRenderer {
     const borderRadius = levelStyle.borderRadius || 5;
     const borderColor = levelStyle.borderColor || '#fff';
     const borderWidth = levelStyle.borderWidth || 1.5;
+    const fillOpacity = levelStyle.fillOpacity || 0.5;
 
+//    return `<rect x="${node.x}" y="${node.y}"
+//                      width="${node.width}" height="${node.height}"
+//                      rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}"
+//                      stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)"
+//                      id="${node.id}_rect" class="node-shape" />`;
     return `<rect x="${node.x}" y="${node.y}"
                       width="${node.width}" height="${node.height}"
-                      rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}"
+                      rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}" fill-opacity="${fillOpacity}"
                       stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)"
-                      id="${node.id}_rect" class="node-shape" />`;
-  }
+                      id="${node.id}_rect" class="node-shape" />`;  }
 
   /**
    * Draw text for a node

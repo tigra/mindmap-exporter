@@ -168,7 +168,7 @@ class MindmapRenderer {
     _drawNodeRecursive(node) {
         let svg = '';
         const levelStyle = this.style.getLevelStyle(node.level);
-
+        svg += _drawBoundingBox(node);
         // Only draw connections to children if not collapsed
         if (!node.collapsed) {
             for (let i = 0; i < node.children.length; i++) {
@@ -241,6 +241,20 @@ class MindmapRenderer {
         const connectionWidth = parentStyle.connectionWidth || 2;
 
         return `<path d="${path}" stroke="${connectionColor}" stroke-width="${connectionWidth}" fill="none" />`;
+    }
+
+    _drawBoundingBox(node) {
+        if (node.boundingBox) {
+            console.log(node.boundingBox);
+            return `<rect x="${node.boundingBox.x}" y="${node.boundingBox.y}"
+                          width="${node.boundingBox.width}" height="${node.boundingBox.height}"
+                          rx="2" ry="2" fill="${fillColor}" fill-opacity="0.01"
+                          stroke="#00A000" stroke-width="${borderWidth}" filter="url(#dropShadow)"
+                          id="${node.id}_bbox" class="node-shape" />`;
+        } else {
+            console.log('no bounding box!');
+            return '';
+        }
     }
 
     /**

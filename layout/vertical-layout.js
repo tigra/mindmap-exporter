@@ -50,6 +50,12 @@ class VerticalLayout extends Layout {
     };
 
     if (node.children.length === 0 || node.collapsed) {
+      node.boundingBox = {
+        x: x,
+        y: y,
+        width: nodeSize.width,
+        height: nodeSize.height
+      }
       return {
         width: nodeSize.width,
         height: nodeSize.height
@@ -101,10 +107,14 @@ class VerticalLayout extends Layout {
       this.adjustPositionRecursive(node.children[i], childShift, 0);
     }
 
-    return {
+    node.boundingBox = {
+      x: x,
+      y: y,
       width: Math.max(nodeSize.width, totalWidth),
       height: nodeSize.height + this.parentPadding + maxChildHeight
-    };
+    }
+
+    return node.boundingBox;
   }
 
   /**

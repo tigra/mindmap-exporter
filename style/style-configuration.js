@@ -23,12 +23,16 @@ class StyleConfiguration {
 
     // Layout type
     this.layoutType = options.layoutType || 'horizontal';
+//    this.direction = options.direction || 'left';
+    this.direction = options.direction || 'right';
+//    this.direction = options.direction || 'down  ';
 
     // Colors and appearance
     this.backgroundColor = options.backgroundColor || '#ffffff';
+    this.fillOpacity = options.fillOpacity || 0.9;  // TODO 1 and some semitransparent presets
     this.textColor = options.textColor || '#000000';
     this.borderColor = options.borderColor || '#cccccc';
-    this.borderWidth = options.borderWidth || 1;
+    this.borderWidth = options.borderWidth || 2;
     this.borderRadius = options.borderRadius || 5;
     this.nodeType = options.nodeType || 'box';
     this.connectionColor = options.connectionColor || '#666666';
@@ -47,7 +51,8 @@ class StyleConfiguration {
         return LayoutFactory.createLayout(
           this.layoutType,
           this.parentPadding,
-          this.childPadding
+          this.childPadding,
+          this.direction
         );
       }
 //      else {
