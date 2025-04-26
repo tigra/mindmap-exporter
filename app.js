@@ -23,6 +23,7 @@ class MindmapApp {
    * @param {string} options.exportFormatId - The ID of the export format select element
    * @param {string} options.generateBtnId - The ID of the generate button
    * @param {string} options.exportBtnId - The ID of the export button
+   * @param {string} options.loadingIndicator - The ID of the loading indicator
    */
   constructor(options = {}) {
     this.options = {
@@ -187,7 +188,17 @@ class MindmapApp {
     const presetName = this.stylePreset.value;
     MindmapStylePresets.applyPreset(presetName, style);
 
-    style.setGlobalLayoutType(this. layoutType.value);
+//    style.setGlobalLayoutType(this.layoutType.value);
+    // TODO factor out this behavoir, find the proper class responsible for it
+    const layoutType = this.layoutType.value;
+    if (layoutType === 'horizontal-left') {
+      style.setGlobalLayoutType('horizontal', {direction: 'left'});
+    } else if (layoutType === 'horizontal-right') {
+      style.setGlobalLayoutType('horizontal', {direction: 'right'});
+    } else {
+      style.setGlobalLayoutType(layoutType);
+    }
+    console.log(style.getLevelStyle(1));
     const layout = style.getLevelStyle(1).getLayout();
     layout.applyLayout(this.model.getRoot(), 0, 0, style);
 

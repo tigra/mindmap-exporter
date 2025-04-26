@@ -119,6 +119,7 @@ class StyleManager {
 
     const excludeLevels = options.excludeLevels || [];
     const customPadding = options.customPadding || {};
+    const direction = options.direction || null;
 
     // Update default level style
     if (!excludeLevels.includes(0)) {
@@ -142,6 +143,9 @@ class StyleManager {
       }
 
       this.levelStyles[level].layoutType = layoutType;
+      if (direction) {
+        this.levelStyles[level].direction = direction;
+      }
 
       // Adjust padding values based on the layout type if needed
       if (customPadding[level]) {

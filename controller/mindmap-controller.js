@@ -43,6 +43,11 @@ class MindmapController {
       // Toggle node collapse state
       this.model.toggleNodeCollapse(nodeId);
 
+      // reapply layout. TODO think where to take it from rather then window
+      const style = window.styleManager;
+      const layout = style.getLevelStyle(1).getLayout();
+      layout.applyLayout(this.model.getRoot(), 0, 0, style);
+
       // Re-render the mindmap
       this.renderer.render(this.container);
     }
@@ -53,8 +58,14 @@ class MindmapController {
    * @param {string} layoutType - The new layout type
    */
   handleLayoutChange(layoutType) {
-  console.log('handleLayoutChange(', layoutType);
-    this.styleManager.setGlobalLayoutType(layoutType);
+    console.log('handleLayoutChange(', layoutType);
+    if (layoutType === 'horizontal-left') {
+      this.styleManager.setGlobalLayoutType('horizontal', {direction: 'left'});
+    } else if (layoutType === 'horizontal-right') {
+      this.styleManager.setGlobalLayoutType('horizontal', {direction: 'right'});
+    } else {
+      this.styleManager.setGlobalLayoutType(layoutType);
+    }
     this.renderer.render(this.container);
   }
 
