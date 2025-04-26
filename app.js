@@ -33,6 +33,7 @@ class MindmapApp {
       exportFormatId: 'export-format',
       generateBtnId: 'generate-btn',
       exportBtnId: 'export-btn',
+      loadingIndicator: "loading-indicator",
       ...options
     };
 
@@ -63,11 +64,52 @@ class MindmapApp {
     this.exportFormat = document.getElementById(this.options.exportFormatId);
     this.generateBtn = document.getElementById(this.options.generateBtnId);
     this.exportBtn = document.getElementById(this.options.exportBtnId);
+    this.loadingIndicator = document.getElementById(this.options.loadingIndicator);
 
     if (!this.container || !this.markdownInput) {
       console.error('Required DOM elements not found');
       return;
     }
+
+   // Sample data
+    this.markdownInput.value = `# Project Planning
+## Research
+- competitive landscape
+    - existing mindmap apps on the market
+        - open source
+           - Xmind
+              - pros
+                - open source
+                - more feature rich then FreeMind
+              - cons
+                - doesn't have a really future-proof file format
+                - 5555555555
+        - proprietary
+    - subbullet 2
+        - subsub, again
+            - 1111111
+            - 2222222222222 2222222222
+               - 333333
+                 - 3
+### Market Analysis
+### Technical Feasibility
+## Design
+### UI/UX Design
+### System Architecture
+#### Class Diagram
+#### Deployment Diagram
+- bullet 1
+- subbullet 1
+- subbullet 2
+## Development
+### Frontend
+- markdown parsing
+- layout algorithms
+- styling
+- interactivity
+### Backend
+* not needed
+## Testing`;
 
     // Initialize controller
     this.controller = new MindmapController(
@@ -87,11 +129,13 @@ class MindmapApp {
     }
 
     // TODO switched off temporarily
-//    if (this.layoutType) {
-//      this.layoutType.addEventListener('change', () => {
-//        this.controller.handleLayoutChange(this.layoutType.value);
-//      });
-//    }
+    if (this.layoutType) {
+      this.layoutType.addEventListener('change', () => {
+//              this.controller.handleStyleChange(this.stylePreset.value);
+        this.controller.handleLayoutChange(this.layoutType.value);
+        this.handleGenerate();
+      });
+    }
 
     if (this.stylePreset) {
       this.stylePreset.addEventListener('change', () => {
@@ -116,25 +160,36 @@ class MindmapApp {
    * Handle generate button click
    */
   handleGenerate() {
-  console.log("generate");
-    if (!this.markdownInput || !this.container) return;
+    console.log("generate");
+    if (!this.markdownInput || !this.container) {
+        this.loadingIndicator.style.display = 'none';
+        return;
+    }
 
     const markdown = this.markdownInput.value.trim();
     if (!markdown) {
       console.warn('No markdown content to generate mindmap');
+      this.loadingIndicator.style.display = 'none';
       return;
     }
 
     // Parse markdown
     this.model.parseFromMarkdown(markdown);
+    if (!this.model.getRoot()) {
+        this.loadingIndicator.style.display = 'none';
+        return;
+    }
 
-            var style = window.styleManager;
-            const presetName = this.stylePreset.value;
-            MindmapStylePresets.applyPreset(presetName, style);
+    this.loadingIndicator.textContent = 'Generating mindmap...';
+    this.loadingIndicator.style.display = 'block';
 
-            style.setGlobalLayoutType(this. layoutType.value);
-            const layout = style.getLevelStyle(1).getLayout();
-            layout.applyLayout(this.model.getRoot(), 0, 0, style);
+    var style = window.styleManager;
+    const presetName = this.stylePreset.value;
+    MindmapStylePresets.applyPreset(presetName, style);
+
+    style.setGlobalLayoutType(this. layoutType.value);
+    const layout = style.getLevelStyle(1).getLayout();
+    layout.applyLayout(this.model.getRoot(), 0, 0, style);
 
     // Apply style preset
     if (this.stylePreset) {
@@ -148,6 +203,7 @@ class MindmapApp {
 
     // Render the mindmap
     this.controller.initialize();
+    this.loadingIndicator.style.display = 'none';
 
     // Enable export button
     if (this.exportBtn) {

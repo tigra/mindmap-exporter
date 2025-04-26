@@ -18,7 +18,7 @@ class MindmapRenderer {
     this.minY = Infinity;
     this.maxX = -Infinity;
     this.maxY = -Infinity;
-    this.padding = 30;
+    this.padding = 100;
     this.nodeMap = new Map(); // Store references to nodes by id
   }
 
