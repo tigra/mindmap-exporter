@@ -1,4 +1,4 @@
-// src/style/style-manager.js
+// src/style/style-manager.js - Pass styleManager to StyleConfiguration
 
 import StyleConfiguration from './style-configuration.js';
 
@@ -25,7 +25,7 @@ class StyleManager {
         borderColor: '#aaaaaa',
         borderWidth: 2,
         nodeType: 'box'
-      }),
+      }, this), // Pass this (StyleManager) to StyleConfiguration
 
       // Second level
       2: new StyleConfiguration({
@@ -35,7 +35,7 @@ class StyleManager {
         parentPadding: 60,
         childPadding: 20,
         nodeType: 'box'
-      }),
+      }, this),
 
       // Third level
       3: new StyleConfiguration({
@@ -43,7 +43,7 @@ class StyleManager {
         parentPadding: 40,
         layoutType: 'horizontal',
         nodeType: 'box'
-      }),
+      }, this),
 
       // Fourth level and beyond
       4: new StyleConfiguration({
@@ -54,11 +54,57 @@ class StyleManager {
         childPadding: 15,
         layoutType: 'horizontal',
         nodeType: 'text-only'
-      })
+      }, this)
     };
 
     // Default style for any level not explicitly defined
-    this.defaultLevelStyle = new StyleConfiguration();
+    this.defaultLevelStyle = new StyleConfiguration({}, this);
+  }
+
+  /**
+   * Get the effective value for a property, checking node overrides, parent inheritance, and level style
+   * @param {Node} node - The node to get value for
+   * @param {string} property - The property name to resolve
+   * @param {boolean} inheritFromParent - Whether this property should inherit from parent (default: true)
+   * @return {any} The effective value
+   */
+  getEffectiveValue(node, property, inheritFromParent = true) {
+    // Currently only handling 'direction' property
+    if (property !== 'direction') {
+      // For properties other than direction, just return the level style value
+      return this.getLevelStyle(node.level)[property];
+    }
+
+    // Get the appropriate level style
+    const levelStyle = this.getLevelStyle(node.level);
+
+    // Start with level style default
+    let value = levelStyle[property];
+
+    // Check node's own overrides
+    if (node.configOverrides && property in node.configOverrides) {
+      return node.configOverrides[property];
+    }
+
+    // Check parent inheritance if enabled
+    if (inheritFromParent && node.parent) {
+      // Recursively check parent's effective value
+      const parentValue = this.getEffectiveValue(node.parent, property, true);
+      if (parentValue !== undefined) {
+        value = parentValue;
+      }
+    }
+
+    return value;
+  }
+
+  /**
+   * Get the effective direction for a node
+   * @param {Node} node - The node to get direction for
+   * @return {string} The effective direction
+   */
+  getEffectiveDirection(node) {
+    return this.getEffectiveValue(node, 'direction');
   }
 
   /**
@@ -81,18 +127,11 @@ class StyleManager {
     return this.defaultLevelStyle;
   }
 
-//  getLayout(level, node, options) {
-//    // TODO
-//    return LayoutFactory.createLayout();
-//  }
-
   /**
    * Configure the style with custom settings
    * @param {Object} options - Style configuration options
    */
   configure(options = {}) {
-    console.log('configure', options);
-    console.log('initially', options.levelStyles);
     if (options.levelStyles) {
       // Merge provided level styles with existing ones
       for (const [level, styleOptions] of Object.entries(options.levelStyles)) {
@@ -103,14 +142,13 @@ class StyleManager {
           ...styleOptions   // Override with new properties
         };
 
-        this.levelStyles[level] = new StyleConfiguration(mergedOptions);
+        this.levelStyles[level] = new StyleConfiguration(mergedOptions, this);
       }
     }
 
     if (options.defaultStyle) {
-      this.defaultLevelStyle = new StyleConfiguration(options.defaultStyle);
+      this.defaultLevelStyle = new StyleConfiguration(options.defaultStyle, this);
     }
-    console.log('updated levelStyles:', this.levelStyles);
   }
 
   /**
@@ -121,7 +159,6 @@ class StyleManager {
    * @param {Object} options.customPadding - Custom padding values for different layout types
    */
   setGlobalLayoutType(layoutType, options = {}) {
-    console.log('setGlobalLayouutType(', layoutType, options);
     if (layoutType !== 'horizontal' && layoutType !== 'vertical' && layoutType !== 'taproot') {
       throw new Error('Layout type must be either "horizontal" or "vertical". Or "taproot"');
     }

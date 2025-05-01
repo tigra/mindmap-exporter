@@ -1,4 +1,4 @@
-// src/layout/tap-root-layout.js
+// src/layout/tap-root-layout.js - Update for direction overrides
 
 import Layout from './layout.js';
 import ConnectionPoint from './connection-point.js';
@@ -114,7 +114,6 @@ class TapRootLayout extends Layout {
     if (rightColumnHeight > 0) rightColumnHeight -= this.childPadding;
 
     // Calculate the center point for the parent node
-//    const parentCenterX = x + (nodeSize.width / 2);
     const parentCenterX = x + (nodeSize.width / 2);
 
     // Now actually apply layouts to the children
@@ -123,33 +122,33 @@ class TapRootLayout extends Layout {
 
     // Process left column (branches pointing left)
     for (let i = 0; i < leftChildren.length; i++) {
+      // Set direction override to 'left' for left column children
+      leftChildren[i].setOverride('direction', 'left');
+
       const childSize = leftLayout.applyLayout(leftChildren[i], 0, currentLeftY, style);
-      leftChildren[i].direction = 'left';
       leftColumnMaxWidth = Math.max(leftColumnMaxWidth, childSize.width);
       currentLeftY += childSize.height + this.childPadding;
     }
 
     // Process right column (branches pointing right)
     for (let i = 0; i < rightChildren.length; i++) {
+      // Set direction override to 'right' for right column children
+      rightChildren[i].setOverride('direction', 'right');
+
       const childSize = rightLayout.applyLayout(rightChildren[i], 0, currentRightY, style);
-      rightChildren[i].direction = 'right';
       rightColumnMaxWidth = Math.max(rightColumnMaxWidth, childSize.width);
       currentRightY += childSize.height + this.childPadding;
     }
 
     // Calculate positions for the columns relative to the parent
-//    const totalWidth = leftColumnMaxWidth + rightColumnMaxWidth + this.columnGap;
-//    const leftColumnX = parentCenterX - (totalWidth / 2);
     const leftColumnX = parentCenterX - this.columnGap / 2;
-//    const rightColumnX = parentCenterX + (totalWidth / 2) - rightColumnMaxWidth;
     const rightColumnX = parentCenterX + this.columnGap / 2;
 
     // Adjust positions for left column
     for (let i = 0; i < leftChildren.length; i++) {
       const child = leftChildren[i];
       // Position each child so its right side aligns with leftColumnX
-//      const targetX = leftColumnX + leftColumnMaxWidth - child.width;
-      const targetX = leftColumnX  - child.width;
+      const targetX = leftColumnX - child.width;
       const deltaX = targetX - child.x;
       this.adjustPositionRecursive(child, deltaX, 0);
     }
@@ -162,8 +161,7 @@ class TapRootLayout extends Layout {
       this.adjustPositionRecursive(child, deltaX, 0);
     }
 
-    // Calculate the overall bounding box by finding the min/max coordinates
-    // of the parent node and all children's bounding boxes
+    // Calculate the overall bounding box
     let minX = node.x;
     let minY = node.y;
     let maxX = node.x + node.width;
@@ -223,17 +221,24 @@ class TapRootLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getChildConnectionPoint(node, levelStyle) {
-//     For child nodes, the connection point depends on which column they're in
-    const parentX = node.parent.x + node.parent.width / 2;
+    // TODO maybe vice versa
+    // Get parent center for reference
+    const parentX = node.parent ? node.parent.x + node.parent.width / 2 : 0;
 
-    // If child is to the left of parent center, connect on right side
-//    if (node.x < parentX) {
-    if (false) {
-      return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'left');
+    // Use our override direction to determine connection point
+    // Get direction from node overrides
+    let direction = 'right'; // Default
+
+    if (node.configOverrides && 'direction' in node.configOverrides) {
+      direction = node.configOverrides.direction;
     }
-    // If child is to the right of parent center, connect on left side
-    else {
-      return new ConnectionPoint(node.x, node.y + node.height / 2, 'right');
+
+    if (direction === 'left') {
+      // If direction is left, connect on right side of node
+      return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'right');
+    } else {
+      // If direction is right, connect on left side of node
+      return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
     }
   }
 }
