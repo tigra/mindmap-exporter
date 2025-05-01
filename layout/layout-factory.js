@@ -2,6 +2,7 @@
 
 import HorizontalLayout from './horizontal-layout.js';
 import VerticalLayout from './vertical-layout.js';
+import TaprootLayout from './taproot-layout.js';
 
 /**
  * Factory for creating appropriate layouts
@@ -16,13 +17,15 @@ class LayoutFactory {
    * @return {Layout} The created layout instance
    */
   static createLayout(type, parentPadding, childPadding, direction) {
-    if (type === 'vertical') {
+    if (type === 'taproot') {
+      return new TapRootLayout(parentPadding, childPadding);  // TODO columnGap
+    } else if (type === 'vertical') {
       // Default direction for vertical layout is 'down'
       const verticalDirection = direction === 'up' ? 'up' : 'down';
       return new VerticalLayout(parentPadding, childPadding, verticalDirection);
     } else {
       // Default direction for horizontal layout is 'right'
-      const horizontalDirection = direction === 'left' ? 'left' : 'right';
+      const horizontalDirection = direction === 'left' ? 'left' : direction === 'right' ? 'right' : null;
       return new HorizontalLayout(parentPadding, childPadding, horizontalDirection);
     }
   }

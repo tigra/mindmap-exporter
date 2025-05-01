@@ -161,6 +161,28 @@ class MindmapRenderer {
     return this._drawNodeRecursive(this.model.getRoot());
   }
 
+  _drawParentDropZone(node, parentChildPadding) {
+    return `<rect x="${node.boundingBox.x}" y="${node.boundingBox.y - parentChildPadding/2}"
+     width="${node.width}" height="${node.boundingBox.height / 2 + parentChildPadding / 2}" fill="#500000"
+     stroke="#450000"
+     fill-opacity="0.1" class="node-shape" /> `  +
+     `<rect x="${node.boundingBox.x}" y="${node.boundingBox.y + node.boundingBox.height / 2}"
+     width="${node.width}" height="${node.boundingBox.height / 2  + parentChildPadding / 2}" fill="#000060"
+     stroke="#000045"
+     fill-opacity="0.1" class="node-shape" />`
+  }
+
+  _drawChildDropZone(node, layout, parentChildPadding) {
+    var additionalSpan = 0;
+    if (!node.hasChildren()) {
+        additionalSpan = 300;
+    }
+    return `<rect x="${node.boundingBox.x+node.width}" y="${node.boundingBox.y - parentChildPadding / 2}"
+     width="${layout.parentPadding + additionalSpan}" height="${node.boundingBox.height + parentChildPadding}" fill="#005000"
+     fill-opacity="0.1" stroke="#004000" class="node-shape"
+     />`
+  }
+
   /**
    * Recursively draw a node and its children
    * @private
@@ -170,8 +192,12 @@ class MindmapRenderer {
   _drawNodeRecursive(node) {
     let svg = '';
     const levelStyle = this.styleManager.getLevelStyle(node.level);
+    const parentChildPadding = node.level > 1 ? this.styleManager.getLevelStyle(node.level - 1).childPadding : 0;
+    const layout = levelStyle.getLayout();
     // TODO configure / style these thingies:
 //    svg += `<circle r="5" cx="${node.x}" cy="${node.y}" fill="red" />`
+//    svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
+//    svg += this._drawChildDropZone(node, layout, parentChildPadding);
     if (levelStyle.boundingBox) {
        svg += this._drawBoundingBox(node);
     }

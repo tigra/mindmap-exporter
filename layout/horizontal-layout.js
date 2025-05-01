@@ -84,7 +84,7 @@ class HorizontalLayout extends Layout {
       // Get the appropriate layout for the child's level
       const childLevelStyle = style.getLevelStyle(child.level);
       const childLayoutType = childLevelStyle.layoutType;
-      const childDirection = childLevelStyle.direction || this.direction; // Use level-specific direction or inherit
+      const childDirection = child.direction || childLevelStyle.direction || this.direction; // Use level-specific direction or inherit
 
       // Use LayoutFactory to create appropriate layout
       let childLayout = LayoutFactory.createLayout(
@@ -93,6 +93,7 @@ class HorizontalLayout extends Layout {
         childLevelStyle.childPadding,
         childDirection
       );
+      let childLayout =
 
       const childSize = childLayout.applyLayout(child, childX, y + totalHeight, style);
 
@@ -114,7 +115,7 @@ class HorizontalLayout extends Layout {
       }
     }
 
-    console.log('maxChildWidth', maxChildWidth);
+//    console.log('maxChildWidth', maxChildWidth);
     node.boundingBox = {
       x: x + directionMultiplier1 * maxChildWidth + directionMultiplier1 * this.parentPadding,
       y: y - nodeSize.height / 2,

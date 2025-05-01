@@ -10,14 +10,17 @@ class Node {
    * @param {number} level - The hierarchy level of the node
    * @param {boolean} collapsed - Whether the node is collapsed by default
    */
-  constructor(text = '', level = 0, collapsed = false) {
+  constructor(text = '', level = 0, collapsed = false, parent = null) {
     this.text = text;
     this.level = level;
     this.children = [];
+    this.parent = parent; // TODO ????
+
     this.x = 0;
     this.y = 0;
     this.width = 0;
     this.height = 0;
+
     this.style = {};
     this.collapsed = collapsed;
     this.id = 'node_' + Node.generateUniqueId();
@@ -44,6 +47,7 @@ class Node {
    */
   addChild(childNode) {
     this.children.push(childNode);
+    childNode.setParent(this); // TODO ????
   }
 
   /**
@@ -73,6 +77,10 @@ class Node {
    */
   collapse() {
     this.collapsed = true;
+  }
+  // TODO ????
+  setParent(node) {
+    this.parent = node;
   }
 }
 

@@ -195,6 +195,25 @@ class MindmapApp {
       style.setGlobalLayoutType('horizontal', {direction: 'left'});
     } else if (layoutType === 'horizontal-right') {
       style.setGlobalLayoutType('horizontal', {direction: 'right'});
+    } else if (layoutType === 'taproot') {
+      console.log('applying taproot...');
+      style.configure({
+        1: {
+           layoutType: 'taproot'
+        },
+        2: {
+           layoutType: 'horizontal'
+        },
+        3: {
+           layoutType: 'horizontal'
+        },
+        4: {
+           layoutType: 'horizontal'
+        },
+        default: {
+           layoutType: 'horizontal'
+        },
+      });
     } else {
       style.setGlobalLayoutType(layoutType);
     }
@@ -206,20 +225,39 @@ class MindmapApp {
     if (this.stylePreset) {
       this.controller.handleStyleChange(this.stylePreset.value);
       // TODO make it steerable through the UI
-//      style.configure({
-//        levelStyles: {
-//            1: {boundingBox: true},
-//            2: {boundingBox: true},
+      style.configure({
+        levelStyles: {
+            1: {boundingBox: true},
+            2: {boundingBox: true},
 //            3: {boundingBox: true},
 //            4: {boundingBox: true}
-//        },
-//        default: {boundingBox: true},
-//      });
+        },
+        default: {boundingBox: true},
+      });
     }
 
     // Apply layout type
     if (this.layoutType) {
       this.controller.handleLayoutChange(this.layoutType.value);
+            console.log('applying taproot...');
+      style.configure({
+        1: {
+           layoutType: 'taproot'
+        },
+        2: {
+           layoutType: 'horizontal'
+        },
+        3: {
+           layoutType: 'horizontal'
+        },
+        4: {
+           layoutType: 'horizontal'
+        },
+        default: {
+           layoutType: 'horizontal'
+        },
+      });
+
     }
 
     // Render the mindmap

@@ -169,7 +169,31 @@ class MindmapController {
    */
   handleLayoutChange(layoutType) {
     console.log('handleLayoutChange(', layoutType);
-    if (layoutType === 'horizontal-left') {
+    if (layoutType === 'taproot') {
+      console.log('applying taproot...');
+      this.styleManager.configure({
+        levelStyles: {
+        1: {
+           layoutType: 'taproot'
+        },
+        2: {
+           layoutType: 'horizontal',
+          direction: null
+        },
+        3: {
+           layoutType: 'horizontal',
+           direction: null
+        },
+        4: {
+           layoutType: 'horizontal',
+           direction: null
+        },
+        default: {
+           layoutType: 'horizontal',
+           direction: null
+        },
+      }});
+    } else if (layoutType === 'horizontal-left') {
       this.styleManager.setGlobalLayoutType('horizontal', {direction: 'left'});
     } else if (layoutType === 'horizontal-right') {
       this.styleManager.setGlobalLayoutType('horizontal', {direction: 'right'});

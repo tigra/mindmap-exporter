@@ -81,11 +81,18 @@ class StyleManager {
     return this.defaultLevelStyle;
   }
 
+//  getLayout(level, node, options) {
+//    // TODO
+//    return LayoutFactory.createLayout();
+//  }
+
   /**
    * Configure the style with custom settings
    * @param {Object} options - Style configuration options
    */
   configure(options = {}) {
+    console.log('configure', options);
+    console.log('initially', options.levelStyles);
     if (options.levelStyles) {
       // Merge provided level styles with existing ones
       for (const [level, styleOptions] of Object.entries(options.levelStyles)) {
@@ -103,6 +110,7 @@ class StyleManager {
     if (options.defaultStyle) {
       this.defaultLevelStyle = new StyleConfiguration(options.defaultStyle);
     }
+    console.log('updated levelStyles:', this.levelStyles);
   }
 
   /**
@@ -113,8 +121,9 @@ class StyleManager {
    * @param {Object} options.customPadding - Custom padding values for different layout types
    */
   setGlobalLayoutType(layoutType, options = {}) {
-    if (layoutType !== 'horizontal' && layoutType !== 'vertical') {
-      throw new Error('Layout type must be either "horizontal" or "vertical"');
+    console.log('setGlobalLayouutType(', layoutType, options);
+    if (layoutType !== 'horizontal' && layoutType !== 'vertical' && layoutType !== 'taproot') {
+      throw new Error('Layout type must be either "horizontal" or "vertical". Or "taproot"');
     }
 
     const excludeLevels = options.excludeLevels || [];

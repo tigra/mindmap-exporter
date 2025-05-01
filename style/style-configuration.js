@@ -24,7 +24,7 @@ class StyleConfiguration {
     // Layout type
     this.layoutType = options.layoutType || 'horizontal';
 //    this.direction = options.direction || 'left';
-    this.direction = options.direction || 'right';
+    this.direction = options.direction || null;
 //    this.direction = options.direction || 'down  ';
 
     // Colors and appearance

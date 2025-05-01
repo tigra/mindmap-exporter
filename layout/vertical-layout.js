@@ -77,9 +77,9 @@ class VerticalLayout extends Layout {
       // Create appropriate layout based on type
       let childLayout;
       if (childLayoutType === 'horizontal') {
-        childLayout = new HorizontalLayout(childLevelStyle.parentPadding, childLevelStyle.childPadding);
+        childLayout = new HorizontalLayout(childLevelStyle.parentPadding, childLevelStyle.childPadding, style.direction || null);
       } else {
-        childLayout = new VerticalLayout(childLevelStyle.parentPadding, childLevelStyle.childPadding);
+        childLayout = new VerticalLayout(childLevelStyle.parentPadding, childLevelStyle.childPadding, style.direction || null);
       }
 
       const childSize = childLayout.applyLayout(child, x + totalWidth, childY, style);
