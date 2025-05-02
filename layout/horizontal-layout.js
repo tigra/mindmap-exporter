@@ -39,9 +39,15 @@ class HorizontalLayout extends Layout {
     node.height = nodeSize.height;
 
     // Get effective direction for this node - use StyleManager if available, fall back to constructor value
+    console.log('style', style);
     const effectiveDirection = style.getEffectiveDirection ?
       style.getEffectiveDirection(node) :
       this.direction || 'right';
+    console.log("applyLayout", node, effectiveDirection);
+
+//    if (effectiveDirection === 'left') {
+//        node.x = x - nodeSize.width;
+//    }
 
     // Use the effective direction for layout calculations
     const directionMultiplier = effectiveDirection === 'right' ? 1 : -1;
@@ -71,10 +77,11 @@ class HorizontalLayout extends Layout {
     }
 
     // Calculate child X position based on direction
-    var childX
+    var childX;
     if (effectiveDirection === 'right') {
-       childX = x + nodeSize.width + this.parentPadding
+       childX = x + nodeSize.width + this.parentPadding;
     } else {
+//       childX = x - nodeSize.width - this.parentPadding;
        childX = x - this.parentPadding;
     }
 
@@ -118,7 +125,8 @@ class HorizontalLayout extends Layout {
 
     for (let i = 0; i < node.children.length; i++) {
       if (effectiveDirection === 'left') {
-        this.adjustPositionRecursive(node.children[i], -node.children[i].width * directionMultiplier, 0);
+        this.adjustPositionRecursive(node.children[i], -node.children[i].width, 0);
+//        this.adjustPositionRecursive(node.children[i], 0, 0);
       }
     }
 
@@ -142,8 +150,8 @@ class HorizontalLayout extends Layout {
     let effectiveDirection = this.direction; // Default to constructor value
 
     // Use StyleManager if available
-    if (levelStyle.style && levelStyle.style.getEffectiveDirection) {
-      effectiveDirection = levelStyle.style.getEffectiveDirection(node);
+    if (levelStyle.styleManager && levelStyle.styleManager.getEffectiveDirection) {
+      effectiveDirection = levelStyle.styleManager.getEffectiveDirection(node);
     }
     // Check node overrides
     else if (node.configOverrides && 'direction' in node.configOverrides) {
@@ -176,9 +184,10 @@ class HorizontalLayout extends Layout {
 
     var effectiveDirection;
     // Use StyleManager if available
-    if (levelStyle.style && levelStyle.style.getEffectiveDirection) {
+//    if (levelStyle.style && levelStyle.style.getEffectiveDirection) {
+    if (levelStyle.styleManager) { // } && levelStyle.style.getEffectiveDirection) {
       console.log('1');
-      effectiveDirection = levelStyle.style.getEffectiveDirection(node);
+      effectiveDirection = levelStyle.styleManager.getEffectiveDirection(node);
     }
     // Check node overrides
     else if (node.configOverrides && 'direction' in node.configOverrides) {
@@ -187,6 +196,7 @@ class HorizontalLayout extends Layout {
     } else {
       effectiveDirection = 'right'; // TODO remove
     }
+    console.log('effectiveDirection', effectiveDirection);
 
     // For the child node, connection point is always on the side facing the parent
     // In horizontal layout, this depends on the direction

@@ -220,27 +220,27 @@ class TapRootLayout extends Layout {
    * @param {Object} levelStyle - The style for this node's level
    * @return {ConnectionPoint} The connection point
    */
-  getChildConnectionPoint(node, levelStyle) {
-    // TODO maybe vice versa
-    // Get parent center for reference
-    const parentX = node.parent ? node.parent.x + node.parent.width / 2 : 0;
+    getChildConnectionPoint(node, levelStyle) {
+      // Get effective direction either from styleManager or node overrides
+      let direction = 'right'; // Default
 
-    // Use our override direction to determine connection point
-    // Get direction from node overrides
-    let direction = 'right'; // Default
+      // Try to get direction from StyleManager if available
+      if (levelStyle.styleManager && levelStyle.styleManager.getEffectiveDirection) {
+        direction = levelStyle.styleManager.getEffectiveDirection(node);
+      }
+      // Fallback to node overrides
+//      else if (node.configOverrides && 'direction' in node.configOverrides) {
+//        direction = node.configOverrides.direction;
+//      }
 
-    if (node.configOverrides && 'direction' in node.configOverrides) {
-      direction = node.configOverrides.direction;
+      if (direction === 'left') {
+        // If direction is left, connect on right side of node
+        return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'right');
+      } else {
+        // If direction is right, connect on left side of node
+        return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
+      }
     }
-
-    if (direction === 'left') {
-      // If direction is left, connect on right side of node
-      return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'right');
-    } else {
-      // If direction is right, connect on left side of node
-      return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
-    }
-  }
 }
 
 // For backward compatibility

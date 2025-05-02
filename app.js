@@ -196,13 +196,32 @@ class MindmapApp {
     } else if (layoutType === 'horizontal-right') {
       style.setGlobalLayoutType('horizontal', {direction: 'right'});
     } else if (layoutType === 'taproot') {
-      console.log('applying taproot...');
+      console.log('applying taprooty...');
       style.configure({
         1: {
            layoutType: 'taproot'
         },
         2: {
            layoutType: 'horizontal'
+        },
+        3: {
+           layoutType: 'horizontal'
+        },
+        4: {
+           layoutType: 'horizontal'
+        },
+        default: {
+           layoutType: 'horizontal'
+        },
+      });
+    } else if (layoutType === 'vertical-over-taproot') {
+      console.log('applying vertical over taproot...');
+      style.configure({
+        1: {
+           layoutType: 'vertical'
+        },
+        2: {
+           layoutType: 'taproot'
         },
         3: {
            layoutType: 'horizontal'
@@ -219,44 +238,50 @@ class MindmapApp {
     }
     console.log(style.getLevelStyle(1));
     const layout = style.getLevelStyle(1).getLayout();
+//    this.model.getRoot().setOverride('direction', layoutType === 'horizontal-left' ? 'left' : (direction === 'horizontal-right' ? 'right' : null));
+    if (layoutType === 'horizontal-left') {
+        this.model.getRoot().setOverride('direction', 'left');
+    } else if (layoutType === 'horizontal-right') {
+        this.model.getRoot().setOverride('direction', 'right');
+    }
     layout.applyLayout(this.model.getRoot(), 0, 0, style);
 
     // Apply style preset
     if (this.stylePreset) {
       this.controller.handleStyleChange(this.stylePreset.value);
       // TODO make it steerable through the UI
-      style.configure({
-        levelStyles: {
-            1: {boundingBox: true},
-            2: {boundingBox: true},
-//            3: {boundingBox: true},
-//            4: {boundingBox: true}
-        },
-        default: {boundingBox: true},
-      });
+//      style.configure({
+//        levelStyles: {
+//            1: {boundingBox: true},
+//            2: {boundingBox: true},
+////            3: {boundingBox: true},
+////            4: {boundingBox: true}
+//        },
+//        default: {boundingBox: true},
+//      });
     }
 
     // Apply layout type
     if (this.layoutType) {
       this.controller.handleLayoutChange(this.layoutType.value);
-            console.log('applying taproot...');
-      style.configure({
-        1: {
-           layoutType: 'taproot'
-        },
-        2: {
-           layoutType: 'horizontal'
-        },
-        3: {
-           layoutType: 'horizontal'
-        },
-        4: {
-           layoutType: 'horizontal'
-        },
-        default: {
-           layoutType: 'horizontal'
-        },
-      });
+//            console.log('applying taproot...');
+//      style.configure({
+//        1: {
+//           layoutType: 'taproot'
+//        },
+//        2: {
+//           layoutType: 'horizontal'
+//        },
+//        3: {
+//           layoutType: 'horizontal'
+//        },
+//        4: {
+//           layoutType: 'horizontal'
+//        },
+//        default: {
+//           layoutType: 'horizontal'
+//        },
+//      });
 
     }
 

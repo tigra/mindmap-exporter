@@ -169,8 +169,28 @@ class MindmapController {
    */
   handleLayoutChange(layoutType) {
     console.log('handleLayoutChange(', layoutType);
+    if (layoutType === 'vertical-over-taproot') {
+          console.log('applying vertical over taproot...');
+      this.styleManager.configure({
+        1: {
+           layoutType: 'vertical'
+        },
+        2: {
+           layoutType: 'taproot'
+        },
+        3: {
+           layoutType: 'horizontal'
+        },
+        4: {
+           layoutType: 'horizontal'
+        },
+        default: {
+           layoutType: 'horizontal'
+        },
+      });
+    } else
     if (layoutType === 'taproot') {
-      console.log('applying taproot...');
+      console.log('applyingg taproot...');
       this.styleManager.configure({
         levelStyles: {
         1: {
