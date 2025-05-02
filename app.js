@@ -99,18 +99,25 @@ class MindmapApp {
 ### System Architecture
 #### Class Diagram
 #### Deployment Diagram
-- bullet 1
-- subbullet 1
-- subbullet 2
+- browser
+- browser
+- and only browser
 ## Development
 ### Frontend
 - markdown parsing
+  - support for
+    - headings
+    - bullet-point lists
 - layout algorithms
 - styling
 - interactivity
 ### Backend
 * not needed
-## Testing`;
+## Testing
+- Regression
+- Functional
+- Performance
+`;
 
     // Initialize controller
     this.controller = new MindmapController(
@@ -238,7 +245,7 @@ class MindmapApp {
     }
     console.log(style.getLevelStyle(1));
     const layout = style.getLevelStyle(1).getLayout();
-//    this.model.getRoot().setOverride('direction', layoutType === 'horizontal-left' ? 'left' : (direction === 'horizontal-right' ? 'right' : null));
+
     if (layoutType === 'horizontal-left') {
         this.model.getRoot().setOverride('direction', 'left');
     } else if (layoutType === 'horizontal-right') {
@@ -264,25 +271,6 @@ class MindmapApp {
     // Apply layout type
     if (this.layoutType) {
       this.controller.handleLayoutChange(this.layoutType.value);
-//            console.log('applying taproot...');
-//      style.configure({
-//        1: {
-//           layoutType: 'taproot'
-//        },
-//        2: {
-//           layoutType: 'horizontal'
-//        },
-//        3: {
-//           layoutType: 'horizontal'
-//        },
-//        4: {
-//           layoutType: 'horizontal'
-//        },
-//        default: {
-//           layoutType: 'horizontal'
-//        },
-//      });
-
     }
 
     // Render the mindmap

@@ -70,11 +70,6 @@ class StyleManager {
    */
   getEffectiveValue(node, property, inheritFromParent = true) {
     console.log('getEffectiveValue', node, property, inheritFromParent);
-    // Currently only handling 'direction' property
-    if (property !== 'direction') {
-      // For properties other than direction, just return the level style value
-      return this.getLevelStyle(node.level)[property];
-    }
 
     // Get the appropriate level style
     const levelStyle = this.getLevelStyle(node.level);
@@ -97,16 +92,6 @@ class StyleManager {
     }
 
     return value;
-  }
-
-  /**
-   * Get the effective direction for a node
-   * @param {Node} node - The node to get direction for
-   * @return {string} The effective direction
-   */
-  getEffectiveDirection(node) {
-    console.log("getEffectiveDirection");
-    return this.getEffectiveValue(node, 'direction');
   }
 
   /**

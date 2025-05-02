@@ -222,16 +222,12 @@ class TapRootLayout extends Layout {
    */
     getChildConnectionPoint(node, levelStyle) {
       // Get effective direction either from styleManager or node overrides
-      let direction = 'right'; // Default
+      let direction = 'left'; // Default
 
       // Try to get direction from StyleManager if available
-      if (levelStyle.styleManager && levelStyle.styleManager.getEffectiveDirection) {
-        direction = levelStyle.styleManager.getEffectiveDirection(node);
+      if (levelStyle.styleManager && levelStyle.styleManager.getEffectiveValue) {
+        direction = levelStyle.styleManager.getEffectiveValue(node, 'direction');
       }
-      // Fallback to node overrides
-//      else if (node.configOverrides && 'direction' in node.configOverrides) {
-//        direction = node.configOverrides.direction;
-//      }
 
       if (direction === 'left') {
         // If direction is left, connect on right side of node

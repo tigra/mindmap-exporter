@@ -38,16 +38,7 @@ class HorizontalLayout extends Layout {
     node.width = nodeSize.width;
     node.height = nodeSize.height;
 
-    // Get effective direction for this node - use StyleManager if available, fall back to constructor value
-    console.log('style', style);
-    const effectiveDirection = style.getEffectiveDirection ?
-      style.getEffectiveDirection(node) :
-      this.direction || 'right';
-    console.log("applyLayout", node, effectiveDirection);
-
-//    if (effectiveDirection === 'left') {
-//        node.x = x - nodeSize.width;
-//    }
+    const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || 'left';
 
     // Use the effective direction for layout calculations
     const directionMultiplier = effectiveDirection === 'right' ? 1 : -1;
@@ -81,7 +72,6 @@ class HorizontalLayout extends Layout {
     if (effectiveDirection === 'right') {
        childX = x + nodeSize.width + this.parentPadding;
     } else {
-//       childX = x - nodeSize.width - this.parentPadding;
        childX = x - this.parentPadding;
     }
 
@@ -147,16 +137,7 @@ class HorizontalLayout extends Layout {
    */
   getParentConnectionPoint(node, levelStyle) {
     // Get the effective direction for this node
-    let effectiveDirection = this.direction; // Default to constructor value
-
-    // Use StyleManager if available
-    if (levelStyle.styleManager && levelStyle.styleManager.getEffectiveDirection) {
-      effectiveDirection = levelStyle.styleManager.getEffectiveDirection(node);
-    }
-    // Check node overrides
-    else if (node.configOverrides && 'direction' in node.configOverrides) {
-      effectiveDirection = node.configOverrides.direction;
-    }
+      let effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || 'left';
 
     // Direction determines which side of the node the connection points come from
     if (effectiveDirection === 'right') {
@@ -176,27 +157,7 @@ class HorizontalLayout extends Layout {
    */
   getChildConnectionPoint(node, levelStyle) {
     // Get the effective direction for this node
-//    let effectiveDirection = this.direction; // Default to constructor value
-
-    console.log('HorizontalLayout.getChildConnectionPoint()');
-    console.log('node', node);
-    console.log('levelStyle', levelStyle);
-
-    var effectiveDirection;
-    // Use StyleManager if available
-//    if (levelStyle.style && levelStyle.style.getEffectiveDirection) {
-    if (levelStyle.styleManager) { // } && levelStyle.style.getEffectiveDirection) {
-      console.log('1');
-      effectiveDirection = levelStyle.styleManager.getEffectiveDirection(node);
-    }
-    // Check node overrides
-    else if (node.configOverrides && 'direction' in node.configOverrides) {
-      console.log('2');
-      effectiveDirection = node.configOverrides.direction;  // TODO rely on getEffectiveProperty in StyleManager
-    } else {
-      effectiveDirection = 'right'; // TODO remove
-    }
-    console.log('effectiveDirection', effectiveDirection);
+    let effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || 'left';
 
     // For the child node, connection point is always on the side facing the parent
     // In horizontal layout, this depends on the direction
