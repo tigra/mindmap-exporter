@@ -2,6 +2,7 @@
 
 import Layout from './layout.js';
 import ConnectionPoint from './connection-point.js';
+import LayoutFactory from './layout-factory.js';
 
 /**
  * Vertical layout implementation
@@ -11,11 +12,13 @@ class VerticalLayout extends Layout {
    * Create a new VerticalLayout
    * @param {number} parentPadding - Padding between parent and children
    * @param {number} childPadding - Padding between siblings
+   * @param {string} direction - Direction of layout ('down' or 'up')
    */
-  constructor(parentPadding = 30, childPadding = 30) {
+  constructor(parentPadding = 30, childPadding = 30, direction = 'down') {
     super();
     this.parentPadding = parentPadding;
     this.childPadding = childPadding;
+    this.direction = direction || 'down';
   }
 
   /**
@@ -23,19 +26,25 @@ class VerticalLayout extends Layout {
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate
    * @param {number} y - The y coordinate
-   * @param {Object} style - The style to apply
+   * @param {Object} style - The style to apply (StyleManager)
    * @return {Object} The size of the laid out subtree
    */
   applyLayout(node, x, y, style) {
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
-    // the entire branch left top corner is (x, y)
-    // initially place the parent at this position
+    // The entire branch left top corner is (x, y)
+    // Initially place the parent at this position
     node.x = x;
     node.y = y;
     node.width = nodeSize.width;
     node.height = nodeSize.height;
+
+    // Get direction from StyleManager
+    const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
+
+    // Direction multiplier for positioning (1 for down, -1 for up)
+    const directionMultiplier = effectiveDirection === 'down' ? 1 : -1;
 
     // Apply style properties to the node for rendering later
     node.style = {
@@ -49,20 +58,20 @@ class VerticalLayout extends Layout {
       borderRadius: levelStyle.borderRadius
     };
 
+    // If the node has no children or is collapsed, return its dimensions
     if (node.children.length === 0 || node.collapsed) {
       node.boundingBox = {
         x: x,
         y: y,
         width: nodeSize.width,
         height: nodeSize.height
-      }
-      return {
-        width: nodeSize.width,
-        height: nodeSize.height
       };
+      return node.boundingBox;
     }
 
-    const childY = y + nodeSize.height + this.parentPadding;
+    // Calculate child Y position based on direction
+    const childY = y + (directionMultiplier * (nodeSize.height + this.parentPadding));
+
     let totalWidth = 0;
     let maxChildHeight = 0;
 
@@ -70,18 +79,18 @@ class VerticalLayout extends Layout {
     for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i];
 
-      // Get the appropriate layout for the child's level
+      // Get layout type from StyleManager
+      const childLayoutType = style.getEffectiveValue(child, 'layoutType');
       const childLevelStyle = style.getLevelStyle(child.level);
-      const childLayoutType = childLevelStyle.layoutType;
 
-      // Create appropriate layout based on type
-      let childLayout;
-      if (childLayoutType === 'horizontal') {
-        childLayout = new HorizontalLayout(childLevelStyle.parentPadding, childLevelStyle.childPadding, style.direction || null);
-      } else {
-        childLayout = new VerticalLayout(childLevelStyle.parentPadding, childLevelStyle.childPadding, style.direction || null);
-      }
+      // Create layout for child
+      const childLayout = LayoutFactory.createLayout(
+        childLayoutType,
+        childLevelStyle.parentPadding,
+        childLevelStyle.childPadding
+      );
 
+      // Apply layout to child
       const childSize = childLayout.applyLayout(child, x + totalWidth, childY, style);
 
       totalWidth += childSize.width + this.childPadding;
@@ -91,7 +100,7 @@ class VerticalLayout extends Layout {
     // Remove extra padding from last child
     totalWidth -= this.childPadding;
 
-    // Depending on total size of children and the size of parent, adjust them relatively to x
+    // Depending on total size of children and the size of parent, adjust them
     let parentShift = 0;
     let childShift = 0;
 
@@ -101,18 +110,33 @@ class VerticalLayout extends Layout {
       parentShift = (totalWidth - nodeSize.width) / 2;
     }
 
+    // Center parent horizontally
     node.x = x + parentShift;
 
-    for (let i = 0; i < node.children.length; i++) {
-      this.adjustPositionRecursive(node.children[i], childShift, 0);
+    // Adjust children positions
+    if (childShift !== 0) {
+      for (let i = 0; i < node.children.length; i++) {
+        this.adjustPositionRecursive(node.children[i], childShift, 0);
+      }
     }
+
+    // Adjust positions for up-directed layouts
+    if (effectiveDirection === 'up') {
+      for (let i = 0; i < node.children.length; i++) {
+        this.adjustPositionRecursive(node.children[i], 0, -maxChildHeight - 2 * this.parentPadding);
+      }
+    }
+
+    // Calculate bounding box dimensions
+    const bbHeight = nodeSize.height + this.parentPadding + maxChildHeight;
+    const bbY = effectiveDirection === 'down' ? y : y - maxChildHeight - this.parentPadding;
 
     node.boundingBox = {
       x: x,
-      y: y,
+      y: bbY,
       width: Math.max(nodeSize.width, totalWidth),
-      height: nodeSize.height + this.parentPadding + maxChildHeight
-    }
+      height: bbHeight
+    };
 
     return node.boundingBox;
   }
@@ -124,11 +148,17 @@ class VerticalLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getParentConnectionPoint(node, levelStyle) {
-    // In vertical layout, parent connects from its bottom
-    const x = node.x + node.width / 2;
-    const y = node.y + node.height;
+    // Get direction from StyleManager
+    const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
 
-    return new ConnectionPoint(x, y, 'bottom');
+    // In vertical layout, parent connects from its bottom or top depending on direction
+    const x = node.x + node.width / 2;
+
+    if (effectiveDirection === 'down') {
+      return new ConnectionPoint(x, node.y + node.height, 'bottom');
+    } else {
+      return new ConnectionPoint(x, node.y, 'top');
+    }
   }
 
   /**
@@ -138,16 +168,19 @@ class VerticalLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getChildConnectionPoint(node, levelStyle) {
-    // In vertical layout, child connects on its top
-    const x = node.x + node.width / 2;
-    const y = node.y;
+    // Get direction from StyleManager
+    const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
 
-    return new ConnectionPoint(x, y, 'top');
+    // In vertical layout, child connects on its top or bottom depending on direction
+    const x = node.x + node.width / 2;
+
+    if (effectiveDirection === 'down') {
+      return new ConnectionPoint(x, node.y, 'top');
+    } else {
+      return new ConnectionPoint(x, node.y + node.height, 'bottom');
+    }
   }
 }
-
-// For backward compatibility with how the original code refers to layouts
-//import HorizontalLayout from './horizontal-layout.js';
 
 // For backward compatibility
 if (typeof window !== 'undefined') {
