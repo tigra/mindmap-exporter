@@ -1,4 +1,4 @@
-// model/node.js
+// src/model/node.js - Enhancement for configuration overrides
 
 /**
  * Node class for the mindmap
@@ -10,27 +10,53 @@ class Node {
    * @param {number} level - The hierarchy level of the node
    * @param {boolean} collapsed - Whether the node is collapsed by default
    */
-  constructor(text = '', level = 0, collapsed = false) {
+  constructor(text = '', level = 0, collapsed = false, parent = null) {
     this.text = text;
     this.level = level;
     this.children = [];
+    this.parent = parent;
+
     this.x = 0;
     this.y = 0;
     this.width = 0;
     this.height = 0;
+
     this.style = {};
     this.collapsed = collapsed;
     this.id = 'node_' + Node.generateUniqueId();
     this.boundingBox = {
         x: 0, y: 0, width: 0, height: 0
     };
+
+    // Configuration overrides dictionary
+    this.configOverrides = {};
   }
 
   /**
-   * Generate a unique ID for the node
-   * @private
-   * @return {string} A unique ID
+   * Set a configuration override
+   * @param {string} property - The property name to override
+   * @param {any} value - The value to set
    */
+  setOverride(property, value) {
+    this.configOverrides[property] = value;
+  }
+
+  /**
+   * Clear a configuration override
+   * @param {string} property - The property name to clear
+   */
+  clearOverride(property) {
+    delete this.configOverrides[property];
+  }
+
+  /**
+   * Clear all configuration overrides
+   */
+  clearAllOverrides() {
+    this.configOverrides = {};
+  }
+
+  // Existing methods remain unchanged
   static generateUniqueId() {
     if (!Node.lastId) {
       Node.lastId = 0;
@@ -38,41 +64,29 @@ class Node {
     return ++Node.lastId;
   }
 
-  /**
-   * Add a child node to this node
-   * @param {Node} childNode - The child node to add
-   */
   addChild(childNode) {
     this.children.push(childNode);
+    childNode.setParent(this);
   }
 
-  /**
-   * Check if this node has any children
-   * @return {boolean} True if the node has children
-   */
   hasChildren() {
     return this.children.length > 0;
   }
 
-  /**
-   * Toggle the collapsed state of this node
-   */
   toggleCollapse() {
     this.collapsed = !this.collapsed;
   }
 
-  /**
-   * Expand this node (set collapsed to false)
-   */
   expand() {
     this.collapsed = false;
   }
 
-  /**
-   * Collapse this node (set collapsed to true)
-   */
   collapse() {
     this.collapsed = true;
+  }
+
+  setParent(node) {
+    this.parent = node;
   }
 }
 

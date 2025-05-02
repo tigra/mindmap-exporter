@@ -1,4 +1,4 @@
-// src/style/style-configuration.js
+// src/style/style-configuration.js - Add StyleManager reference
 import LayoutFactory from '../layout/layout-factory.js';
 
 /**
@@ -8,8 +8,12 @@ class StyleConfiguration {
   /**
    * Create a new StyleConfiguration
    * @param {Object} options - Configuration options for this style
+   * @param {StyleManager} styleManager - Reference to the StyleManager
    */
-  constructor(options = {}) {
+  constructor(options = {}, styleManager = null) {
+    // Store reference to StyleManager
+    this.styleManager = styleManager;
+
     // Font settings
     this.fontSize = options.fontSize || 14;
     this.fontWeight = options.fontWeight || 'normal';
@@ -23,13 +27,11 @@ class StyleConfiguration {
 
     // Layout type
     this.layoutType = options.layoutType || 'horizontal';
-//    this.direction = options.direction || 'left';
-    this.direction = options.direction || 'right';
-//    this.direction = options.direction || 'down  ';
+    this.direction = options.direction || null;
 
     // Colors and appearance
     this.backgroundColor = options.backgroundColor || '#ffffff';
-    this.fillOpacity = options.fillOpacity || 0.9;  // TODO 1 and some semitransparent presets
+    this.fillOpacity = options.fillOpacity || 0.9;
     this.textColor = options.textColor || '#000000';
     this.borderColor = options.borderColor || '#cccccc';
     this.borderWidth = options.borderWidth || 2;
@@ -40,25 +42,25 @@ class StyleConfiguration {
     this.boundingBox = options.boundingBox || false;
   }
 
-    /**
-     * Get the appropriate layout for this level style
-     * @return {Layout} The layout instance
-     */
-    getLayout() {
-      const LayoutFactory = window.LayoutFactory || (typeof require !== 'undefined' ? require('../layout/layout-factory').default : null);
-        return LayoutFactory.createLayout(
-          this.layoutType,
-          this.parentPadding,
-          this.childPadding,
-          this.direction
-        );
-    }
+  /**
+   * Get the appropriate layout for this level style
+   * @return {Layout} The layout instance
+   */
+  getLayout() {
+    // Create appropriate layout based on layout type and direction
+    return LayoutFactory.createLayout(
+      this.layoutType,
+      this.parentPadding,
+      this.childPadding,
+      this.direction
+    );
+  }
 
   /**
    * Get the appropriate layout type for this style
    * @return {string} The layout type
    */
-  getLayoutType() {  // TODO do we need it?
+  getLayoutType() {
     return this.layoutType;
   }
 
