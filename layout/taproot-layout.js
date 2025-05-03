@@ -69,10 +69,6 @@ class TapRootLayout extends Layout {
     // Start positioning children below the parent
     const childStartY = y + nodeSize.height + this.parentPadding;
 
-    // Use horizontal layouts for the children, left for left column and right for right column
-    const leftLayout = LayoutFactory.createLayout('horizontal', levelStyle.parentPadding, levelStyle.childPadding, 'left');
-    const rightLayout = LayoutFactory.createLayout('horizontal', levelStyle.parentPadding, levelStyle.childPadding, 'right');
-
     // Initialize variables for tracking the column heights and widths
     let leftColumnHeight = 0;
     let rightColumnHeight = 0;
@@ -86,85 +82,86 @@ class TapRootLayout extends Layout {
     // Copy the original array to avoid modifications
     const children = [...node.children];
 
-    // Distribute children to left and right columns to balance heights
-    let leftIndex = 0;
-    let rightIndex = children.length - 1;
-
-    // First, calculate sizes without actually applying layouts
-    const childSizes = children.map(child => {
-      const childLevelStyle = style.getLevelStyle(child.level);
-      return this.getNodeSize(child.text, childLevelStyle);
-    });
-
-    // Distribute children until we've used all of them
-    while (leftIndex <= rightIndex) {
-      // If left column is shorter or equal, add to left
-      if (leftColumnHeight <= rightColumnHeight && leftIndex <= rightIndex) {
-        leftChildren.push(children[leftIndex]);
-        leftColumnHeight += childSizes[leftIndex].height + this.childPadding;
-        leftIndex++;
+    // Calculate the center point for the parent node
+    const parentCenterX = x + (nodeSize.width / 2);
+    
+    // Initialize current Y positions for both columns
+    let currentLeftY = childStartY;
+    let currentRightY = childStartY;
+    
+    // Get layouts for the columns
+    const leftLayout = LayoutFactory.createLayout('horizontal', levelStyle.parentPadding, levelStyle.childPadding, 'left');
+    const rightLayout = LayoutFactory.createLayout('horizontal', levelStyle.parentPadding, levelStyle.childPadding, 'right');
+    
+    // Distribute children one by one, applying layout and adding to shorter column
+    while (children.length > 0) {
+      // Get the next child based on which column is shorter
+      let nextChild;
+      let useLeftColumn;
+      
+      if (leftColumnHeight <= rightColumnHeight) {
+        // Use left column (take from front of array)
+        nextChild = children.shift();
+        useLeftColumn = true;
+      } else {
+        // Use right column (take from end of array)
+        nextChild = children.pop();
+        useLeftColumn = false;
       }
-      // If right column is shorter, add to right
-      else if (leftIndex <= rightIndex) {
-        rightChildren.push(children[rightIndex]);
-        rightColumnHeight += childSizes[rightIndex].height + this.childPadding;
-        rightIndex--;
+      
+      // Set appropriate overrides for the child
+      if (useLeftColumn) {
+        nextChild.setOverride('direction', 'left');
+        nextChild.setOverride('layoutType', 'horizontal');
+        
+        // Apply layout and get actual size with its children
+        const childSize = leftLayout.applyLayout(nextChild, 0, currentLeftY, style);
+        
+        // Update column height with actual bounding box height
+        leftColumnHeight += childSize.height + this.childPadding;
+        leftColumnMaxWidth = Math.max(leftColumnMaxWidth, childSize.width);
+        
+        // Position the child so its right side aligns with leftColumnX
+        const leftColumnX = parentCenterX - this.columnGap / 2;
+        const targetX = leftColumnX - childSize.width; // Use bounding box width instead of node width
+        const deltaX = targetX - childSize.x; // Use bounding box x instead of node x
+        this.adjustPositionRecursive(nextChild, deltaX, 0);
+        
+        // Add to left column array
+        leftChildren.push(nextChild);
+        
+        // Update Y position for next left child
+        currentLeftY += childSize.height + this.childPadding;
+      } else {
+        nextChild.setOverride('direction', 'right');
+        nextChild.setOverride('layoutType', 'horizontal');
+        
+        // Apply layout and get actual size with its children
+        const childSize = rightLayout.applyLayout(nextChild, 0, currentRightY, style);
+        
+        // Update column height with actual bounding box height
+        rightColumnHeight += childSize.height + this.childPadding;
+        rightColumnMaxWidth = Math.max(rightColumnMaxWidth, childSize.width);
+        
+        // Position the child so its left side aligns with rightColumnX
+        const rightColumnX = parentCenterX + this.columnGap / 2;
+        const deltaX = rightColumnX - childSize.x; // Use bounding box x instead of node x
+        this.adjustPositionRecursive(nextChild, deltaX, 0);
+        
+        // Add to right column array  
+        rightChildren.push(nextChild);
+        
+        // Update Y position for next right child
+        currentRightY += childSize.height + this.childPadding;
       }
     }
-
+    
     // Remove extra padding
     if (leftColumnHeight > 0) leftColumnHeight -= this.childPadding;
     if (rightColumnHeight > 0) rightColumnHeight -= this.childPadding;
 
-    // Calculate the center point for the parent node
-    const parentCenterX = x + (nodeSize.width / 2);
-
-    // Now actually apply layouts to the children
-    let currentLeftY = childStartY;
-    let currentRightY = childStartY;
-
-    // Process left column (branches pointing left)
-    for (let i = 0; i < leftChildren.length; i++) {
-      // Set direction override to 'left' for left column children
-      leftChildren[i].setOverride('direction', 'left');
-      leftChildren[i].setOverride('layoutType', 'horizontal');
-
-      const childSize = leftLayout.applyLayout(leftChildren[i], 0, currentLeftY, style);
-      leftColumnMaxWidth = Math.max(leftColumnMaxWidth, childSize.width);
-      currentLeftY += childSize.height + this.childPadding;
-    }
-
-    // Process right column (branches pointing right)
-    for (let i = 0; i < rightChildren.length; i++) {
-      // Set direction override to 'right' for right column children
-      rightChildren[i].setOverride('direction', 'right');
-      leftChildren[i].setOverride('layoutType', 'horizontal');
-
-      const childSize = rightLayout.applyLayout(rightChildren[i], 0, currentRightY, style);
-      rightColumnMaxWidth = Math.max(rightColumnMaxWidth, childSize.width);
-      currentRightY += childSize.height + this.childPadding;
-    }
-
-    // Calculate positions for the columns relative to the parent
-    const leftColumnX = parentCenterX - this.columnGap / 2;
-    const rightColumnX = parentCenterX + this.columnGap / 2;
-
-    // Adjust positions for left column
-    for (let i = 0; i < leftChildren.length; i++) {
-      const child = leftChildren[i];
-      // Position each child so its right side aligns with leftColumnX
-      const targetX = leftColumnX - child.width;
-      const deltaX = targetX - child.x;
-      this.adjustPositionRecursive(child, deltaX, 0);
-    }
-
-    // Adjust positions for right column
-    for (let i = 0; i < rightChildren.length; i++) {
-      const child = rightChildren[i];
-      // Position each child so its left side aligns with rightColumnX
-      const deltaX = rightColumnX - child.x;
-      this.adjustPositionRecursive(child, deltaX, 0);
-    }
+    // All child layout calculation and positioning is now handled in the distribution loop above
+    // The code here has been moved into the main distribution loop for better column balancing
 
     // Calculate the overall bounding box
     let minX = node.x;
