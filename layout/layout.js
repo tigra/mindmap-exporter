@@ -8,7 +8,7 @@ import textMetrics from '../utils/text-metrics.js';
  */
 class Layout {
   /**
-   * Calculate dimensions of a node based on text and level style
+   * Calculate own dimensions of a node based on text and level style
    * @param {string} text - The text content of the node
    * @param {Object} levelStyle - The style for this node's level
    * @return {Object} The calculated width and height
@@ -47,7 +47,9 @@ class Layout {
   }
 
   /**
-   * Apply layout to a node and its children
+   * Apply layout to a node and its children.
+   * x and y are only the initial position. The position may change after laying out children recursively
+   * and finding out their positions/bounding boxes.
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate
    * @param {number} y - The y coordinate

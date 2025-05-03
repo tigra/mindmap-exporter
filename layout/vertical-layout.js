@@ -110,6 +110,7 @@ class VerticalLayout extends Layout {
     totalWidth -= this.childPadding;
 
     // Depending on total size of children and the size of parent, adjust them
+    // Both the parent, and all bounding boxes of children should have aligned centers
     let parentShift = 0;
     let childShift = 0;
 
