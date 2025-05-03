@@ -12,12 +12,12 @@ import LayoutFactory from './layout-factory.js';
 class ClassicMindmapLayout extends ColumnBasedLayout {
   /**
    * Create a new ClassicMindmapLayout
-   * @param {number} parentPadding - Horizontal padding between parent and children
-   * @param {number} childPadding - Padding between siblings
+   * @param {number} parentPadding - Not used in classic layout (use childPadding instead)
+   * @param {number} childPadding - Padding between parent node edge and children
    * @param {number} columnGap - Gap between left and right columns
    * @param {number} verticalOffset - Optional vertical offset from parent center
    */
-  constructor(parentPadding = 60, childPadding = 30, columnGap = 80, verticalOffset = 0) {
+  constructor(parentPadding = 60, childPadding = 60, columnGap = 80, verticalOffset = 0) {
     super(parentPadding, childPadding, columnGap);
     this.verticalOffset = verticalOffset;
   }
@@ -33,9 +33,11 @@ class ClassicMindmapLayout extends ColumnBasedLayout {
   positionChildrenInColumns(node, leftChildren, rightChildren, childStartY, style) {
     const levelStyle = style.getLevelStyle(node.level);
     
-    // Calculate parent center point
+    // Calculate parent center points and edges
     const parentCenterX = node.x + (node.width / 2);
     const parentCenterY = node.y + (node.height / 2) + this.verticalOffset;
+    const parentLeftEdge = node.x;
+    const parentRightEdge = node.x + node.width;
     
     // Get layouts for the columns
     const leftLayout = LayoutFactory.createLayout('horizontal', levelStyle.parentPadding, levelStyle.childPadding, 'left');
@@ -87,6 +89,10 @@ class ClassicMindmapLayout extends ColumnBasedLayout {
     // Calculate starting Y positions to center each column vertically
     let leftStartY = parentCenterY - (leftTotalHeight / 2);
     let rightStartY = parentCenterY - (rightTotalHeight / 2);
+    
+    // Set column X positions using childPadding as distance from parent node edge
+    this.leftColumnX = parentLeftEdge - this.childPadding;
+    this.rightColumnX = parentRightEdge + this.childPadding;
     
     // Update column tracking for debug visualization
     this.columnMinY = Math.min(leftStartY, rightStartY);

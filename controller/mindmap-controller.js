@@ -314,7 +314,7 @@ logPropertyInheritanceChain(node, property) {
       // Configure style system for classic mindmap layout
       this.styleManager.configure({
         levelStyles: {
-          1: { layoutType: 'classic' },
+          1: { layoutType: 'classic', childPadding: 60 },
           2: { layoutType: 'horizontal', direction: null },
           3: { layoutType: 'horizontal', direction: null },
           4: { layoutType: 'horizontal', direction: null },
