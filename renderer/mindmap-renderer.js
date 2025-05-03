@@ -291,7 +291,8 @@ class MindmapRenderer {
     const parentLayout = parentStyle.getLayout();
     const childLayout = childStyle.getLayout();
 
-    const startPoint = parentLayout.getParentConnectionPoint(parent, parentStyle);
+    // Pass the child node to getParentConnectionPoint to enable multiple connection points
+    const startPoint = parentLayout.getParentConnectionPoint(parent, parentStyle, child);
     const endPoint = childLayout.getChildConnectionPoint(child, childStyle);
 
     // Determine the curve control points based on connection directions
@@ -411,7 +412,8 @@ class MindmapRenderer {
     const parentLayout = levelStyle.getLayout();
 
     // Get the connection point where the indicator should be placed
-    const connectionPoint = parentLayout.getParentConnectionPoint(node, levelStyle);
+    // For collapse indicator, we pass null as childNode to get the default position
+    const connectionPoint = parentLayout.getParentConnectionPoint(node, levelStyle, null);
     const radius = 6;
 
     // Determine position based on layout direction

@@ -151,11 +151,16 @@ class VerticalLayout extends Layout {
    * Get the connection point for a parent node in vertical layout
    * @param {Node} node - The parent node
    * @param {Object} levelStyle - The style for this node's level
+   * @param {Node} childNode - The specific child node being connected to (optional)
    * @return {ConnectionPoint} The connection point
    */
-  getParentConnectionPoint(node, levelStyle) {
+  getParentConnectionPoint(node, levelStyle, childNode = null) {
     // Get direction from StyleManager with fallback to default
     const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
+
+    // Currently, we don't use childNode to determine the connection point
+    // Future enhancement could distribute connection points along bottom/top edge
+    // based on child's horizontal position relative to parent
 
     // In vertical layout, parent connects from its bottom or top depending on direction
     const x = node.x + node.width / 2;
