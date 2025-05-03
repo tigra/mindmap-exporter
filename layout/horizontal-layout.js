@@ -121,12 +121,31 @@ class HorizontalLayout extends Layout {
     const bbX = effectiveDirection === 'right' ? x : x - maxChildWidth - this.parentPadding;
     const bbWidth = nodeSize.width + this.parentPadding + maxChildWidth;
 
-    node.boundingBox = {
-      x: bbX,
-      y: y - Math.max(nodeSize.height / 2, totalHeight / 2),
-      width: bbWidth,
-      height: Math.max(nodeSize.height, totalHeight)
-    };
+      // Calculate bounding box dimensions by properly accounting for all children's actual bounding boxes
+      // Start with the parent node's position and size
+      let minX = x;
+      let maxX = x + nodeSize.width;
+      let minY = y - nodeSize.height / 2;
+      let maxY = y + nodeSize.height / 2;
+
+      // Now check all children's bounding boxes to ensure our bounding box contains them all
+      for (let i = 0; i < node.children.length; i++) {
+        const child = node.children[i];
+        if (child.boundingBox) {
+          minX = Math.min(minX, child.boundingBox.x);
+          maxX = Math.max(maxX, child.boundingBox.x + child.boundingBox.width);
+          minY = Math.min(minY, child.boundingBox.y);
+          maxY = Math.max(maxY, child.boundingBox.y + child.boundingBox.height);
+        }
+      }
+
+      node.boundingBox = {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY
+      };
+
     console.groupEnd();
     return node.boundingBox;
   }
