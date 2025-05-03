@@ -46,9 +46,8 @@ class VerticalLayout extends Layout {
     node.width = nodeSize.width;
     node.height = nodeSize.height;
 
-    // Get direction from StyleManager
-//    const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
-    const effectiveDirection = style.getEffectiveValue(node, 'direction');
+    // Get direction from StyleManager with fallback to default
+    const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
     console.log('effectiveDirection', effectiveDirection);
 
     // Direction multiplier for positioning (1 for down, -1 for up)
@@ -158,7 +157,7 @@ class VerticalLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getParentConnectionPoint(node, levelStyle) {
-    // Get direction from StyleManager
+    // Get direction from StyleManager with fallback to default
     const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
 
     // In vertical layout, parent connects from its bottom or top depending on direction
@@ -178,7 +177,7 @@ class VerticalLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getChildConnectionPoint(node, levelStyle) {
-    // Get direction from StyleManager
+    // Get direction from StyleManager with fallback to default
     const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
 
     // In vertical layout, child connects on its top or bottom depending on direction

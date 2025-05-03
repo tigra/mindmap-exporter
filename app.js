@@ -294,6 +294,10 @@ class MindmapApp {
 //    console.log(style.getLevelStyle(1));
     const layout = style.getLevelStyle(1).getLayout();
 
+    // Always clear overrides before setting new ones to avoid inconsistent behavior
+    this.model.getRoot().clearOverridesRecursive();
+    
+    // Now set specific overrides based on layout type
     if (layoutType === 'horizontal-left') {
         this.model.getRoot().setOverride('direction', 'left');
     } else if (layoutType === 'horizontal-right') {
@@ -302,8 +306,8 @@ class MindmapApp {
         this.model.getRoot().setOverride('direction', 'up');
         this.model.getRoot().setOverride('layoutType', 'vertical');
     } else if (layoutType === 'vertical-down' || layoutType === 'vertical') {
-        this.model.getRoot().clearOverridesRecursive();
         this.model.getRoot().setOverride('direction', 'down');
+        this.model.getRoot().setOverride('layoutType', 'vertical');
     } else if (layoutType === 'vertical-over-taproot') {
         this.model.getRoot().setOverride('layoutType', 'vertical');
         this.model.getRoot().setOverride('direction', 'down');

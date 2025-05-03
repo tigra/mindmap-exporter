@@ -274,78 +274,95 @@ logPropertyInheritanceChain(node, property) {
    */
   handleLayoutChange(layoutType) {
     console.log('handleLayoutChange(', layoutType, ')');
+    
+    // Always start by clearing all node overrides to ensure consistent behavior
+    const rootNode = this.model.getRoot();
+    if (rootNode) {
+      rootNode.clearOverridesRecursive();
+    }
 
     // Handle specialized layout configurations
     if (layoutType === 'vertical-over-taproot') {
+      // Configure style system
       this.styleManager.configure({
         levelStyles: {
-          1: { layoutType: 'vertical' },
+          1: { layoutType: 'vertical', direction: 'down' },
           2: { layoutType: 'taproot' },
           3: { layoutType: 'horizontal' },
-          4: { layoutType: 'horizontal' }
+          4: { layoutType: 'horizontal' },
+          default: { layoutType: 'horizontal' }
         }
       });
+      
+      // Set node overrides
+      if (rootNode) {
+        rootNode.setOverride('layoutType', 'vertical');
+        rootNode.setOverride('direction', 'down');
+      }
     } else if (layoutType === 'taproot') {
+      // Configure style system
       this.styleManager.configure({
         levelStyles: {
           1: { layoutType: 'taproot' },
           2: { layoutType: 'horizontal', direction: null },
           3: { layoutType: 'horizontal', direction: null },
-          4: { layoutType: 'horizontal', direction: null }
+          4: { layoutType: 'horizontal', direction: null },
+          default: { layoutType: 'horizontal' }
         }
       });
     } else if (layoutType === 'horizontal-left') {
+      // Configure style system
       this.styleManager.setGlobalLayoutType('horizontal', { direction: 'left' });
-
-      // Also set override on the root node for backward compatibility
-      const rootNode = this.model.getRoot();
+      
+      // Set node overrides
       if (rootNode) {
         rootNode.setOverride('direction', 'left');
       }
     } else if (layoutType === 'horizontal-right') {
+      // Configure style system
       this.styleManager.setGlobalLayoutType('horizontal', { direction: 'right' });
-
-      // Also set override on the root node for backward compatibility
-      const rootNode = this.model.getRoot();
+      
+      // Set node overrides
       if (rootNode) {
         rootNode.setOverride('direction', 'right');
       }
     } else if (layoutType === 'vertical-up') {
-//      this.styleManager.setGlobalLayoutType('vertical', { direction: 'up' });
-    this.styleManager.configure({
-       levelStyles: {
-        1: {
-          layoutType: 'vertical',
-          direction: 'up'
-         },
-        3: {
-          layoutType: 'vertical',
-          direction: 'up'
-         },
-        4: {
-          layoutType: 'vertical',
-          direction: 'up'
-         },
-        1: {
-          layoutType: 'vertical',
-          direction: 'up'
-         },
+      // Configure style system
+      this.styleManager.configure({
+        levelStyles: {
+          1: { layoutType: 'vertical', direction: 'up' },
+          2: { layoutType: 'vertical', direction: 'up' },
+          3: { layoutType: 'vertical', direction: 'up' },
+          4: { layoutType: 'vertical', direction: 'up' },
+          default: { layoutType: 'vertical', direction: 'up' }
         }
-    })
-
-      // Also set override on the root node for backward compatibility
-      const rootNode = this.model.getRoot();
+      });
+      
+      // Set node overrides
       if (rootNode) {
+        rootNode.setOverride('layoutType', 'vertical');
         rootNode.setOverride('direction', 'up');
       }
-    } else {
-      this.styleManager.setGlobalLayoutType(layoutType);
-
-      // Clear any direction overrides on the root node
-      const rootNode = this.model.getRoot();
+    } else if (layoutType === 'vertical' || layoutType === 'vertical-down') {
+      // Configure style system
+      this.styleManager.configure({
+        levelStyles: {
+          1: { layoutType: 'vertical', direction: 'down' },
+          2: { layoutType: 'vertical', direction: 'down' },
+          3: { layoutType: 'vertical', direction: 'down' },
+          4: { layoutType: 'vertical', direction: 'down' },
+          default: { layoutType: 'vertical', direction: 'down' }
+        }
+      });
+      
+      // Set node overrides
       if (rootNode) {
-        rootNode.clearOverride('direction');
+        rootNode.setOverride('layoutType', 'vertical');
+        rootNode.setOverride('direction', 'down');
       }
+    } else {
+      // Default case - use whatever layout type was provided
+      this.styleManager.setGlobalLayoutType(layoutType);
     }
 
     // Apply the new layout
