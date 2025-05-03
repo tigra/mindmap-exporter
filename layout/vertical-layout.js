@@ -129,16 +129,12 @@ class VerticalLayout extends Layout {
       }
     }
 
-    // Adjust positions for up-directed layouts
-    if (effectiveDirection === 'up') {
-      for (let i = 0; i < node.children.length; i++) {
-        this.adjustPositionRecursive(node.children[i], 0, -maxChildHeight - 2 * this.parentPadding);
-      }
-    }
-
+    // We don't need additional adjustment for up-directed layouts anymore
+    // The directionMultiplier in childY calculation already handles this correctly
+    
     // Calculate bounding box dimensions
     const bbHeight = nodeSize.height + this.parentPadding + maxChildHeight;
-    const bbY = effectiveDirection === 'down' ? y : y - maxChildHeight - this.parentPadding;
+    const bbY = effectiveDirection === 'down' ? y : y - nodeSize.height;
 
     node.boundingBox = {
       x: x,
