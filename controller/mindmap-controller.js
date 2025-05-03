@@ -305,7 +305,7 @@ logPropertyInheritanceChain(node, property) {
       // Configure style system
       this.styleManager.configure({
         levelStyles: {
-          1: { layoutType: 'taproot' },
+          1: { layoutType: 'taproot', parentConnectionPoints: 'distributeEvenly' },
           2: { layoutType: 'horizontal', direction: null },
           3: { layoutType: 'horizontal', direction: null },
           4: { layoutType: 'horizontal', direction: null },
@@ -316,7 +316,7 @@ logPropertyInheritanceChain(node, property) {
       // Configure style system for classic mindmap layout
       this.styleManager.configure({
         levelStyles: {
-          1: { layoutType: 'classic', childPadding: 60 },
+          1: { layoutType: 'classic', childPadding: 60, parentConnectionPoints: 'distributeEvenly' },
           2: { layoutType: 'horizontal', direction: null },
           3: { layoutType: 'horizontal', direction: null },
           4: { layoutType: 'horizontal', direction: null },

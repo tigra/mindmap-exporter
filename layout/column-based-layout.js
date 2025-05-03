@@ -215,17 +215,57 @@ class ColumnBasedLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getParentConnectionPoint(node, levelStyle, childNode = null) {
-    // In column based layouts, parent typically connects from its bottom
-    // This is the default implementation, but subclasses can override to provide
-    // specialized behavior based on the childNode parameter
+    // Get connection points type from style with fallback to 'single'
+    const connectionPointsType = levelStyle.styleManager ? 
+      levelStyle.styleManager.getEffectiveValue(node, 'parentConnectionPoints') || 'single' : 
+      'single';
     
-    // In the future, this could utilize childNode to distribute connection points
-    // along the bottom edge of the parent based on which column the child is in
-    
-    const x = node.x + node.width / 2;
+    // Default Y position and side
     const y = node.y + node.height;
-
-    return new ConnectionPoint(x, y, 'bottom');
+    const side = 'bottom';
+    
+    // Use the common helper method for calculating connection points
+    return this.calculateConnectionPoint(
+      node, 
+      childNode, 
+      connectionPointsType,
+      // Function to get single connection point (center)
+      () => {
+        const x = node.x + node.width / 2;
+        return new ConnectionPoint(x, y, side);
+      },
+      // Function to calculate distributed points
+      (parentNode, childNode, isEvenlyDistributed, childIndex, childCount) => {
+        const parentWidth = parentNode.width;
+        
+        if (isEvenlyDistributed) {
+          // DistributeEvenly - based on child index
+          const usableWidth = parentWidth * 0.8;  // 80% of the width (10% margin on each side)
+          const startX = parentNode.x + (parentWidth * 0.1);  // 10% from left edge
+          
+          // Calculate connection point position
+          let position;
+          if (childCount === 1) {
+            position = startX + (usableWidth / 2);
+          } else {
+            // Create n evenly spaced points
+            const gap = usableWidth / (childCount - 1);
+            position = startX + (gap * childIndex);
+          }
+          
+          return new ConnectionPoint(position, y, side);
+        } else {
+          // DistributedRelativeToParentSize - based on child position
+          const childCenterX = childNode.x + (childNode.width / 2);
+          
+          // Calculate relative position with 10% margin from edges
+          let relativePosition = (childCenterX - parentNode.x) / parentWidth;
+          relativePosition = Math.max(0.1, Math.min(0.9, relativePosition));
+          
+          return new ConnectionPoint(parentNode.x + (parentWidth * relativePosition), y, side);
+        }
+      }
+    );
   }
 
   /**

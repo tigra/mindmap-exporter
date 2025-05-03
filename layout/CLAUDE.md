@@ -16,12 +16,11 @@ The mindmap can now support multiple parent connection points, controlled by the
 - `distributeEvenly`: Evenly distributes connection points along the parent node's edge based on child index
 
 #### Implementation Notes
-- Currently implemented only for VerticalLayout
-- Other layouts still default to single connection point behavior
+- Implemented for VerticalLayout and ColumnBasedLayout (TapRoot and ClassicMindmap)
+- Connected through a common utility method in the base Layout class
 - Can be configured per-level or as a default in style configurations
 
 #### How it works in VerticalLayout
-0. `single` option TODO describe.
 
 1. The `distributedRelativeToParentSize` option:
    - Creates connection points along the bottom/top edge of the parent node
@@ -56,16 +55,23 @@ levelStyles: {
 }
 ```
 
-#### Future Enhancements for Other Layouts
-1. TapRootLayout could:
-   - Create bottom-based connection points distributed along parent's bottom edge
-   - Weight connection points based on child subtree size
+#### How it works in ColumnBasedLayout (TapRoot and ClassicMindmap)
+Similar to VerticalLayout, but with connection points distributed along the bottom edge:
 
-2. HorizontalLayout could:
+1. The connection points are always created along the bottom edge of the parent node
+2. Both `distributeEvenly` and `distributedRelativeToParentSize` options are supported
+3. Space is allocated within the 10-90% range of parent width for balanced appearance
+4. Distribution choices determine whether connection points are positioned based on:
+   - Child index among siblings (evenly distributed)
+   - Child's actual horizontal position (relative to parent size)
+
+#### Future Enhancements for Other Layouts
+1. HorizontalLayout could:
    - Distribute connection points along right/left edge based on child vertical position
 
-3. ClassicMindmapLayout could:
-   - Apply similar distribution but with more weighting toward true child center
+2. Better integration with ClassicMindmapLayout:
+   - Apply side-specific distribution that recognizes left/right columns
+   - Consider adding specialized option for column-aware connection points
 
 #### Future Potential Enhancements
 1. Connection Distribution Algorithms: Implement smart algorithms to distribute connection points evenly or based on subtree size.

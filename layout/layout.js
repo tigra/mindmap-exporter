@@ -70,6 +70,51 @@ class Layout {
   getParentConnectionPoint(node, levelStyle, childNode = null) {
     throw new Error('Method getParentConnectionPoint must be implemented by subclasses');
   }
+  
+  /**
+   * Helper method to calculate connection points based on distribution type
+   * This method can be used by any layout to implement consistent connection point behavior
+   * @param {Node} node - The parent node
+   * @param {Node} childNode - The child node being connected to
+   * @param {string} connectionPointsType - The connection points distribution type ('single', 'distributedRelativeToParentSize', 'distributeEvenly')
+   * @param {function} getSingleConnectionPoint - Function that returns a single connection point (usually center)
+   * @param {function} calculateDistributedPoint - Function that calculates x,y coordinates for a distributed point
+   * @return {ConnectionPoint} The calculated connection point
+   */
+  calculateConnectionPoint(node, childNode, connectionPointsType, getSingleConnectionPoint, calculateDistributedPoint) {
+    // If no child provided or using single connection point mode, return single point
+    if (!childNode || connectionPointsType === 'single') {
+      return getSingleConnectionPoint();
+    }
+    
+    const children = node.children;
+    
+    // Handle distributedRelativeToParentSize - based on child position
+    if (connectionPointsType === 'distributedRelativeToParentSize') {
+      return calculateDistributedPoint(node, childNode, false);
+    }
+    
+    // Handle distributeEvenly - based on child index
+    if (connectionPointsType === 'distributeEvenly') {
+      // Early return if no children
+      if (!children || children.length === 0) {
+        return getSingleConnectionPoint();
+      }
+      
+      // Find the index of this child among siblings
+      const childIndex = children.findIndex(child => child === childNode);
+      
+      // If child not found, return center
+      if (childIndex === -1) {
+        return getSingleConnectionPoint();
+      }
+      
+      return calculateDistributedPoint(node, childNode, true, childIndex, children.length);
+    }
+    
+    // Fallback to single connection point
+    return getSingleConnectionPoint();
+  }
 
   /**
    * Get the connection point for a child node connecting to its parent

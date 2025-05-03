@@ -165,62 +165,47 @@ class VerticalLayout extends Layout {
     // Get connection points type from style with fallback to 'single'
     const connectionPointsType = levelStyle.styleManager.getEffectiveValue(node, 'parentConnectionPoints') || 'single';
     
-    // If no child provided or using single connection point mode, return center point
-    if (!childNode || connectionPointsType === 'single') {
-      return new ConnectionPoint(node.x + node.width / 2, y, side);
-    }
-    
-    const parentWidth = node.width;
-    
-    // Handle distributedRelativeToParentSize connection points based on child position
-    if (connectionPointsType === 'distributedRelativeToParentSize') {
-      const childCenterX = childNode.x + (childNode.width / 2);
-      
-      // Calculate relative position with 10% margin from edges
-      let relativePosition = (childCenterX - node.x) / parentWidth;
-      relativePosition = Math.max(0.1, Math.min(0.9, relativePosition));
-      
-      return new ConnectionPoint(node.x + (parentWidth * relativePosition), y, side);
-    }
-    
-    // Handle distributeEvenly connection points
-    if (connectionPointsType === 'distributeEvenly') {
-      // Find all children and this child's index among them
-      const children = node.children;
-      
-      // Early return if no children (shouldn't happen, but just in case)
-      if (!children || children.length === 0) {
+    // Use the common helper method for calculating connection points
+    return this.calculateConnectionPoint(
+      node, 
+      childNode, 
+      connectionPointsType,
+      // Function to get single connection point (center)
+      () => {
         return new ConnectionPoint(node.x + node.width / 2, y, side);
+      },
+      // Function to calculate distributed points
+      (parentNode, childNode, isEvenlyDistributed, childIndex, childCount) => {
+        const parentWidth = parentNode.width;
+        
+        if (isEvenlyDistributed) {
+          // DistributeEvenly - based on child index
+          const usableWidth = parentWidth * 0.8;  // 80% of the width (10% margin on each side)
+          const startX = parentNode.x + (parentWidth * 0.1);  // 10% from left edge
+          
+          // Calculate connection point position
+          let position;
+          if (childCount === 1) {
+            position = startX + (usableWidth / 2);
+          } else {
+            // Create n evenly spaced points
+            const gap = usableWidth / (childCount - 1);
+            position = startX + (gap * childIndex);
+          }
+          
+          return new ConnectionPoint(position, y, side);
+        } else {
+          // DistributedRelativeToParentSize - based on child position
+          const childCenterX = childNode.x + (childNode.width / 2);
+          
+          // Calculate relative position with 10% margin from edges
+          let relativePosition = (childCenterX - parentNode.x) / parentWidth;
+          relativePosition = Math.max(0.1, Math.min(0.9, relativePosition));
+          
+          return new ConnectionPoint(parentNode.x + (parentWidth * relativePosition), y, side);
+        }
       }
-      
-      // Find the index of this child among siblings
-      const childIndex = children.findIndex(child => child === childNode);
-      
-      // If child not found (shouldn't happen), return center
-      if (childIndex === -1) {
-        return new ConnectionPoint(node.x + node.width / 2, y, side);
-      }
-      
-      // Calculate evenly spaced positions within the 10%-90% range
-      const usableWidth = parentWidth * 0.8;  // 80% of the width (10% margin on each side)
-      const startX = node.x + (parentWidth * 0.1);  // 10% from left edge
-      
-      // Calculate connection point position
-      // For one child, use center; otherwise space evenly
-      let position;
-      if (children.length === 1) {
-        position = startX + (usableWidth / 2);
-      } else {
-        // Create n evenly spaced points
-        const gap = usableWidth / (children.length - 1);
-        position = startX + (gap * childIndex);
-      }
-      
-      return new ConnectionPoint(position, y, side);
-    }
-    
-    // Fallback to single connection point if type is not recognized
-    return new ConnectionPoint(node.x + node.width / 2, y, side);
+    );
   }
 
   /**
