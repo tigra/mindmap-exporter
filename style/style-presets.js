@@ -57,7 +57,7 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 10,
                     nodeType: 'box',
-                    connectionColor: '#8892d8'
+                    connectionColor: '#5562b6'  // Darker than the backgroundColor
                 },
                 2: {
                     fontSize: 16,
@@ -66,7 +66,7 @@ class MindmapStylePresets {
                     borderColor: '#6a75c9',
                     borderRadius: 8,
                     nodeType: 'box',
-                    connectionColor: '#a5add8'
+                    connectionColor: '#6a75c9'  // Matches the level 1's borderColor
                 },
                 3: {
                     fontSize: 14,
@@ -75,20 +75,20 @@ class MindmapStylePresets {
                     borderColor: '#8892d8',
                     borderRadius: 6,
                     nodeType: 'box',
-                    connectionColor: '#c7cde8'
+                    connectionColor: '#8892d8'  // Matches the level 2's borderColor
                 },
                 4: {
                     fontSize: 12,
                     textColor: '#5562b6',
                     nodeType: 'text-only',
-                    connectionColor: '#c7cde8'
+                    connectionColor: '#8892d8'  // Darker color to be more visible
                 }
             },
             defaultStyle: {
                 fontFamily: 'Arial, sans-serif',
                 nodeType: 'text-only',
                 textColor: '#5562b6',
-                connectionColor: '#c7cde8'
+                connectionColor: '#8892d8'  // Darker color for better visibility
             }
         });
         return style;
@@ -219,7 +219,7 @@ class MindmapStylePresets {
                     borderWidth: 1,
                     borderRadius: 20,
                     nodeType: 'box',
-                    connectionColor: '#e0b0cd'
+                    connectionColor: '#c37a96'  // Much darker than backgroundColor for better visibility
                 },
                 2: {
                     fontSize: 16,
@@ -228,7 +228,7 @@ class MindmapStylePresets {
                     borderColor: '#91cbd3',
                     borderRadius: 20,
                     nodeType: 'box',
-                    connectionColor: '#bae5ed'
+                    connectionColor: '#6aa9b0'  // Much darker than backgroundColor
                 },
                 3: {
                     fontSize: 14,
@@ -237,20 +237,20 @@ class MindmapStylePresets {
                     borderColor: '#f3dea0',
                     borderRadius: 20,
                     nodeType: 'box',
-                    connectionColor: '#fff3ce'
+                    connectionColor: '#caa550'  // Darker golden tone for connections
                 },
                 4: {
                     fontSize: 12,
                     textColor: '#875573',
                     nodeType: 'text-only',
-                    connectionColor: '#e0b0cd'
+                    connectionColor: '#c37a96'  // Match level 1 connection color
                 }
             },
             defaultStyle: {
                 fontFamily: 'Comic Sans MS, cursive, sans-serif',
                 nodeType: 'text-only',
                 textColor: '#875573',
-                connectionColor: '#e0b0cd'
+                connectionColor: '#c37a96'  // Darker pink for better visibility
             }
         });
         return style;
@@ -453,7 +453,7 @@ class MindmapStylePresets {
                     borderColor: '#d4be4c',
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#fff1a5'
+                    connectionColor: '#efe1a5'
                 },
                 4: {
                     fontSize: 12,
@@ -489,7 +489,7 @@ class MindmapStylePresets {
                     borderWidth: 1,
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#cccccc'
+                    connectionColor: '#888888'  // Much darker than the original #cccccc for better visibility
                 },
                 2: {
                     fontSize: 16,
@@ -498,7 +498,7 @@ class MindmapStylePresets {
                     borderColor: '#e6e6e6',
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#cccccc'
+                    connectionColor: '#999999'  // Darker than the original
                 },
                 3: {
                     fontSize: 14,
@@ -507,20 +507,20 @@ class MindmapStylePresets {
                     borderColor: '#e6e6e6',
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#cccccc'
+                    connectionColor: '#aaaaaa'  // Still darker than original but lighter than level 2
                 },
                 4: {
                     fontSize: 12,
                     textColor: '#666666',
                     nodeType: 'text-only',
-                    connectionColor: '#cccccc'
+                    connectionColor: '#888888'  // Match level 1 connection color for consistency
                 }
             },
             defaultStyle: {
                 fontFamily: 'Helvetica, Arial, sans-serif',
                 nodeType: 'text-only',
                 textColor: '#666666',
-                connectionColor: '#cccccc'
+                connectionColor: '#888888'  // Darker for better visibility
             }
         });
         return style;

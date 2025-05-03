@@ -382,17 +382,20 @@ class MindmapRenderer {
     }
 
     // Draw different icons based on collapsed state
-    const fillColor = this._darkenColor(this.getFillColor(node), 10);
+    // Use the connection color for the indicator but darker
+    const connectionColor = levelStyle.connectionColor || '#666';
+    const fillColor = this._darkenColor(connectionColor, 20);  // Darken the connection color
+    const borderColor = this._darkenColor(connectionColor, 40);  // Even darker for the border
     let icon;
 
     if (node.collapsed) {
       // Plus icon for collapsed nodes
-      icon = `<circle cx="${indicatorX}" cy="${indicatorY}" r="${radius}" fill="${fillColor}" stroke="#666" stroke-width="1" />
+      icon = `<circle cx="${indicatorX}" cy="${indicatorY}" r="${radius}" fill="${fillColor}" stroke="${borderColor}" stroke-width="1" />
               <line x1="${indicatorX - 3}" y1="${indicatorY}" x2="${indicatorX + 3}" y2="${indicatorY}" stroke="#fff" stroke-width="1.5" />
               <line x1="${indicatorX}" y1="${indicatorY - 3}" x2="${indicatorX}" y2="${indicatorY + 3}" stroke="#fff" stroke-width="1.5" />`;
     } else {
       // Minus icon for expanded nodes
-      icon = `<circle cx="${indicatorX}" cy="${indicatorY}" r="${radius}" fill="${fillColor}" stroke="#666" stroke-width="1" />
+      icon = `<circle cx="${indicatorX}" cy="${indicatorY}" r="${radius}" fill="${fillColor}" stroke="${borderColor}" stroke-width="1" />
               <line x1="${indicatorX - 3}" y1="${indicatorY}" x2="${indicatorX + 3}" y2="${indicatorY}" stroke="#fff" stroke-width="1.5" />`;
     }
 
