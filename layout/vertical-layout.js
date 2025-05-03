@@ -158,89 +158,26 @@ class VerticalLayout extends Layout {
     // Get direction from StyleManager with fallback to default
     const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
     
-    // Get parent connection points configuration from style
+    // Determine Y position based on direction
+    const y = effectiveDirection === 'down' ? node.y + node.height : node.y;
+    const side = effectiveDirection === 'down' ? 'bottom' : 'top';
+    
+    // If no child provided or using single connection point mode, return center point
     const connectionPointsType = levelStyle.styleManager.getEffectiveValue(node, 'parentConnectionPoints') || 'single';
-    
-    // Use default center connection point if:
-    // 1. No specific child node is provided, OR
-    // 2. Connection points type is set to 'single'
-    if (!childNode || connectionPointsType === 'single') {
-      const x = node.x + node.width / 2;
-      
-      if (effectiveDirection === 'down') {
-        return new ConnectionPoint(x, node.y + node.height, 'bottom');
-      } else {
-        return new ConnectionPoint(x, node.y, 'top');
-      }
+    if (!childNode || connectionPointsType !== 'distributed') {
+      return new ConnectionPoint(node.x + node.width / 2, y, side);
     }
     
-    // If connection points type is set to 'distributed', use the distributed algorithm
-    if (connectionPointsType === 'distributed') {
-      return this.getDistributedParentConnectionPoint(node, childNode, effectiveDirection);
-    }
-    
-    // Fallback to single connection point if type is not recognized
-    const x = node.x + node.width / 2;
-    
-    if (effectiveDirection === 'down') {
-      return new ConnectionPoint(x, node.y + node.height, 'bottom');
-    } else {
-      return new ConnectionPoint(x, node.y, 'top');
-    }
-  }
-  
-  /**
-   * Get a distributed connection point for a parent node based on child position
-   * @private
-   * @param {Node} node - The parent node
-   * @param {Node} childNode - The specific child node being connected to
-   * @param {string} effectiveDirection - The layout direction ('down' or 'up')
-   * @return {ConnectionPoint} The connection point
-   */
-  getDistributedParentConnectionPoint(node, childNode, effectiveDirection) {
-    // Calculate the parent's horizontal range
-    const parentLeft = node.x;
-    const parentRight = node.x + node.width;
+    // Handle distributed connection points based on child position
     const parentWidth = node.width;
-    
-    // Calculate child's center position
     const childCenterX = childNode.x + (childNode.width / 2);
     
-    // Calculate the position along the parent's edge
-    // Map the child's position to the parent's width with some margin
-    // Constrain the x position to be within the parent's boundaries
-    const minPercentage = 0.1;  // Keep connections at least 10% from edges
-    const maxPercentage = 0.9;  // Keep connections at most 90% from left edge
+    // Calculate relative position with 10% margin from edges
+    let relativePosition = (childCenterX - node.x) / parentWidth;
+    relativePosition = Math.max(0.1, Math.min(0.9, relativePosition));
     
-    // Determine relative position of child's center within parent's width
-    let relativePosition;
-    
-    // If child is completely to the left of parent
-    if (childCenterX < parentLeft) {
-      relativePosition = minPercentage;
-    } 
-    // If child is completely to the right of parent
-    else if (childCenterX > parentRight) {
-      relativePosition = maxPercentage;
-    } 
-    // If child overlaps with parent horizontally
-    else {
-      // Calculate position as percentage of parent width
-      relativePosition = (childCenterX - parentLeft) / parentWidth;
-      
-      // Constrain to stay within our margins
-      relativePosition = Math.max(minPercentage, Math.min(maxPercentage, relativePosition));
-    }
-    
-    // Calculate the actual x coordinate
-    const x = parentLeft + (parentWidth * relativePosition);
-    
-    // Return the appropriate connection point based on direction
-    if (effectiveDirection === 'down') {
-      return new ConnectionPoint(x, node.y + node.height, 'bottom');
-    } else {
-      return new ConnectionPoint(x, node.y, 'top');
-    }
+    // Return connection point
+    return new ConnectionPoint(node.x + (parentWidth * relativePosition), y, side);
   }
 
   /**
