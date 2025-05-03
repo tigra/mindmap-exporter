@@ -33,22 +33,136 @@ python transform.py file1.md > file2.md  # transforms nested bullet points to ne
 
 ## Layouts
 
+The mindmap exporter supports several layout types that can be selected from the dropdown menu. Each layout organizes nodes in a different way, suitable for different types of information structures.
+
 ### Classic MindMap Layout
 
-  For the ClassicMindmapLayout (to be implemented):
+The Classic MindMap Layout places the parent node in the center with children distributed evenly on both sides. Children are vertically centered relative to the parent.
 
-      Left Column                 Parent                 Right Column
-      +---------+               +--------+               +----------+
-      |         |               |        |               |          |
-      | Child 1 +------→        |        |        ←------+  Child 3 |
-      |         |      |        |        |        |      |          |
-      +---------+      |        |        |        |      +----------+
-                       |========# Parent #========|
-      +---------+      |        |  Node  |        |      +----------+
-      |         |      |        |        |        |      |          |
-      | Child 2 +------→        |        |        ←------+  Child 3 |
-      |         |               |        |               |          |
-      +---------+               +--------+               +----------+
+```
+    Left Column                 Parent                 Right Column
+    +---------+               +--------+               +----------+
+    | Child 1 |------→        |        |        ←------|  Child 4 |
+    +---------+      |        |        |        |      +----------+
+                     |========# Parent #========|
+    +---------+      |        |  Node  |        |      +----------+
+    | Child 2|+------→        |        |        ←------|  Child 3 |
+    +---------+               +--------+               +----------+
+```
 
-  This provides a classic mindmap layout with the parent in the center and children balanced on both sides, vertically centered relative to the parent node.
+Best suited for:
+- Traditional mind mapping
+- Balanced content organization
+- Presentations where the main topic has equal importance on subtopics
+
+### TapRoot Layout
+
+The TapRoot Layout distributes children in balanced left and right columns, similar to the Classic layout, but places them below the parent node. Child nodes are arranged vertically, maintaining a consistent horizontal alignment in each column.
+
+```
+                +--------------------+
+                |      Parent        |
+                +--------------------+
+                      | |  | |                      
+    Left Column       | |  | |    Right Column      
++---------+---------+ | |  | | +---------+---------+
+| +---------------+ | | |  | | | +---------------+ |
+| |    Child 1    |-|-+ |  | +-| |   Child 3     | |
+| +---------------+ |   |  |   | +---------------+ |
+|                   |   |  |   |                   |
+| +---------------+ |   |  |   | +---------------+ |
+| |    Child 2    |-|---+  +---|-|    Child 4    | |
+| +---------------+ |          | +---------------+ |
++-------------------+          +-------------------+
+```
+
+Best suited for:
+- Hierarchical structures
+- Balanced categorization
+- When visual balance is important
+
+### Vertical Layout
+
+The Vertical Layout arranges children horizontally below (or above) the parent node. Nodes are centered when possible, and siblings are placed side by side.
+
+```
+                +--------------------+
+                |      Parent        |
+                +--------------------+
+                       | | |
+          +------------- | +-------------+
+          |              |               |
++---------+----+ +-------+------+ +------+-------+
+|   Child 1    | |   Child 2    | |   Child 3    |
++--------------+ +--------------+ +--------------+
+```
+
+Two direction options are available:
+- **Vertical Down**: Places children below the parent (shown above)
+- **Vertical Up**: Places children above the parent
+
+Best suited for:
+- Hierarchical organization charts
+- Simple top-down or bottom-up flows
+- When horizontal relationships are important
+
+### Horizontal Layout
+
+The Horizontal Layout places children vertically to the right (or left) of the parent node. Children are arranged in a vertical stack.
+
+```
+                       +----------------+
+                   ____|    Child 1     |
++----------------+/    +----------------+
+|                |     +----------------+
+|     Parent     |-----|    Child 2     |
+|                |     +----------------+
++----------------+\_   +----------------+
+                    \__|    Child 3     | 
+                       +----------------+
+```
+
+Two direction options are available:
+- **Horizontal Right**: Places children to the right of the parent (shown above) 
+- **Horizontal Left**: Places children to the left of the parent
+
+Best suited for:
+- Process flows
+- Timeline visualizations
+- When vertical relationships are important
+
+### Vertical-over-TapRoot Layout
+
+This special layout combines a Vertical layout at the root level with TapRoot layouts for all second-level nodes. It creates a hybrid structure where main topics are arranged horizontally, and each main topic has its own balanced TapRoot-style subtree.
+
+```
+                                       Root Node
+                                          |
+            +---------------------------------------------------------------------------------+
+            |                             |                               |                   |
+       +----+-----+                  +----+-----+                    +----+-----+        +----+-----+
+       | Topic 1  |                  | Topic 2  |                    | Topic 3  |        | Topic 4  |
+       +----------+                  +----------+                    +----------+        +----------+
+            |                             |                               |                   |
+     +------+------+               +------+------+                 +------+------+      +------+------+
+     |             |               |             |                 |             |      |             |
++----+----+   +----+----+     +----+----+   +----+----+       +----+----+   +----+----+ | +----+----+ | +----+----+
+|Subtopic1|   |Subtopic2|     |Subtopic3|   |Subtopic4|       |Subtopic5|   |Subtopic6| | |Subtopic7| | |Subtopic8|
++---------+   +---------+     +---------+   +---------+       +---------+   +---------+ | +---------+ | +---------+
+```
+
+Best suited for:
+- Complex, multi-level hierarchies
+- Large mindmaps with many branches
+- When you want to emphasize main categories while keeping subtopics balanced
+
+### Connection Points
+
+Each layout supports multiple connection point modes that control how lines connect parent nodes to their children:
+
+- **Single**: All connections from a parent node originate from a single central point
+- **Distributed Relative to Size**: Connection points are positioned based on the child's actual position
+- **Distribute Evenly**: Connection points are evenly spaced along the parent node edge
+
+Different layouts use different amounts of the parent width for connections: vertical layouts use 75% and TapRoot layouts use 40% to maintain consistent visual appearance.
 
