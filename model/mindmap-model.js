@@ -60,8 +60,9 @@ class MindmapModel {
         continue; // Skip lines that aren't headings or bullet points
       }
 
-      // Create node
-      const node = new Node(text, level);
+      // Create node and auto-collapse if level >= 4
+      const collapsed = level >= 4;
+      const node = new Node(text, level, collapsed);
 
       // Find the parent node
       while (stack.length > 1 && stack[stack.length - 1].level >= level) {
