@@ -165,7 +165,8 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 15,
                     nodeType: 'box',
-                    connectionColor: '#e67e22'
+                    connectionColor: '#e67e22',
+                    parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
                 },
                 2: {
                     fontSize: 16,
@@ -174,7 +175,8 @@ class MindmapStylePresets {
                     borderColor: '#d35400',
                     borderRadius: 15,
                     nodeType: 'box',
-                    connectionColor: '#f1c40f'
+                    connectionColor: '#f1c40f',
+                    parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
                 },
                 3: {
                     fontSize: 14,
@@ -183,20 +185,23 @@ class MindmapStylePresets {
                     borderColor: '#16a085',
                     borderRadius: 15,
                     nodeType: 'box',
-                    connectionColor: '#2ecc71'
+                    connectionColor: '#2ecc71',
+                    parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
                 },
                 4: {
                     fontSize: 12,
                     textColor: '#8e44ad',
                     nodeType: 'text-only',
-                    connectionColor: '#9b59b6'
+                    connectionColor: '#9b59b6',
+                    parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
                 }
             },
             defaultStyle: {
                 fontFamily: 'Verdana, sans-serif',
                 nodeType: 'text-only',
                 textColor: '#8e44ad',
-                connectionColor: '#9b59b6'
+                connectionColor: '#9b59b6',
+                parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
             }
         });
         return style;

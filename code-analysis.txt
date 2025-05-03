@@ -13,10 +13,12 @@
   - Uses direction ("up" or "down") to determine child positioning relative to parent
   - Calculates a bounding box based on all children's positions and sizes
   - Ensures parent is centered over children if children's total width exceeds parent's width
+  - Supports distributed connection points controlled by the parentConnectionPoints style parameter
   - Assumptions:
     * Child nodes are arranged horizontally in a single row
     * Bounding box should contain all children and parent
     * Connection points change based on direction
+    * Connection points can either be a single point (center) or distributed along the edge
 
   3. TapRootLayout (`taproot-layout.js`)
   - Balances child nodes into two columns (left and right) based on their heights
@@ -107,6 +109,8 @@
 
      - `layout/vertical-layout.js`
         - Contains vertical layout algorithm
+        - Enhanced with configurable parent connection points system
+        - Supports "single" (centered) and "distributed" (child-position-based) connection modes
         - Issue: Doesn't properly account for TapRoot children's full width
 
      - `layout/taproot-layout.js`
