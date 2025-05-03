@@ -8,50 +8,65 @@
 </head>
 <body>
     <div class="sidebar">
-        <h1>Markdown MindMap Exporter</h1>
-        <a href="https://github.com/tigra/mindmap-exporter">https://github.com/tigra/mindmap-exporter</a>
-        <ul><a href="https://tigra.github.io/simple-mindmap-exporter.html"><small>Convert your Markdown
-            (e.g. edited in Obsidian, with Enhancing Mindmap plugin, or elsewhere)
-            with headings and bullet points to a mindmap!</small></a></ul>
-        <div>
-            <label for="markdown-input">Paste Your MindMap Markdown:</label>
-            <textarea id="markdown-input" placeholder="# Root Topic&#10;## Subtopic 1&#10;### Detail 1.1&#10;## Subtopic 2"></textarea>
-            <div id="status-message"></div>
+        <div class="sidebar-header">
+            <h1>Markdown MindMap Exporter</h1>
+            <a href="https://github.com/tigra/mindmap-exporter">https://github.com/tigra/mindmap-exporter</a>
         </div>
-
-        <div class="settings-section">
-            <h3>Appearance</h3>
-            <div class="form-group">
-                <label for="style-preset">Style Preset:</label>
-                <select id="style-preset">
-                    <option value="default">Default Purple</option>
-                    <option value="corporate">Corporate Blue</option>
-                    <option value="vibrant">Vibrant Colors</option>
-                    <option value="pastel">Soft Pastel</option>
-                    <option value="monochrome">Monochrome</option>
-                    <option value="nature">Nature Green</option>
-                    <option value="tech">Tech Dark</option>
-                    <option value="retro">Retro Pixel</option>
-                    <option value="minimal">Minimal Clean</option>
-                    <option value="creative">Creative Round</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="layout-type">Layout Style:</label>
-                <select id="layout-type">
-                    <option value="horizontal-right">Horizontal (Right)</option>
-                    <option value="horizontal-left">Horizontal (Left)</option>
-                    <option value="vertical">Vertical (Down)</option>
-                    <option value="vertical-up">Vertical (Up)</option>
-                    <option value="taproot" selected>Taproot</option>
-                    <option value="vertical-over-taproot" >Vertical over Taproot</option>
-                </select>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="editor">Markdown Editor</div>
+            <div class="tab" data-tab="appearance">Appearance</div>
+        </div>
+        
+        <div class="tab-content active" id="editor-tab">
+            <div class="editor-container">
+                <label for="markdown-input">Paste Your MindMap Markdown:</label>
+                <textarea id="markdown-input" placeholder="# Root Topic&#10;## Subtopic 1&#10;### Detail 1.1&#10;## Subtopic 2"></textarea>
+                <div id="status-message"></div>
+                <button id="generate-btn">Generate MindMap</button>
             </div>
         </div>
-
-        <button id="generate-btn">Generate MindMap</button>
+        
+        <div class="tab-content" id="appearance-tab">
+            <div class="settings-section">
+                <h3>Style Settings</h3>
+                <div class="form-group">
+                    <label for="style-preset">Style Preset:</label>
+                    <select id="style-preset">
+                        <option value="default">Default Purple</option>
+                        <option value="corporate">Corporate Blue</option>
+                        <option value="vibrant">Vibrant Colors</option>
+                        <option value="pastel">Soft Pastel</option>
+                        <option value="monochrome">Monochrome</option>
+                        <option value="nature">Nature Green</option>
+                        <option value="tech">Tech Dark</option>
+                        <option value="retro">Retro Pixel</option>
+                        <option value="minimal">Minimal Clean</option>
+                        <option value="creative">Creative Round</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Layout Settings</h3>
+                <div class="form-group">
+                    <label for="layout-type">Layout Style:</label>
+                    <select id="layout-type">
+                        <option value="horizontal-right">Horizontal (Right)</option>
+                        <option value="horizontal-left">Horizontal (Left)</option>
+                        <option value="vertical">Vertical (Down)</option>
+                        <option value="vertical-up">Vertical (Up)</option>
+                        <option value="taproot" selected>Taproot</option>
+                        <option value="vertical-over-taproot">Vertical over Taproot</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="apply-settings-btn">Apply Settings</button>
+        </div>
     </div>
+
+    <div class="splitter" id="splitter"></div>
 
     <div class="preview">
         <div class="preview-content">
@@ -106,5 +121,38 @@
     <script type="module" src="model/integration.js"></script>
 
     <script type="module" src="utils/text-metrics.js"></script>
+    <script type="module">
+        import splitterService from './utils/splitter.js';
+        import tabManager from './utils/tab-manager.js';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize the splitter once DOM is fully loaded
+            splitterService.init('splitter', '.sidebar', '.preview', {
+                minLeftWidth: 300,
+                minRightWidth: 300
+            });
+            
+            // Initialize tab switching
+            tabManager.init('.tab', '.tab-content');
+            
+            // Handle apply settings button
+            const applySettingsBtn = document.getElementById('apply-settings-btn');
+            const generateBtn = document.getElementById('generate-btn');
+            
+            if (applySettingsBtn) {
+                applySettingsBtn.addEventListener('click', () => {
+                    // Call the same function as the generate button
+                    if (generateBtn && typeof generateBtn.click === 'function') {
+                        generateBtn.click();
+                    } else if (window.mindmapApp && typeof window.mindmapApp.handleGenerate === 'function') {
+                        window.mindmapApp.handleGenerate();
+                    }
+                    
+                    // Switch back to editor tab if desired
+                    // tabManager.switchTab('editor');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
