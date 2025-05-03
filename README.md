@@ -19,7 +19,7 @@ to the text area. Play with the settings. Click `Generate MindMap`.
 * Jump to Edges: Home/End keys
 
 ## How does it look
-![Mindmap Exporter Screenshot](mindmap-exporter.png)
+![Mindmap Exporter Screenshot](mindmap-classic-tabbed-screenshot.png)
 
 ## Additional tool
 
