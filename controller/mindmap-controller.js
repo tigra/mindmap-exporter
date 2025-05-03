@@ -200,6 +200,7 @@ debugNodeProperties(nodeId) {
   const properties = [
     'layoutType',
     'direction',
+    'parentConnectionPoints',
     'fontSize',
     'fontWeight',
     'fontFamily',
@@ -286,7 +287,7 @@ logPropertyInheritanceChain(node, property) {
       // Configure style system
       this.styleManager.configure({
         levelStyles: {
-          1: { layoutType: 'vertical', direction: 'down' },
+          1: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly' },
           2: { layoutType: 'taproot' },
           3: { layoutType: 'horizontal' },
           4: { layoutType: 'horizontal' },
@@ -298,6 +299,7 @@ logPropertyInheritanceChain(node, property) {
       if (rootNode) {
         rootNode.setOverride('layoutType', 'vertical');
         rootNode.setOverride('direction', 'down');
+        rootNode.setOverride('parentConnectionPoints', 'distributeEvenly');
       }
     } else if (layoutType === 'taproot') {
       // Configure style system
@@ -341,11 +343,11 @@ logPropertyInheritanceChain(node, property) {
       // Configure style system
       this.styleManager.configure({
         levelStyles: {
-          1: { layoutType: 'vertical', direction: 'up' },
-          2: { layoutType: 'vertical', direction: 'up' },
-          3: { layoutType: 'vertical', direction: 'up' },
-          4: { layoutType: 'vertical', direction: 'up' },
-          default: { layoutType: 'vertical', direction: 'up' }
+          1: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly' },
+          2: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly' },
+          3: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly' },
+          4: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly' },
+          default: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly' }
         }
       });
       
@@ -353,16 +355,17 @@ logPropertyInheritanceChain(node, property) {
       if (rootNode) {
         rootNode.setOverride('layoutType', 'vertical');
         rootNode.setOverride('direction', 'up');
+        rootNode.setOverride('parentConnectionPoints', 'distributeEvenly');
       }
     } else if (layoutType === 'vertical' || layoutType === 'vertical-down') {
       // Configure style system
       this.styleManager.configure({
         levelStyles: {
-          1: { layoutType: 'vertical', direction: 'down' },
-          2: { layoutType: 'vertical', direction: 'down' },
-          3: { layoutType: 'vertical', direction: 'down' },
-          4: { layoutType: 'vertical', direction: 'down' },
-          default: { layoutType: 'vertical', direction: 'down' }
+          1: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly' },
+          2: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly' },
+          3: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly' },
+          4: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly' },
+          default: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly' }
         }
       });
       
@@ -370,6 +373,7 @@ logPropertyInheritanceChain(node, property) {
       if (rootNode) {
         rootNode.setOverride('layoutType', 'vertical');
         rootNode.setOverride('direction', 'down');
+        rootNode.setOverride('parentConnectionPoints', 'distributeEvenly');
       }
     } else {
       // Default case - use whatever layout type was provided

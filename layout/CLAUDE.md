@@ -12,7 +12,8 @@ The mindmap can now support multiple parent connection points, controlled by the
 
 #### Supported Values
 - `single`: (Default) Uses a single connection point at the center of the parent node's edge
-- `distributed`: Distributes connection points along the parent node's edge based on child position
+- `distributedRelativeToParentSize`: Distributes connection points along the parent node's edge based on child position
+- `distributeEvenly`: Evenly distributes connection points along the parent node's edge based on child index
 
 #### Implementation Notes
 - Currently implemented only for VerticalLayout
@@ -20,19 +21,37 @@ The mindmap can now support multiple parent connection points, controlled by the
 - Can be configured per-level or as a default in style configurations
 
 #### How it works in VerticalLayout
-The `distributed` option in VerticalLayout:
-- Creates connection points along the bottom/top edge of the parent node
-- Positions connection points horizontally based on child node position
-- Maps child horizontal center to a relative position on parent
-- Maintains safety margins (10-90% of parent width) to avoid edge connections
-- Improves visual appearance when children are spread horizontally
+0. `single` option TODO describe.
+
+1. The `distributedRelativeToParentSize` option:
+   - Creates connection points along the bottom/top edge of the parent node
+   - Positions connection points horizontally based on child node position
+   - Maps child horizontal center to a relative position on parent
+   - Maintains safety margins (10-90% of parent width) to avoid edge connections
+   - Improves visual appearance when children are spread horizontally
+
+2. The `distributeEvenly` option:
+   - Creates evenly spaced connection points along the parent's edge
+   - Distributes points based on child index among siblings
+   - Uses the 10-90% range of parent width (maintains safety margins)
+   - Creates equal gaps between connection points
+   - Ensures consistent spacing regardless of child positions
+   - Good for organized, symmetrical layouts
 
 #### Example configuration
 ```javascript
 levelStyles: {
   1: {
     layoutType: 'vertical',
-    parentConnectionPoints: 'distributed'  // Enable distributed connection points
+    parentConnectionPoints: 'distributeEvenly'  // Enable evenly distributed connection points
+  },
+  2: {
+    layoutType: 'vertical',
+    parentConnectionPoints: 'distributedRelativeToParentSize'  // Position based on child location
+  },
+  3: {
+    layoutType: 'vertical',
+    parentConnectionPoints: 'single'  // Single centered connection point
   }
 }
 ```

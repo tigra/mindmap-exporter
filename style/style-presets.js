@@ -166,7 +166,7 @@ class MindmapStylePresets {
                     borderRadius: 15,
                     nodeType: 'box',
                     connectionColor: '#e67e22',
-                    parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
+                    parentConnectionPoints: 'distributeEvenly' // Enable evenly distributed connection points for vertical layouts
                 },
                 2: {
                     fontSize: 16,
@@ -176,7 +176,7 @@ class MindmapStylePresets {
                     borderRadius: 15,
                     nodeType: 'box',
                     connectionColor: '#f1c40f',
-                    parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
+                    parentConnectionPoints: 'distributeEvenly' // Enable evenly distributed connection points for vertical layouts
                 },
                 3: {
                     fontSize: 14,
@@ -186,14 +186,14 @@ class MindmapStylePresets {
                     borderRadius: 15,
                     nodeType: 'box',
                     connectionColor: '#2ecc71',
-                    parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
+                    parentConnectionPoints: 'distributeEvenly' // Enable evenly distributed connection points for vertical layouts
                 },
                 4: {
                     fontSize: 12,
                     textColor: '#8e44ad',
                     nodeType: 'text-only',
                     connectionColor: '#9b59b6',
-                    parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
+                    parentConnectionPoints: 'distributeEvenly' // Enable evenly distributed connection points for vertical layouts
                 }
             },
             defaultStyle: {
@@ -201,7 +201,7 @@ class MindmapStylePresets {
                 nodeType: 'text-only',
                 textColor: '#8e44ad',
                 connectionColor: '#9b59b6',
-                parentConnectionPoints: 'distributed' // Enable distributed connection points for vertical layouts
+                parentConnectionPoints: 'distributeEvenly' // Enable evenly distributed connection points for vertical layouts
             }
         });
         return style;
