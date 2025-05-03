@@ -226,7 +226,8 @@ class MindmapApp {
       console.log('applying vertical over taproot...');
       style.configure({
         1: {
-           layoutType: 'vertical'
+           layoutType: 'vertical',
+           direction: 'down'
         },
         2: {
            layoutType: 'taproot'
@@ -241,6 +242,52 @@ class MindmapApp {
            layoutType: 'horizontal'
         },
       });
+    } else if (layoutType === 'vertical-down' || layoutType === 'vertical') {
+             style.configure({
+        1: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+        2: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+        3: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+        4: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+        default: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+      });
+    }else if(layoutType === 'vertical-up') {
+                    style.configure({
+        1: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+        2: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+        3: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+        4: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+        default: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+      });
     } else {
       style.setGlobalLayoutType(layoutType);
     }
@@ -252,11 +299,14 @@ class MindmapApp {
     } else if (layoutType === 'horizontal-right') {
         this.model.getRoot().setOverride('direction', 'right');
     } else if (layoutType === 'vertical-up') {
-        this.model.getRoot().setOverride('direction', 'top');
-    } else if (layoutType === 'vertical-down') {
-        this.model.getRoot().setOverride('direction', 'bottom');
+        this.model.getRoot().setOverride('direction', 'up');
+        this.model.getRoot().setOverride('layoutType', 'vertical');
+    } else if (layoutType === 'vertical-down' || layoutType === 'vertical') {
+        this.model.getRoot().clearOverridesRecursive();
+        this.model.getRoot().setOverride('direction', 'down');
     } else if (layoutType === 'vertical-over-taproot') {
         this.model.getRoot().setOverride('layoutType', 'vertical');
+        this.model.getRoot().setOverride('direction', 'down');
     } else {
         this.model.getRoot().clearOverridesRecursive();
     }

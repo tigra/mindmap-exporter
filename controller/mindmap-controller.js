@@ -310,6 +310,34 @@ logPropertyInheritanceChain(node, property) {
       if (rootNode) {
         rootNode.setOverride('direction', 'right');
       }
+    } else if (layoutType === 'vertical-up') {
+//      this.styleManager.setGlobalLayoutType('vertical', { direction: 'up' });
+    this.styleManager.configure({
+       levelStyles: {
+        1: {
+          layoutType: 'vertical',
+          direction: 'up'
+         },
+        3: {
+          layoutType: 'vertical',
+          direction: 'up'
+         },
+        4: {
+          layoutType: 'vertical',
+          direction: 'up'
+         },
+        1: {
+          layoutType: 'vertical',
+          direction: 'up'
+         },
+        }
+    })
+
+      // Also set override on the root node for backward compatibility
+      const rootNode = this.model.getRoot();
+      if (rootNode) {
+        rootNode.setOverride('direction', 'up');
+      }
     } else {
       this.styleManager.setGlobalLayoutType(layoutType);
 

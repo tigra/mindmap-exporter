@@ -11,7 +11,14 @@ class StyleManager {
    */
   constructor() {
     // Define default styles for different levels
-    this.levelStyles = {
+    this.levelStyles = this.createInitialLevelStyles();
+
+    // Default style for any level not explicitly defined
+    this.defaultLevelStyle = new StyleConfiguration({}, this);
+  }
+
+  createInitialLevelStyles() {
+     return {
       // Root level
       1: new StyleConfiguration({
         fontSize: 18,
@@ -56,9 +63,6 @@ class StyleManager {
         nodeType: 'text-only'
       }, this)
     };
-
-    // Default style for any level not explicitly defined
-    this.defaultLevelStyle = new StyleConfiguration({}, this);
   }
 
   /**
@@ -90,7 +94,7 @@ class StyleManager {
     }
 
     // Check parent inheritance if enabled
-    if (inheritFromParent && node.parent) {
+    if (!value && inheritFromParent && node.parent) {
       // Recursively check parent's effective value
       const parentValue = this.getEffectiveValue(node.parent, property, true);
 //      if (parentValue !== undefined && parentValue !== null) {

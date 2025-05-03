@@ -47,7 +47,8 @@ class VerticalLayout extends Layout {
     node.height = nodeSize.height;
 
     // Get direction from StyleManager
-    const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
+//    const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
+    const effectiveDirection = style.getEffectiveValue(node, 'direction');
     console.log('effectiveDirection', effectiveDirection);
 
     // Direction multiplier for positioning (1 for down, -1 for up)

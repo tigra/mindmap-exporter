@@ -58,10 +58,9 @@ class Node {
 
   clearOverridesRecursive() {
     this.clearAllOverrides();
-    for (var child in this.children) {
-       if (child && child.clearOverridesRecursive) {
-            child.clearOverridesRecursive();
-       }
+    for (var i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      child.clearOverridesRecursive();
     }
   }
 
