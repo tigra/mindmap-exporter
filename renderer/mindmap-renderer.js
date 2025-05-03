@@ -225,8 +225,56 @@ class MindmapRenderer {
     if (node.hasChildren()) {
       svg += this._drawCollapseIndicator(node);
     }
+    
+    // Draw any debug elements attached to the node
+    if (node.debugElements && node.debugElements.length > 0) {
+      svg += this._drawDebugElements(node);
+    }
 
     return svg;
+  }
+  
+  /**
+   * Draw debug elements attached to a node
+   * @private
+   * @param {Object} node - The node with debug elements
+   * @return {string} SVG elements for debugging
+   */
+  _drawDebugElements(node) {
+    if (!node.debugElements || node.debugElements.length === 0) {
+      return '';
+    }
+    
+    const debugElements = [];
+    
+    // Generate SVG for each debug element
+    for (const element of node.debugElements) {
+      switch (element.type) {
+        case 'line':
+          debugElements.push(`<line 
+            x1="${element.x1}" 
+            y1="${element.y1}" 
+            x2="${element.x2}" 
+            y2="${element.y2}" 
+            stroke="${element.stroke}" 
+            stroke-width="${element.strokeWidth}" 
+            stroke-dasharray="${element.strokeDasharray}" />`);
+          break;
+          
+        case 'text':
+          debugElements.push(`<text 
+            x="${element.x}" 
+            y="${element.y}" 
+            text-anchor="${element.textAnchor}" 
+            fill="${element.fill}" 
+            font-size="${element.fontSize}">${element.content}</text>`);
+          break;
+          
+        // Add more cases for other element types as needed
+      }
+    }
+    
+    return `<g class="debug-elements" id="${node.id}_debug">${debugElements.join('\n')}</g>`;
   }
 
   /**
@@ -481,6 +529,7 @@ class MindmapRenderer {
     this.findBounds();
 
     let svg = this.createSvgContainer();
+//    svg += `<circle r="5" cx="0" cy="0" fill="blue" />`
     svg += this.createDefs();
     svg += this.drawNodes();
     svg += '</svg>';

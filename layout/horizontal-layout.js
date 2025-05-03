@@ -139,6 +139,8 @@ class HorizontalLayout extends Layout {
         }
       }
 
+//      node.moveBoundingBoxTo(x, y);
+
       node.boundingBox = {
         x: minX,
         y: minY,

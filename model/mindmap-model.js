@@ -99,6 +99,20 @@ class MindmapModel {
   findNodeById(id) {
     return this.nodeMap.get(id) || null;
   }
+  
+  /**
+   * Find a node by its text content (first match)
+   * @param {string} text - The text content to search for
+   * @return {Node|null} The node, or null if not found
+   */
+  findNodeByText(text) {
+    for (const node of this.nodeMap.values()) {
+      if (node.text === text) {
+        return node;
+      }
+    }
+    return null;
+  }
 
   /**
    * Toggle the collapsed state of a node by its ID

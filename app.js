@@ -162,6 +162,8 @@ class MindmapApp {
 
     // Generate initial mindmap
     this.handleGenerate();
+//    this.testMoveBoundingBoxByText("Research", 0, 0);
+
 
     // Make components globally available for backward compatibility
     if (typeof window !== 'undefined') {
@@ -431,6 +433,105 @@ class MindmapApp {
     } else if (format === 'png') {
       this.controller.exportToPNG(fileName + '.png');
     }
+  }
+  
+  /**
+   * Test the moveBoundingBoxTo function by moving a node to a specific position
+   * @param {string} nodeId - The ID of the node to move
+   * @param {number} x - The target x coordinate
+   * @param {number} y - The target y coordinate
+   */
+  testMoveBoundingBoxTo(nodeId, x, y) {
+    const node = this.model.findNodeById(nodeId);
+    if (!node) {
+      console.error(`Node with ID ${nodeId} not found`);
+      return;
+    }
+    
+    console.log(`Moving node "${node.text}" bounding box from (${node.boundingBox.x}, ${node.boundingBox.y}) to (${x}, ${y})`);
+    
+    // Store original positions for comparison
+    const originalPositions = this._captureNodePositions(node);
+    
+    // Move the node's bounding box
+    node.moveBoundingBoxTo(x, y);
+    
+    // Log the new positions
+    const newPositions = this._captureNodePositions(node);
+    
+    // Show position changes
+    console.log('Position changes:');
+    this._logPositionChanges(originalPositions, newPositions);
+    
+    // Re-render the mindmap
+    this.renderer.render(this.container);
+  }
+  
+  /**
+   * Capture positions of a node and its descendants for comparison
+   * @param {Node} node - The root node
+   * @returns {Object} Object mapping node IDs to positions
+   * @private
+   */
+  _captureNodePositions(node) {
+    const positions = {};
+    this._captureNodePositionsRecursive(node, positions);
+    return positions;
+  }
+  
+  /**
+   * Recursively capture positions of a node and its descendants
+   * @param {Node} node - The current node
+   * @param {Object} positions - Object to store positions
+   * @private
+   */
+  _captureNodePositionsRecursive(node, positions) {
+    positions[node.id] = {
+      text: node.text,
+      x: node.x,
+      y: node.y,
+      boundingBox: { ...node.boundingBox }
+    };
+    
+    for (let i = 0; i < node.children.length; i++) {
+      this._captureNodePositionsRecursive(node.children[i], positions);
+    }
+  }
+  
+  /**
+   * Log position changes for comparison
+   * @param {Object} before - Original positions
+   * @param {Object} after - New positions
+   * @private
+   */
+  _logPositionChanges(before, after) {
+    for (const nodeId in before) {
+      if (after[nodeId]) {
+        const deltaX = after[nodeId].x - before[nodeId].x;
+        const deltaY = after[nodeId].y - before[nodeId].y;
+        const bbDeltaX = after[nodeId].boundingBox.x - before[nodeId].boundingBox.x;
+        const bbDeltaY = after[nodeId].boundingBox.y - before[nodeId].boundingBox.y;
+        
+        console.log(`Node "${before[nodeId].text}" (${nodeId}): Position delta (${deltaX}, ${deltaY}), BoundingBox delta (${bbDeltaX}, ${bbDeltaY})`);
+      }
+    }
+  }
+  
+  /**
+   * Test the moveBoundingBoxTo function using a node's text content
+   * @param {string} nodeText - The text content to search for
+   * @param {number} x - The target x coordinate
+   * @param {number} y - The target y coordinate
+   */
+  testMoveBoundingBoxByText(nodeText, x, y) {
+    const node = this.model.findNodeByText(nodeText);
+    if (!node) {
+      console.error(`Node with text "${nodeText}" not found`);
+      return;
+    }
+    
+    // Call the existing test function with the found node's ID
+    this.testMoveBoundingBoxTo(node.id, x, y);
   }
 }
 

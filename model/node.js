@@ -96,6 +96,64 @@ class Node {
   setParent(node) {
     this.parent = node;
   }
+  
+  /**
+   * Move the node and all its descendants so that the bounding box is positioned at the specified coordinates
+   * @param {number} x - The target x coordinate for the bounding box
+   * @param {number} y - The target y coordinate for the bounding box
+   */
+  moveBoundingBoxTo(x, y) {
+    if (!this.boundingBox) {
+      console.warn('Cannot move node without a bounding box');
+      return;
+    }
+    
+    // Calculate the delta for movement
+    const deltaX = x - this.boundingBox.x;
+    const deltaY = y - this.boundingBox.y;
+    
+    // Move this node and all its children
+    this._moveNodeAndDescendantsBy(deltaX, deltaY);
+  }
+  
+  /**
+   * Move node and all descendants by the specified delta
+   * @param {number} deltaX - The horizontal adjustment
+   * @param {number} deltaY - The vertical adjustment
+   * @private
+   */
+  _moveNodeAndDescendantsBy(deltaX, deltaY) {
+    // Adjust the node's own position
+    this.x += deltaX;
+    this.y += deltaY;
+    
+    // Adjust the node's bounding box
+    if (this.boundingBox) {
+      this.boundingBox.x += deltaX;
+      this.boundingBox.y += deltaY;
+    }
+    
+    // Adjust debug elements if present
+    if (this.debugElements) {
+      this.debugElements.forEach(element => {
+        if (element.type === 'line') {
+          element.x1 += deltaX;
+          element.y1 += deltaY;
+          element.x2 += deltaX;
+          element.y2 += deltaY;
+        } else if (element.type === 'text') {
+          element.x += deltaX;
+          element.y += deltaY;
+        }
+        // Add cases for other element types as needed
+      });
+    }
+    
+    // Recursively adjust all children
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i]._moveNodeAndDescendantsBy(deltaX, deltaY);
+    }
+  }
 }
 
 // For backward compatibility, export to window object if in browser

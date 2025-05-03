@@ -89,7 +89,7 @@ class StyleManager {
 
     // Check node's own overrides
     if (node.configOverrides && property in node.configOverrides) {
-      console.log('overridden:', property, node.configOverrides[property]);
+//      console.log('overridden:', property, node.configOverrides[property]);
       return node.configOverrides[property];
     }
 
@@ -99,7 +99,7 @@ class StyleManager {
       const parentValue = this.getEffectiveValue(node.parent, property, true);
 //      if (parentValue !== undefined && parentValue !== null) {
       if (parentValue !== undefined) {
-        console.log('overridden in parent', property, parentValue);
+//        console.log('overridden in parent', property, parentValue);
         value = parentValue;
       }
     }

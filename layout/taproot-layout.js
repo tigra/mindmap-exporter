@@ -20,6 +20,12 @@ class TapRootLayout extends Layout {
     this.parentPadding = parentPadding;
     this.childPadding = childPadding;
     this.columnGap = columnGap;
+    
+    // Debug properties for visualizing column alignment
+    this.leftColumnX = null;  // Right edge of left column
+    this.rightColumnX = null; // Left edge of right column
+    this.columnMinY = null;   // Top of columns
+    this.columnMaxY = null;   // Bottom of columns
   }
 
   /**
@@ -72,8 +78,8 @@ class TapRootLayout extends Layout {
     // Initialize variables for tracking the column heights and widths
     let leftColumnHeight = 0;
     let rightColumnHeight = 0;
-    let leftColumnMaxWidth = 0;
-    let rightColumnMaxWidth = 0;
+    this.leftColumnMaxWidth = 0;
+    this.rightColumnMaxWidth = 0;
 
     // Arrays to store children for each column
     const leftChildren = [];
@@ -84,6 +90,12 @@ class TapRootLayout extends Layout {
 
     // Calculate the center point for the parent node
     const parentCenterX = x + (nodeSize.width / 2);
+    
+    // Store column alignment coordinates for debugging
+    this.leftColumnX = parentCenterX - this.columnGap / 2;
+    this.rightColumnX = parentCenterX + this.columnGap / 2;
+    this.columnMinY = childStartY;
+    this.columnMaxY = childStartY; // Will be updated as we add children
     
     // Initialize current Y positions for both columns
     let currentLeftY = childStartY;
@@ -119,11 +131,11 @@ class TapRootLayout extends Layout {
         
         // Update column height with actual bounding box height
         leftColumnHeight += childSize.height + this.childPadding;
-        leftColumnMaxWidth = Math.max(leftColumnMaxWidth, childSize.width);
+        this.leftColumnMaxWidth = Math.max(this.leftColumnMaxWidth, childSize.width);
         
         // Position the child so its right side aligns with leftColumnX
-        const leftColumnX = parentCenterX - this.columnGap / 2;
-        const targetX = leftColumnX - childSize.width; // Use bounding box width instead of node width
+//        const leftColumnX = parentCenterX - this.columnGap / 2;
+        const targetX = this.leftColumnX - childSize.width; // Use bounding box width instead of node width
         const deltaX = targetX - childSize.x; // Use bounding box x instead of node x
         this.adjustPositionRecursive(nextChild, deltaX, 0);
         
@@ -132,6 +144,9 @@ class TapRootLayout extends Layout {
         
         // Update Y position for next left child
         currentLeftY += childSize.height + this.childPadding;
+        
+        // Update max Y coordinate for debugging visualization
+        this.columnMaxY = Math.max(this.columnMaxY, currentLeftY - this.childPadding);
       } else {
         nextChild.setOverride('direction', 'right');
         nextChild.setOverride('layoutType', 'horizontal');
@@ -141,7 +156,7 @@ class TapRootLayout extends Layout {
         
         // Update column height with actual bounding box height
         rightColumnHeight += childSize.height + this.childPadding;
-        rightColumnMaxWidth = Math.max(rightColumnMaxWidth, childSize.width);
+        this.rightColumnMaxWidth = Math.max(this.rightColumnMaxWidth, childSize.width);
         
         // Position the child so its left side aligns with rightColumnX
         const rightColumnX = parentCenterX + this.columnGap / 2;
@@ -153,6 +168,9 @@ class TapRootLayout extends Layout {
         
         // Update Y position for next right child
         currentRightY += childSize.height + this.childPadding;
+        
+        // Update max Y coordinate for debugging visualization
+        this.columnMaxY = Math.max(this.columnMaxY, currentRightY - this.childPadding);
       }
     }
     
@@ -198,6 +216,12 @@ class TapRootLayout extends Layout {
       width: maxX - minX,
       height: maxY - minY
     };
+
+    node.moveBoundingBoxTo(x, y);
+
+    // Add debug elements to the node
+//    this.createDebugElements(node);
+    
     console.groupEnd();
     return node.boundingBox;
   }
@@ -239,6 +263,103 @@ class TapRootLayout extends Layout {
         return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
       }
     }
+    
+  /**
+   * Create debug elements for the node to visualize column alignment
+   * @param {Node} node - The node to add debug elements to
+   */
+  createDebugElements(node) {
+    if (!this.leftColumnX || !this.rightColumnX || !this.columnMinY || !this.columnMaxY) {
+      return; // No debug information available
+    }
+    
+    // Initialize debug elements array if not exists
+    if (!node.debugElements) {
+      node.debugElements = [];
+    }
+    
+    // Create SVG elements for column alignment lines
+    
+    // Left column alignment line (right edge) - red vertical line
+    node.debugElements.push({
+      type: 'line',
+      x1: this.leftColumnX,
+      y1: this.columnMinY,
+      x2: this.leftColumnX,
+      y2: this.columnMaxY,
+      stroke: 'red',
+      strokeWidth: 2,
+      strokeDasharray: '5,5'
+    });
+
+    node.debugElements.push({
+      type: 'line',
+      x1: this.leftColumnX - this.leftColumnMaxWidth,
+      y1: this.columnMinY,
+      x2: this.leftColumnX - this.leftColumnMaxWidth,
+      y2: this.columnMaxY,
+      stroke: 'red',
+      strokeWidth: 2,
+      strokeDasharray: '5,5'
+    });
+
+    // Right column alignment line (left edge) - red vertical line
+    node.debugElements.push({
+      type: 'line',
+      x1: this.rightColumnX,
+      y1: this.columnMinY,
+      x2: this.rightColumnX,
+      y2: this.columnMaxY,
+      stroke: 'red',
+      strokeWidth: 2,
+      strokeDasharray: '5,5'
+    });
+
+    node.debugElements.push({
+      type: 'line',
+      x1: this.rightColumnX + this.rightColumnMaxWidth,
+      y1: this.columnMinY,
+      x2: this.rightColumnX + this.rightColumnMaxWidth,
+      y2: this.columnMaxY,
+      stroke: 'red',
+      strokeWidth: 2,
+      strokeDasharray: '5,5'
+    });
+
+    // Add horizontal lines at top and bottom
+    node.debugElements.push({
+      type: 'line',
+      x1: this.leftColumnX - 20,
+      y1: this.columnMinY,
+      x2: this.rightColumnX + 20,
+      y2: this.columnMinY,
+      stroke: 'red',
+      strokeWidth: 1,
+      strokeDasharray: '5,5'
+    });
+    
+    node.debugElements.push({
+      type: 'line',
+      x1: this.leftColumnX - 20,
+      y1: this.columnMaxY,
+      x2: this.rightColumnX + 20,
+      y2: this.columnMaxY,
+      stroke: 'red',
+      strokeWidth: 1,
+      strokeDasharray: '5,5'
+    });
+    
+    // Add text label for visual explanation
+    node.debugElements.push({
+      type: 'text',
+      x: (this.leftColumnX + this.rightColumnX) / 2,
+      y: this.columnMinY - 10,
+      textAnchor: 'middle',
+      fill: 'red',
+      fontSize: '12px',
+      content: node.text
+    });
+  }
 }
 
 // For backward compatibility
