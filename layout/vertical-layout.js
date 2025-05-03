@@ -30,6 +30,12 @@ class VerticalLayout extends Layout {
    * @return {Object} The size of the laid out subtree
    */
   applyLayout(node, x, y, style) {
+    console.groupCollapsed(`VerticalLayout.applyLayout(${node.text})`);
+    console.log('node', node);
+//    console.log('x', x, 'y', y);
+    if (node.level == 1) {
+        console.log('style', style);
+    }
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
@@ -42,6 +48,7 @@ class VerticalLayout extends Layout {
 
     // Get direction from StyleManager
     const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
+    console.log('effectiveDirection', effectiveDirection);
 
     // Direction multiplier for positioning (1 for down, -1 for up)
     const directionMultiplier = effectiveDirection === 'down' ? 1 : -1;
@@ -66,6 +73,7 @@ class VerticalLayout extends Layout {
         width: nodeSize.width,
         height: nodeSize.height
       };
+      console.groupEnd();
       return node.boundingBox;
     }
 
@@ -81,6 +89,7 @@ class VerticalLayout extends Layout {
 
       // Get layout type from StyleManager
       const childLayoutType = style.getEffectiveValue(child, 'layoutType');
+      console.log('childLayoutType', childLayoutType);
       const childLevelStyle = style.getLevelStyle(child.level);
 
       // Create layout for child
@@ -137,7 +146,7 @@ class VerticalLayout extends Layout {
       width: Math.max(nodeSize.width, totalWidth),
       height: bbHeight
     };
-
+    console.groupEnd();
     return node.boundingBox;
   }
 

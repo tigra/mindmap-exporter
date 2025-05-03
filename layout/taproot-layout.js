@@ -31,6 +31,8 @@ class TapRootLayout extends Layout {
    * @return {Object} The size of the laid out subtree
    */
   applyLayout(node, x, y, style) {
+    console.groupCollapsed(`TaprootLayout.applyLayout(${node.text})`);
+    console.log('node', node);
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
@@ -60,6 +62,7 @@ class TapRootLayout extends Layout {
         width: nodeSize.width,
         height: nodeSize.height
       };
+      console.groupEnd();
       return node.boundingBox;
     }
 
@@ -124,6 +127,7 @@ class TapRootLayout extends Layout {
     for (let i = 0; i < leftChildren.length; i++) {
       // Set direction override to 'left' for left column children
       leftChildren[i].setOverride('direction', 'left');
+      leftChildren[i].setOverride('layoutType', 'horizontal');
 
       const childSize = leftLayout.applyLayout(leftChildren[i], 0, currentLeftY, style);
       leftColumnMaxWidth = Math.max(leftColumnMaxWidth, childSize.width);
@@ -134,6 +138,7 @@ class TapRootLayout extends Layout {
     for (let i = 0; i < rightChildren.length; i++) {
       // Set direction override to 'right' for right column children
       rightChildren[i].setOverride('direction', 'right');
+      leftChildren[i].setOverride('layoutType', 'horizontal');
 
       const childSize = rightLayout.applyLayout(rightChildren[i], 0, currentRightY, style);
       rightColumnMaxWidth = Math.max(rightColumnMaxWidth, childSize.width);
@@ -196,7 +201,7 @@ class TapRootLayout extends Layout {
       width: maxX - minX,
       height: maxY - minY
     };
-
+    console.groupEnd();
     return node.boundingBox;
   }
 

@@ -168,18 +168,105 @@ class MindmapController {
    * @param {string} nodeId - The ID of the node that triggered the event
    * @param {string} eventType - The type of event
    */
-  handleNodeEvent(nodeId, eventType) {
-    if (eventType === 'toggle') {
-      // Toggle node collapse state
-      this.model.toggleNodeCollapse(nodeId);
+handleNodeEvent(nodeId, eventType) {
+  if (eventType === 'toggle') {
+    // Toggle node collapse state
+    this.model.toggleNodeCollapse(nodeId);
 
-      // Reapply layout
-      this.applyLayout();
+    // Reapply layout
+    this.applyLayout();
 
-      // Re-render the mindmap
-      this.renderer.render(this.container);
-    }
+    // Re-render the mindmap
+    this.renderer.render(this.container);
   }
+  else if (eventType === 'debug') {
+    // Output node and its properties to console for debugging
+    this.debugNodeProperties(nodeId);
+  }
+}
+
+/**
+ * Debug node properties - outputs node and its effective properties to console
+ * @param {string} nodeId - The ID of the node to debug
+ */
+debugNodeProperties(nodeId) {
+  const node = this.model.findNodeById(nodeId);
+  if (!node) {
+    console.warn(`Node not found with ID: ${nodeId}`);
+    return;
+  }
+
+  // List of properties to check and display
+  const properties = [
+    'layoutType',
+    'direction',
+    'fontSize',
+    'fontWeight',
+    'fontFamily',
+    'backgroundColor',
+    'textColor',
+    'borderColor',
+    'borderWidth',
+    'borderRadius',
+    'nodeType',
+    'connectionColor',
+    'connectionWidth',
+    'parentPadding',
+    'childPadding'
+  ];
+
+  // Create an object to hold the effective properties
+  const effectiveProperties = {};
+
+  // Get the effective value for each property
+  properties.forEach(prop => {
+    effectiveProperties[prop] = this.styleManager.getEffectiveValue(node, prop);
+  });
+
+  // Output the node and its properties to console
+  console.group(`Node: ${node.text} (ID: ${node.id}, Level: ${node.level})`);
+  console.log('Node object:', node);
+  console.log('Node style overrides:', node.configOverrides);
+  console.log('StyleManager:', this.styleManager);
+  console.log('Effective properties:', effectiveProperties);
+
+  // Show inheritance chain for direction property as an example
+  this.logPropertyInheritanceChain(node, 'direction');
+
+  console.groupEnd();
+}
+
+/**
+ * Log the inheritance chain for a specific property
+ * @param {Node} node - The node to check
+ * @param {string} property - The property to trace
+ */
+logPropertyInheritanceChain(node, property) {
+  console.group(`Inheritance chain for "${property}"`);
+
+  let currentNode = node;
+  let value;
+  let level = 0;
+
+  while (currentNode) {
+    // Check for direct override on this node
+    if (currentNode.configOverrides && property in currentNode.configOverrides) {
+      value = currentNode.configOverrides[property];
+      console.log(`Level ${level}: Node "${currentNode.text}" - Override: ${value}`);
+    } else {
+      // Get from level style
+      const levelStyle = this.styleManager.getLevelStyle(currentNode.level);
+      value = levelStyle[property];
+      console.log(`Level ${level}: Node "${currentNode.text}" - From level style: ${value}`);
+    }
+
+    // Move up to parent
+    currentNode = currentNode.parent;
+    level++;
+  }
+
+  console.groupEnd();
+}
 
   /**
    * Handle layout type change

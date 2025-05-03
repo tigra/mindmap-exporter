@@ -198,6 +198,7 @@ class MindmapApp {
 //    style.setGlobalLayoutType(this.layoutType.value);
     // TODO factor out this behavoir, find the proper class responsible for it
     const layoutType = this.layoutType.value;
+    this.model.getRoot().clearOverridesRecursive();
     if (layoutType === 'horizontal-left') {
       style.setGlobalLayoutType('horizontal', {direction: 'left'});
     } else if (layoutType === 'horizontal-right') {
@@ -243,13 +244,21 @@ class MindmapApp {
     } else {
       style.setGlobalLayoutType(layoutType);
     }
-    console.log(style.getLevelStyle(1));
+//    console.log(style.getLevelStyle(1));
     const layout = style.getLevelStyle(1).getLayout();
 
     if (layoutType === 'horizontal-left') {
         this.model.getRoot().setOverride('direction', 'left');
     } else if (layoutType === 'horizontal-right') {
         this.model.getRoot().setOverride('direction', 'right');
+    } else if (layoutType === 'vertical-up') {
+        this.model.getRoot().setOverride('direction', 'top');
+    } else if (layoutType === 'vertical-down') {
+        this.model.getRoot().setOverride('direction', 'bottom');
+    } else if (layoutType === 'vertical-over-taproot') {
+        this.model.getRoot().setOverride('layoutType', 'vertical');
+    } else {
+        this.model.getRoot().clearOverridesRecursive();
     }
     layout.applyLayout(this.model.getRoot(), 0, 0, style);
 

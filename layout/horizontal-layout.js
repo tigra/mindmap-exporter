@@ -30,6 +30,7 @@ class HorizontalLayout extends Layout {
    * @return {Object} The size of the laid out subtree
    */
   applyLayout(node, x, y, style) {
+    console.groupCollapsed(`HorizontalLayout.applyLayout(${node.text})`);
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
@@ -64,6 +65,7 @@ class HorizontalLayout extends Layout {
         width: nodeSize.width,
         height: nodeSize.height
       };
+      console.groupEnd();
       return node.boundingBox;
     }
 
@@ -125,7 +127,7 @@ class HorizontalLayout extends Layout {
       width: bbWidth,
       height: Math.max(nodeSize.height, totalHeight)
     };
-
+    console.groupEnd();
     return node.boundingBox;
   }
 
