@@ -64,9 +64,10 @@ class Layout {
    * Get the connection point for a parent node connecting to its children
    * @param {Node} node - The parent node
    * @param {Object} levelStyle - The style for this node's level
+   * @param {Node} childNode - The specific child node being connected to (optional)
    * @return {ConnectionPoint} The connection point
    */
-  getParentConnectionPoint(node, levelStyle) {
+  getParentConnectionPoint(node, levelStyle, childNode = null) {
     throw new Error('Method getParentConnectionPoint must be implemented by subclasses');
   }
 

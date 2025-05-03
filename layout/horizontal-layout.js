@@ -156,11 +156,16 @@ class HorizontalLayout extends Layout {
    * Get the connection point for a parent node in horizontal layout
    * @param {Node} node - The parent node
    * @param {Object} levelStyle - The style for this node's level
+   * @param {Node} childNode - The specific child node being connected to (optional)
    * @return {ConnectionPoint} The connection point
    */
-  getParentConnectionPoint(node, levelStyle) {
+  getParentConnectionPoint(node, levelStyle, childNode = null) {
     // Direction is determined by StyleManager
     const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
+
+    // Currently, we're not using childNode to determine the connection point
+    // In the future, this could be enhanced to create multiple connection points
+    // based on the specific child node's position or other attributes
 
     // Direction determines which side of the node the connection points come from
     if (effectiveDirection === 'right') {

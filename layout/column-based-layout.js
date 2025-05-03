@@ -211,10 +211,17 @@ class ColumnBasedLayout extends Layout {
    * Get the connection point for a parent node
    * @param {Node} node - The parent node
    * @param {Object} levelStyle - The style for this node's level
+   * @param {Node} childNode - The specific child node being connected to (optional)
    * @return {ConnectionPoint} The connection point
    */
-  getParentConnectionPoint(node, levelStyle) {
+  getParentConnectionPoint(node, levelStyle, childNode = null) {
     // In column based layouts, parent typically connects from its bottom
+    // This is the default implementation, but subclasses can override to provide
+    // specialized behavior based on the childNode parameter
+    
+    // In the future, this could utilize childNode to distribute connection points
+    // along the bottom edge of the parent based on which column the child is in
+    
     const x = node.x + node.width / 2;
     const y = node.y + node.height;
 

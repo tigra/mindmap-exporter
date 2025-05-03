@@ -171,18 +171,24 @@ class ClassicMindmapLayout extends ColumnBasedLayout {
    * Get the connection point for a parent node in classic mindmap layout
    * @param {Node} node - The parent node
    * @param {Object} levelStyle - The style for this node's level
+   * @param {Node} childNode - The specific child node being connected to (optional)
    * @return {ConnectionPoint} The connection point
    */
-  getParentConnectionPoint(node, levelStyle) {
-    // For determining connection points we need to know which direction the child is
-    // Get the child's direction if available
-    let childNode = node.children[0];
+  getParentConnectionPoint(node, levelStyle, childNode = null) {
+    // In ClassicMindmapLayout, we want to determine connection point based on which side
+    // the child is on (left or right column)
+    
     let direction = 'right';  // Default
     
-    if (childNode) {
-      // Try to get direction from StyleManager if available
+    // If a specific childNode was provided, use it to determine direction
+    if (childNode && levelStyle.styleManager && levelStyle.styleManager.getEffectiveValue) {
+      direction = levelStyle.styleManager.getEffectiveValue(childNode, 'direction');
+    } 
+    // Fallback to first child if no specific child provided
+    else if (node.children.length > 0) {
+      const firstChild = node.children[0];
       if (levelStyle.styleManager && levelStyle.styleManager.getEffectiveValue) {
-        direction = levelStyle.styleManager.getEffectiveValue(childNode, 'direction');
+        direction = levelStyle.styleManager.getEffectiveValue(firstChild, 'direction');
       }
     }
     
