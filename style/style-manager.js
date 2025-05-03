@@ -161,7 +161,7 @@ class StyleManager {
    * @param {Object} options.customPadding - Custom padding values for different layout types
    */
   setGlobalLayoutType(layoutType, options = {}) {  // TODO use style change instead
-    if (layoutType !== 'horizontal' && layoutType !== 'vertical' && layoutType !== 'taproot') {
+    if (layoutType !== 'horizontal' && layoutType !== 'vertical' && layoutType !== 'taproot' && layout !== 'classic') {
       throw new Error('Layout type must be either "horizontal" or "vertical". Or "taproot"');
     }
 

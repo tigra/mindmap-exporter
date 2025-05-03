@@ -310,6 +310,17 @@ logPropertyInheritanceChain(node, property) {
           default: { layoutType: 'horizontal' }
         }
       });
+    } else if (layoutType === 'classic') {
+      // Configure style system for classic mindmap layout
+      this.styleManager.configure({
+        levelStyles: {
+          1: { layoutType: 'classic' },
+          2: { layoutType: 'horizontal', direction: null },
+          3: { layoutType: 'horizontal', direction: null },
+          4: { layoutType: 'horizontal', direction: null },
+          default: { layoutType: 'horizontal' }
+        }
+      });
     } else if (layoutType === 'horizontal-left') {
       // Configure style system
       this.styleManager.setGlobalLayoutType('horizontal', { direction: 'left' });

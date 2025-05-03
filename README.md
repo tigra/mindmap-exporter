@@ -30,3 +30,25 @@ python transform.py file1.md > file2.md  # transforms nested bullet points to ne
 ```
 
 (not needed anymore because the page supports bullet points itself, but just in case :) 
+
+## Layouts
+
+### Classic MindMap Layout
+
+  For the ClassicMindmapLayout (to be implemented):
+
+      Left Column                 Parent                 Right Column
+      +---------+               +--------+               +----------+
+      |         |               |        |               |          |
+      | Child 1 +------→        |        |        ←------+  Child 3 |
+      |         |      |        |        |        |      |          |
+      +---------+      |        |        |        |      +----------+
+                       |========# Parent #========|
+      +---------+      |        |  Node  |        |      +----------+
+      |         |      |        |        |        |      |          |
+      | Child 2 +------→        |        |        ←------+  Child 3 |
+      |         |               |        |               |          |
+      +---------+               +--------+               +----------+
+
+  This provides a classic mindmap layout with the parent in the center and children balanced on both sides, vertically centered relative to the parent node.
+

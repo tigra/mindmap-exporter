@@ -284,6 +284,25 @@ class MindmapApp {
            layoutType: 'horizontal'
         },
       });
+    } else if (layoutType === 'classic') {
+      console.log('applying classic mindmap layout...');
+      style.configure({
+        1: {
+           layoutType: 'classic'
+        },
+        2: {
+           layoutType: 'horizontal'
+        },
+        3: {
+           layoutType: 'horizontal'
+        },
+        4: {
+           layoutType: 'horizontal'
+        },
+        default: {
+           layoutType: 'horizontal'
+        },
+      });
     } else if (layoutType === 'vertical-over-taproot') {
       console.log('applying vertical over taproot...');
       style.configure({
@@ -532,6 +551,43 @@ class MindmapApp {
     
     // Call the existing test function with the found node's ID
     this.testMoveBoundingBoxTo(node.id, x, y);
+  }
+  
+  /**
+   * Test the ClassicMindmapLayout by applying it to the current mindmap
+   */
+  testClassicMindmapLayout() {
+    console.log('Testing ClassicMindmapLayout...');
+    
+    // Clear any existing overrides
+    this.model.getRoot().clearOverridesRecursive();
+    
+    // Configure style to use ClassicMindmapLayout for level 1
+    this.styleManager.configure({
+      levelStyles: {
+        1: {
+          layoutType: 'classic',
+          parentPadding: 80,
+          childPadding: 30
+        },
+        2: {
+          layoutType: 'horizontal',
+          parentPadding: 50,
+          childPadding: 20
+        }
+      }
+    });
+    
+    // Get the layout from the updated style
+    const layout = this.styleManager.getLevelStyle(1).getLayout();
+    
+    // Apply the layout to the root node
+    layout.applyLayout(this.model.getRoot(), 0, 0, this.styleManager);
+    
+    // Re-render the mindmap
+    this.controller.initialize();
+    
+    console.log('ClassicMindmapLayout applied');
   }
 }
 
