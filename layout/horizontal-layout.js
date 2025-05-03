@@ -1,4 +1,4 @@
-// src/layout/horizontal-layout.js - Update for direction inheritance
+// src/layout/horizontal-layout.js
 
 import Layout from './layout.js';
 import ConnectionPoint from './connection-point.js';
@@ -18,7 +18,7 @@ class HorizontalLayout extends Layout {
     super();
     this.parentPadding = parentPadding;
     this.childPadding = childPadding;
-    this.direction = direction; // Store initial direction from constructor
+    this.direction = direction; // Store direction from constructor
   }
 
   /**
@@ -26,10 +26,11 @@ class HorizontalLayout extends Layout {
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate
    * @param {number} y - The y coordinate
-   * @param {Object} style - The style to apply
+   * @param {Object} style - The style to apply (StyleManager)
    * @return {Object} The size of the laid out subtree
    */
   applyLayout(node, x, y, style) {
+    console.groupCollapsed(`HorizontalLayout.applyLayout(${node.text})`);
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
@@ -38,11 +39,11 @@ class HorizontalLayout extends Layout {
     node.width = nodeSize.width;
     node.height = nodeSize.height;
 
-    const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || 'left';
+    // Direction is determined by StyleManager
+    const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
 
-    // Use the effective direction for layout calculations
+    // Direction multiplier for positioning (1 for right, -1 for left)
     const directionMultiplier = effectiveDirection === 'right' ? 1 : -1;
-    const directionMultiplier1 = effectiveDirection === 'right' ? 0 : -1;
 
     // Apply style properties to the node for rendering later
     node.style = {
@@ -59,11 +60,12 @@ class HorizontalLayout extends Layout {
     // If the node has no children or is collapsed, return its dimensions
     if (node.children.length === 0 || node.collapsed) {
       node.boundingBox = {
-        x: x, //+ directionMultiplier1 * nodeSize.width,
+        x: x,
         y: y - 0.5 * nodeSize.height,
         width: nodeSize.width,
         height: nodeSize.height
       };
+      console.groupEnd();
       return node.boundingBox;
     }
 
@@ -84,21 +86,16 @@ class HorizontalLayout extends Layout {
 
       // Get the appropriate layout for the child's level
       const childLevelStyle = style.getLevelStyle(child.level);
-      const childLayoutType = childLevelStyle.layoutType;
+      const childLayoutType = style.getEffectiveValue(child, 'layoutType');
 
-      // Use the effective direction for the child - this will consider node overrides and inheritance
-      const childDirection = style.getEffectiveDirection ?
-        style.getEffectiveDirection(child) :
-        (child.direction || childLevelStyle.direction || effectiveDirection);
-
-      // Use LayoutFactory to create appropriate layout
-      let childLayout = LayoutFactory.createLayout(
+      // Create appropriate layout for child using LayoutFactory
+      const childLayout = LayoutFactory.createLayout(
         childLayoutType,
         childLevelStyle.parentPadding,
-        childLevelStyle.childPadding,
-        childDirection
+        childLevelStyle.childPadding
       );
 
+      // Apply layout to child
       const childSize = childLayout.applyLayout(child, childX, y + totalHeight, style);
 
       totalHeight += childSize.height + this.childPadding;
@@ -113,19 +110,24 @@ class HorizontalLayout extends Layout {
       node.y = y - (nodeSize.height / 2) + ((totalHeight - nodeSize.height) / 2);
     }
 
-    for (let i = 0; i < node.children.length; i++) {
-      if (effectiveDirection === 'left') {
+    // Adjust positions for left-directed layouts
+    if (effectiveDirection === 'left') {
+      for (let i = 0; i < node.children.length; i++) {
         this.adjustPositionRecursive(node.children[i], -node.children[i].width, 0);
-//        this.adjustPositionRecursive(node.children[i], 0, 0);
       }
     }
 
+    // Calculate bounding box dimensions
+    const bbX = effectiveDirection === 'right' ? x : x - maxChildWidth - this.parentPadding;
+    const bbWidth = nodeSize.width + this.parentPadding + maxChildWidth;
+
     node.boundingBox = {
-      x: x + directionMultiplier1 * maxChildWidth + directionMultiplier1 * this.parentPadding,
-      y: y - nodeSize.height / 2,
-      width: nodeSize.width + this.parentPadding + maxChildWidth,
+      x: bbX,
+      y: y - Math.max(nodeSize.height / 2, totalHeight / 2),
+      width: bbWidth,
       height: Math.max(nodeSize.height, totalHeight)
     };
+    console.groupEnd();
     return node.boundingBox;
   }
 
@@ -136,8 +138,8 @@ class HorizontalLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getParentConnectionPoint(node, levelStyle) {
-    // Get the effective direction for this node
-      let effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || 'left';
+    // Direction is determined by StyleManager
+    const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
 
     // Direction determines which side of the node the connection points come from
     if (effectiveDirection === 'right') {
@@ -156,16 +158,15 @@ class HorizontalLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getChildConnectionPoint(node, levelStyle) {
-    // Get the effective direction for this node
-    let effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || 'left';
+    // Direction is determined by StyleManager
+    const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
 
     // For the child node, connection point is always on the side facing the parent
-    // In horizontal layout, this depends on the direction
     if (effectiveDirection === 'right') {
-      // When the layout flows right, child connects on its left side (facing parent)
+      // When layout flows right, child connects on its left side
       return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
     } else {
-      // When the layout flows left, child connects on its right side (facing parent)
+      // When layout flows left, child connects on its right side
       return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'right');
     }
   }

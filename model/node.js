@@ -56,6 +56,14 @@ class Node {
     this.configOverrides = {};
   }
 
+  clearOverridesRecursive() {
+    this.clearAllOverrides();
+    for (var i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      child.clearOverridesRecursive();
+    }
+  }
+
   // Existing methods remain unchanged
   static generateUniqueId() {
     if (!Node.lastId) {

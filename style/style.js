@@ -20,7 +20,7 @@ class StyleManager {
         horizontalPadding: 20,
         parentPadding: 80,
         childPadding: 20,
-        layoutType: 'horizontal',
+//        layoutType: 'horizontal',
         backgroundColor: '#f5f5f5',
         borderColor: '#aaaaaa',
         borderWidth: 2,
@@ -31,7 +31,7 @@ class StyleManager {
       2: new StyleConfiguration({
         fontSize: 16,
         fontWeight: 'bold',
-        layoutType: 'horizontal',
+//        layoutType: 'horizontal',
         parentPadding: 60,
         childPadding: 20,
         nodeType: 'box'
@@ -41,7 +41,7 @@ class StyleManager {
       3: new StyleConfiguration({
         fontSize: 14,
         parentPadding: 40,
-        layoutType: 'horizontal',
+//        layoutType: 'horizontal',
         nodeType: 'box'
       }),
 
@@ -52,7 +52,7 @@ class StyleManager {
         verticalPadding: 5,
         parentPadding: 30,
         childPadding: 15,
-        layoutType: 'horizontal',
+//        layoutType: 'horizontal',
         nodeType: 'text-only'
       })
     };
@@ -112,7 +112,7 @@ class StyleManager {
    * @param {Array<number>} options.excludeLevels - Array of level numbers to exclude from the change
    * @param {Object} options.customPadding - Custom padding values for different layout types
    */
-  setGlobalLayoutType(layoutType, options = {}) {
+  setGlobalLayoutType(layoutType, options = {}) {   // TODO rely on style change instead
     if (layoutType !== 'horizontal' && layoutType !== 'vertical') {
       throw new Error('Layout type must be either "horizontal" or "vertical"');
     }

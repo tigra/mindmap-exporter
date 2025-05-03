@@ -198,6 +198,7 @@ class MindmapApp {
 //    style.setGlobalLayoutType(this.layoutType.value);
     // TODO factor out this behavoir, find the proper class responsible for it
     const layoutType = this.layoutType.value;
+    this.model.getRoot().clearOverridesRecursive();
     if (layoutType === 'horizontal-left') {
       style.setGlobalLayoutType('horizontal', {direction: 'left'});
     } else if (layoutType === 'horizontal-right') {
@@ -225,7 +226,8 @@ class MindmapApp {
       console.log('applying vertical over taproot...');
       style.configure({
         1: {
-           layoutType: 'vertical'
+           layoutType: 'vertical',
+           direction: 'down'
         },
         2: {
            layoutType: 'taproot'
@@ -240,16 +242,77 @@ class MindmapApp {
            layoutType: 'horizontal'
         },
       });
+    } else if (layoutType === 'vertical-down' || layoutType === 'vertical') {
+             style.configure({
+        1: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+        2: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+        3: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+        4: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+        default: {
+           layoutType: 'vertical',
+           direction: 'down'
+        },
+      });
+    }else if(layoutType === 'vertical-up') {
+                    style.configure({
+        1: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+        2: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+        3: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+        4: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+        default: {
+           layoutType: 'vertical',
+           direction: 'up'
+        },
+      });
     } else {
       style.setGlobalLayoutType(layoutType);
     }
-    console.log(style.getLevelStyle(1));
+//    console.log(style.getLevelStyle(1));
     const layout = style.getLevelStyle(1).getLayout();
 
+    // Always clear overrides before setting new ones to avoid inconsistent behavior
+    this.model.getRoot().clearOverridesRecursive();
+    
+    // Now set specific overrides based on layout type
     if (layoutType === 'horizontal-left') {
         this.model.getRoot().setOverride('direction', 'left');
     } else if (layoutType === 'horizontal-right') {
         this.model.getRoot().setOverride('direction', 'right');
+    } else if (layoutType === 'vertical-up') {
+        this.model.getRoot().setOverride('direction', 'up');
+        this.model.getRoot().setOverride('layoutType', 'vertical');
+    } else if (layoutType === 'vertical-down' || layoutType === 'vertical') {
+        this.model.getRoot().setOverride('direction', 'down');
+        this.model.getRoot().setOverride('layoutType', 'vertical');
+    } else if (layoutType === 'vertical-over-taproot') {
+        this.model.getRoot().setOverride('layoutType', 'vertical');
+        this.model.getRoot().setOverride('direction', 'down');
+    } else {
+        this.model.getRoot().clearOverridesRecursive();
     }
     layout.applyLayout(this.model.getRoot(), 0, 0, style);
 

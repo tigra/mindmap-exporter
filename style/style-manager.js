@@ -11,7 +11,14 @@ class StyleManager {
    */
   constructor() {
     // Define default styles for different levels
-    this.levelStyles = {
+    this.levelStyles = this.createInitialLevelStyles();
+
+    // Default style for any level not explicitly defined
+    this.defaultLevelStyle = new StyleConfiguration({}, this);
+  }
+
+  createInitialLevelStyles() {
+     return {
       // Root level
       1: new StyleConfiguration({
         fontSize: 18,
@@ -20,7 +27,7 @@ class StyleManager {
         horizontalPadding: 20,
         parentPadding: 80,
         childPadding: 20,
-        layoutType: 'horizontal',
+//        layoutType: 'horizontal',
         backgroundColor: '#f5f5f5',
         borderColor: '#aaaaaa',
         borderWidth: 2,
@@ -31,7 +38,7 @@ class StyleManager {
       2: new StyleConfiguration({
         fontSize: 16,
         fontWeight: 'bold',
-        layoutType: 'horizontal',
+//        layoutType: 'horizontal',
         parentPadding: 60,
         childPadding: 20,
         nodeType: 'box'
@@ -41,7 +48,7 @@ class StyleManager {
       3: new StyleConfiguration({
         fontSize: 14,
         parentPadding: 40,
-        layoutType: 'horizontal',
+//        layoutType: 'horizontal',
         nodeType: 'box'
       }, this),
 
@@ -52,13 +59,10 @@ class StyleManager {
         verticalPadding: 5,
         parentPadding: 30,
         childPadding: 15,
-        layoutType: 'horizontal',
+//        layoutType: 'horizontal',
         nodeType: 'text-only'
       }, this)
     };
-
-    // Default style for any level not explicitly defined
-    this.defaultLevelStyle = new StyleConfiguration({}, this);
   }
 
   /**
@@ -69,28 +73,39 @@ class StyleManager {
    * @return {any} The effective value
    */
   getEffectiveValue(node, property, inheritFromParent = true) {
-    console.log('getEffectiveValue', node, property, inheritFromParent);
+//  if (property = 'layoutType') {
+//  console.group(`getEffectiveValue(${node}, ${property}`);
+//  }
+//    console.log('getEffectiveValue', node, property, inheritFromParent);
 
     // Get the appropriate level style
     const levelStyle = this.getLevelStyle(node.level);
 
+//    console.log('levelStyle', levelStyle);
+
     // Start with level style default
     let value = levelStyle[property];
+    console.log('levelstyle value', value);
 
     // Check node's own overrides
     if (node.configOverrides && property in node.configOverrides) {
+      console.log('overridden:', property, node.configOverrides[property]);
       return node.configOverrides[property];
     }
 
     // Check parent inheritance if enabled
-    if (inheritFromParent && node.parent) {
+    if (!value && inheritFromParent && node.parent) {
       // Recursively check parent's effective value
       const parentValue = this.getEffectiveValue(node.parent, property, true);
+//      if (parentValue !== undefined && parentValue !== null) {
       if (parentValue !== undefined) {
+        console.log('overridden in parent', property, parentValue);
         value = parentValue;
       }
     }
-
+//      if (property = 'layoutType') {
+//    console.groupEnd();
+//    }
     return value;
   }
 
@@ -145,7 +160,7 @@ class StyleManager {
    * @param {Array<number>} options.excludeLevels - Array of level numbers to exclude from the change
    * @param {Object} options.customPadding - Custom padding values for different layout types
    */
-  setGlobalLayoutType(layoutType, options = {}) {
+  setGlobalLayoutType(layoutType, options = {}) {  // TODO use style change instead
     if (layoutType !== 'horizontal' && layoutType !== 'vertical' && layoutType !== 'taproot') {
       throw new Error('Layout type must be either "horizontal" or "vertical". Or "taproot"');
     }

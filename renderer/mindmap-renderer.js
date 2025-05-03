@@ -277,14 +277,14 @@ class MindmapRenderer {
 
     _drawBoundingBox(node) {
         if (node.boundingBox) {
-            console.log(node.boundingBox);
+//            console.log(node.boundingBox);
             return `<rect x="${node.boundingBox.x}" y="${node.boundingBox.y}"
                           width="${node.boundingBox.width}" height="${node.boundingBox.height}"
                           rx="2" ry="2" fill="#101010" fill-opacity="0.05"
                           stroke="#001000" stroke-width="1" filter="url(#dropShadow)"
                           id="${node.id}_bbox" class="node-shape" />`;
         } else {
-            console.log('no bounding box!');
+//            console.log('no bounding box!');
             return '';
         }
     }
@@ -503,25 +503,47 @@ class MindmapRenderer {
   /**
    * Attach event handlers to nodes
    */
-  attachEventHandlers() {
-    this.nodeMap.forEach((node, nodeId) => {
-      // Add event listener to node shape
-      const nodeRect = document.getElementById(`${nodeId}_rect`);
-      if (nodeRect) {
-        nodeRect.addEventListener('dblclick', () => {
-          eventBridge.handleNodeEvent(nodeId, 'toggle');
-        });
-      }
+attachEventHandlers() {
+  this.nodeMap.forEach((node, nodeId) => {
+    // Add event listener to node shape
+    const nodeRect = document.getElementById(`${nodeId}_rect`);
+    if (nodeRect) {
+      // Double-click event for toggling collapse state
+      nodeRect.addEventListener('dblclick', () => {
+        eventBridge.handleNodeEvent(nodeId, 'toggle');
+      });
 
-      // Add event listener to collapse/expand indicator
-      const nodeIndicator = document.getElementById(`${nodeId}_indicator`);
-      if (nodeIndicator) {
-        nodeIndicator.addEventListener('click', () => {
-          eventBridge.handleNodeEvent(nodeId, 'toggle');
-        });
-      }
-    });
-  }
+      // Single-click event for debugging node properties
+      nodeRect.addEventListener('click', (event) => {
+        // Prevent event from triggering unwanted behaviors
+        if (!event.ctrlKey) {
+          event.stopPropagation();
+          eventBridge.handleNodeEvent(nodeId, 'debug');
+        }
+      });
+    }
+
+    // Add event listener to text as well for better UX
+    const nodeText = document.getElementById(`${nodeId}_text`);
+    if (nodeText) {
+      nodeText.addEventListener('click', (event) => {
+        // Prevent event from triggering unwanted behaviors
+        if (!event.ctrlKey) {
+          event.stopPropagation();
+          eventBridge.handleNodeEvent(nodeId, 'debug');
+        }
+      });
+    }
+
+    // Add event listener to collapse/expand indicator
+    const nodeIndicator = document.getElementById(`${nodeId}_indicator`);
+    if (nodeIndicator) {
+      nodeIndicator.addEventListener('click', () => {
+        eventBridge.handleNodeEvent(nodeId, 'toggle');
+      });
+    }
+  });
+}
 
   /**
    * Get the node map

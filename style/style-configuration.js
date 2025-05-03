@@ -26,7 +26,10 @@ class StyleConfiguration {
     this.childPadding = options.childPadding || 20;
 
     // Layout type
-    this.layoutType = options.layoutType || 'horizontal';
+//    this.layoutType = options.layoutType || 'horizontal';
+    this.layoutType = options.layoutType || null;
+//    this.layoutType = options.layoutType || undefined;
+//    this.layoutType = options.layoutType;
     this.direction = options.direction || null;
 
     // Colors and appearance
@@ -69,6 +72,7 @@ class StyleConfiguration {
    * @param {string} layoutType - The layout type to set ('horizontal' or 'vertical')
    */
   setLayoutType(layoutType) {
+    a = 1/0;
     if (layoutType !== 'horizontal' && layoutType !== 'vertical') {
       throw new Error('Layout type must be either "horizontal" or "vertical"');
     }
