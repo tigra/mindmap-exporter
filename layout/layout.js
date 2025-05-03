@@ -72,48 +72,65 @@ class Layout {
   }
   
   /**
-   * Helper method to calculate connection points based on distribution type
-   * This method can be used by any layout to implement consistent connection point behavior
+   * Calculate horizontal position for parent connection points when distributed
    * @param {Node} node - The parent node
-   * @param {Node} childNode - The child node being connected to
-   * @param {string} connectionPointsType - The connection points distribution type ('single', 'distributedRelativeToParentSize', 'distributeEvenly')
-   * @param {function} getSingleConnectionPoint - Function that returns a single connection point (usually center)
-   * @param {function} calculateDistributedPoint - Function that calculates x,y coordinates for a distributed point
-   * @return {ConnectionPoint} The calculated connection point
+   * @param {Node} childNode - The child node
+   * @param {string} connectionPointsType - Type of distribution ('single', 'distributedRelativeToParentSize', 'distributeEvenly')
+   * @param {number} widthPortion - Portion of parent width to use for connections (0.0-1.0), default 0.8
+   * @returns {number} The x-coordinate for the connection point
    */
-  calculateConnectionPoint(node, childNode, connectionPointsType, getSingleConnectionPoint, calculateDistributedPoint) {
-    // If no child provided or using single connection point mode, return single point
+  calculateConnectionPointX(node, childNode, connectionPointsType, widthPortion = 0.8) {
+    // Default to center position
     if (!childNode || connectionPointsType === 'single') {
-      return getSingleConnectionPoint();
+      return node.x + (node.width / 2);
     }
     
-    const children = node.children;
+    // Calculate margins - evenly distribute remaining width to both sides
+    const marginPortion = (1 - widthPortion) / 2;
+    const parentWidth = node.width;
     
-    // Handle distributedRelativeToParentSize - based on child position
+    // Handle specific distribution types
     if (connectionPointsType === 'distributedRelativeToParentSize') {
-      return calculateDistributedPoint(node, childNode, false);
+      // Position based on child's horizontal center
+      const childCenterX = childNode.x + (childNode.width / 2);
+      
+      // Calculate relative position with configured margins
+      let relativePosition = (childCenterX - node.x) / parentWidth;
+      // Constrain within the usable range
+      relativePosition = Math.max(marginPortion, Math.min(1 - marginPortion, relativePosition));
+      
+      return node.x + (parentWidth * relativePosition);
     }
     
-    // Handle distributeEvenly - based on child index
     if (connectionPointsType === 'distributeEvenly') {
-      // Early return if no children
+      // Position based on child's index among siblings
+      const children = node.children;
+      
+      // Return center if no children or child not found
       if (!children || children.length === 0) {
-        return getSingleConnectionPoint();
+        return node.x + (node.width / 2);
       }
       
-      // Find the index of this child among siblings
       const childIndex = children.findIndex(child => child === childNode);
-      
-      // If child not found, return center
       if (childIndex === -1) {
-        return getSingleConnectionPoint();
+        return node.x + (node.width / 2);
       }
       
-      return calculateDistributedPoint(node, childNode, true, childIndex, children.length);
+      // Calculate evenly spaced positions
+      const usableWidth = parentWidth * widthPortion;  // Configurable portion of width
+      const startX = node.x + (parentWidth * marginPortion);  // Left margin
+      
+      // For one child, use center; otherwise space evenly
+      if (children.length === 1) {
+        return startX + (usableWidth / 2);
+      } else {
+        const gap = usableWidth / (children.length - 1);
+        return startX + (gap * childIndex);
+      }
     }
     
-    // Fallback to single connection point
-    return getSingleConnectionPoint();
+    // Default fallback to center
+    return node.x + (node.width / 2);
   }
 
   /**

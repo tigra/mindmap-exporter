@@ -29,6 +29,7 @@ class StyleConfiguration {
     this.layoutType = options.layoutType || null;
     this.direction = options.direction || null;
     this.parentConnectionPoints = options.parentConnectionPoints || 'single';
+    this.parentWidthPortionForConnectionPoints = options.parentWidthPortionForConnectionPoints || 0.8;
 
     // Colors and appearance
     this.backgroundColor = options.backgroundColor || '#ffffff';
