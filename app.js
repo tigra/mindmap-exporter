@@ -6,6 +6,8 @@ import MindmapStylePresets from './style/style-presets.js';
 //import StylePresetsAdapter from './style/style-presets-adapter.js';
 import MindmapRenderer from './renderer/mindmap-renderer.js';
 import MindmapController from './controller/mindmap-controller.js';
+import YamlParser from './utils/yaml-parser.js';
+import YamlEditor from './utils/yaml-editor.js';
 
 //StyleManager = window.StyleManager;
 
@@ -66,11 +68,18 @@ class MindmapApp {
     this.generateBtn = document.getElementById(this.options.generateBtnId);
     this.exportBtn = document.getElementById(this.options.exportBtnId);
     this.loadingIndicator = document.getElementById(this.options.loadingIndicator);
+    
+    // YAML editor elements
+    this.styleYamlEditor = document.getElementById('style-yaml-editor');
+    this.layoutYamlEditor = document.getElementById('layout-yaml-editor');
 
     if (!this.container || !this.markdownInput) {
       console.error('Required DOM elements not found');
       return;
     }
+    
+    // Initialize YAML editors
+    this.initYamlEditors();
 
    // Sample data
     this.markdownInput.value = `# Project Planning
@@ -162,6 +171,57 @@ class MindmapApp {
       window.mindmapRenderer = this.renderer;
       window.mindmapController = this.controller;
     }
+  }
+  
+  /**
+   * Initialize YAML editors
+   */
+  initYamlEditors() {
+    if (!this.styleYamlEditor || !this.layoutYamlEditor) {
+      console.warn('YAML editor elements not found');
+      return;
+    }
+    
+    // Initialize Style YAML Editor
+    this.styleYamlEditorComponent = new YamlEditor('style-yaml-editor', 'style', (parsedYaml) => {
+      // Apply the parsed YAML to StyleManager
+      this.styleManager.configure(parsedYaml);
+      // Reapply layout and re-render
+      this.reapplyAndRender();
+    });
+    this.styleYamlEditorComponent.init();
+    
+    // Initialize Layout YAML Editor
+    this.layoutYamlEditorComponent = new YamlEditor('layout-yaml-editor', 'layout', (parsedYaml) => {
+      // Apply the parsed YAML to StyleManager
+      this.styleManager.configure(parsedYaml);
+      // Reapply layout and re-render
+      this.reapplyAndRender();
+    });
+    this.layoutYamlEditorComponent.init();
+    
+    // Set initial templates
+    this.styleYamlEditorComponent.setValue(this.styleYamlEditorComponent.generateTemplate());
+    this.layoutYamlEditorComponent.setValue(this.layoutYamlEditorComponent.generateTemplate());
+  }
+  
+  /**
+   * Helper to reapply layout and re-render after YAML changes
+   */
+  reapplyAndRender() {
+    // Get the root node
+    const root = this.model.getRoot();
+    if (!root) return;
+    
+    // Always clear overrides before applying new styles/layouts
+    root.clearOverridesRecursive();
+    
+    // Apply layout to the model
+    const layout = this.styleManager.getLevelStyle(1).getLayout();
+    layout.applyLayout(root, 0, 0, this.styleManager);
+    
+    // Re-render the mindmap
+    this.controller.initialize();
   }
 
   /**

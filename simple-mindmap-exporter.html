@@ -16,6 +16,7 @@
         <div class="tabs">
             <div class="tab active" data-tab="editor">Markdown Editor</div>
             <div class="tab" data-tab="appearance">Appearance</div>
+            <div class="tab" data-tab="yaml">Custom YAML</div>
         </div>
         
         <div class="tab-content active" id="editor-tab">
@@ -63,6 +64,26 @@
             </div>
             
             <button id="apply-settings-btn">Apply Settings</button>
+        </div>
+        
+        <div class="tab-content" id="yaml-tab">
+            <div class="yaml-editors-container">
+                <!-- Style Preset Editor -->
+                <div class="yaml-editor-section" id="style-yaml-section">
+                    <h3>Style Preset YAML</h3>
+                    <p class="yaml-description">Define custom styling for your mindmap with YAML.</p>
+                    <textarea id="style-yaml-editor" class="yaml-editor" placeholder="Enter style YAML..."></textarea>
+                    <!-- Controls will be added dynamically by YamlEditor -->
+                </div>
+                
+                <!-- Layout Preset Editor -->
+                <div class="yaml-editor-section" id="layout-yaml-section">
+                    <h3>Layout Preset YAML</h3>
+                    <p class="yaml-description">Define custom layout configuration with YAML.</p>
+                    <textarea id="layout-yaml-editor" class="yaml-editor" placeholder="Enter layout YAML..."></textarea>
+                    <!-- Controls will be added dynamically by YamlEditor -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -114,6 +135,8 @@
     <script type="module" src="./style/style-presets.js"></script>
 
     <script type="module" src="./utils/event-bridge.js"></script>
+    <script type="module" src="./utils/yaml-parser.js"></script>
+    <script type="module" src="./utils/yaml-editor.js"></script>
     <script type="module" src="./renderer/mindmap-renderer.js"></script>
     <script type="module" src="./controller/mindmap-controller.js"></script>
     <script type="module" src="./app.js"></script>

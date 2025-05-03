@@ -378,3 +378,105 @@ body.resizing .preview {
     transition: none;
     pointer-events: none;
 }
+
+/* YAML Editor styling */
+.yaml-editors-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.yaml-editor-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f9f9f9;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.yaml-editor-section h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+.yaml-description {
+    font-size: 12px;
+    color: #666;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.yaml-editor {
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 200px;
+    background-color: #282c34;
+    color: #abb2bf;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #3e4451;
+    line-height: 1.5;
+}
+
+.yaml-editor:focus {
+    outline: none;
+    border-color: #7E57C2;
+    box-shadow: 0 0 0 2px rgba(126, 87, 194, 0.2);
+}
+
+.yaml-status {
+    margin-top: 5px;
+    padding: 5px 8px;
+    font-size: 12px;
+    border-radius: 3px;
+    min-height: 1em;
+}
+
+.yaml-status-success {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.yaml-status-error {
+    background-color: #ffebee;
+    color: #b71c1c;
+}
+
+.yaml-status-info {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+}
+
+.yaml-button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.yaml-apply-btn {
+    background-color: #7E57C2;
+}
+
+.yaml-apply-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.yaml-save-btn {
+    background-color: #4caf50;
+}
+
+.yaml-save-btn:hover {
+    background-color: #388e3c;
+}
+
+.yaml-load-btn {
+    background-color: #2196f3;
+}
+
+.yaml-load-btn:hover {
+    background-color: #1976d2;
+}
