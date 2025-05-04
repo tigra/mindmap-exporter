@@ -8,7 +8,7 @@ coordinates of left top corner of future bounding box of a node.
 
 ### Multiple Connection Points
 
-The mindmap can now support multiple parent connection points, controlled by the `parentConnectionPoints` style parameter.
+The mindmap can support multiple parent connection points, controlled by the `parentConnectionPoints` style parameter.
 
 #### Supported Values
 - `single`: (Default) Uses a single connection point at the center of the parent node's edge
