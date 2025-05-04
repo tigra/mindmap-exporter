@@ -25,7 +25,7 @@ jobs:
       - name: Copy files
         run: |
           # Copy while preserving directory structure
-          find . \( -name "*.js" -o -name "*.css" -o -name "*.html" \) -type f | while read file; do
+          find . \( -name "*.js" -o -name "*.css" -o -name "*.html" -o -name "*.png" \) -type f | while read file; do
             # Create directory structure in target
             dir=$(dirname "$file")
             mkdir -p "target/mindmap/$dir"
