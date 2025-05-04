@@ -330,10 +330,13 @@ class MindmapRenderer {
    * @private
    * @param {ConnectionPoint} point - The connection point
    * @param {number} width - The width to offset (half on each side)
-   * @return {Array} Array of [leftX, leftY, rightX, rightY] for the offset points
+   * @return {Array} Array of [topX, topY, bottomX, bottomY] for the offset points
    */
   _calculatePerpendicularOffsets(point, width) {
     // Calculate offset based on the connection point direction
+    // Always return points in a consistent order: first point is always the "top/left" offset
+    // and second point is always the "bottom/right" offset, regardless of direction
+    
     switch (point.direction) {
       case 'top':
         // Offset horizontally for top-pointing connection
@@ -342,10 +345,10 @@ class MindmapRenderer {
           point.x + width/2, point.y   // right point
         ];
       case 'bottom':
-        // Offset horizontally for bottom-pointing connection
+        // Offset horizontally for bottom-pointing connection (same as top)
         return [
-          point.x + width/2, point.y,  // right point (reversed for proper path direction)
-          point.x - width/2, point.y   // left point
+          point.x - width/2, point.y,  // left point
+          point.x + width/2, point.y   // right point
         ];
       case 'left':
         // Offset vertically for left-pointing connection
@@ -354,10 +357,10 @@ class MindmapRenderer {
           point.x, point.y + width/2   // bottom point
         ];
       case 'right':
-        // Offset vertically for right-pointing connection
+        // Offset vertically for right-pointing connection (same as left)
         return [
-          point.x, point.y + width/2,  // bottom point (reversed for proper path direction)
-          point.x, point.y - width/2   // top point
+          point.x, point.y - width/2,  // top point
+          point.x, point.y + width/2   // bottom point
         ];
       default:
         // Default to horizontal offset if direction is unknown
@@ -388,21 +391,22 @@ class MindmapRenderer {
     const [cp1x, cp1y, cp2x, cp2y] = this._calculateBezierControlPoints(startPoint, endPoint);
     
     // Calculate perpendicular offsets at start and end points
-    const [startTopX, startTopY, startBottomX, startBottomY] = 
+    // Now these are consistently ordered: [leftX, leftY, rightX, rightY] or [topX, topY, bottomX, bottomY]
+    const [startLeftX, startLeftY, startRightX, startRightY] = 
       this._calculatePerpendicularOffsets(startPoint, startWidth);
     
-    const [endTopX, endTopY, endBottomX, endBottomY] = 
+    const [endLeftX, endLeftY, endRightX, endRightY] = 
       this._calculatePerpendicularOffsets(endPoint, endWidth);
     
-    // Create the filled path
-    const path = `M ${startTopX} ${startTopY}
-                   C ${cp1x + (startTopX - startPoint.x)} ${cp1y + (startTopY - startPoint.y)},
-                     ${cp2x + (endTopX - endPoint.x)} ${cp2y + (endTopY - endPoint.y)},
-                     ${endTopX} ${endTopY}
-                   L ${endBottomX} ${endBottomY}
-                   C ${cp2x + (endBottomX - endPoint.x)} ${cp2y + (endBottomY - endPoint.y)},
-                     ${cp1x + (startBottomX - startPoint.x)} ${cp1y + (startBottomY - startPoint.y)},
-                     ${startBottomX} ${startBottomY}
+    // Create the filled path - always going clockwise
+    const path = `M ${startLeftX} ${startLeftY}
+                   C ${cp1x + (startLeftX - startPoint.x)} ${cp1y + (startLeftY - startPoint.y)},
+                     ${cp2x + (endLeftX - endPoint.x)} ${cp2y + (endLeftY - endPoint.y)},
+                     ${endLeftX} ${endLeftY}
+                   L ${endRightX} ${endRightY}
+                   C ${cp2x + (endRightX - endPoint.x)} ${cp2y + (endRightY - endPoint.y)},
+                     ${cp1x + (startRightX - startPoint.x)} ${cp1y + (startRightY - startPoint.y)},
+                     ${startRightX} ${startRightY}
                    Z`;
     
     // Get connection color from style
