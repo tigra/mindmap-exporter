@@ -59,8 +59,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#3a459a',  // Darker for root connections
                     connectionTapered: true,     // Enable tapered connections
-                    connectionStartWidth: 10,    // Thickest for root level
-                    connectionEndWidth: 4,       // Still relatively thick at the end
+                    connectionStartWidth: 16,    // Thickest for root level
+                    connectionEndWidth: 6,       // Still relatively thick at the end
                     connectionGradient: true     // Use gradient for more appealing visuals
                 },
                 2: {
@@ -75,7 +75,7 @@ class MindmapStylePresets {
                     connectionColor: '#5562b6',  // Darker than the backgroundColor
                     connectionTapered: true,     // Enable tapered connections
                     connectionStartWidth: 8,     // Slightly thinner than level 1
-                    connectionEndWidth: 3,       // Gradually thinner
+                    connectionEndWidth: 4,       // Gradually thinner
                     connectionGradient: true     // Use gradient for more appealing visuals
                 },
                 3: {
@@ -150,8 +150,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#1a5276',
                     connectionTapered: true,
-                    connectionStartWidth: 9,    // Professional, slightly thinner than default preset
-                    connectionEndWidth: 3.5,    // Still substantial for corporate look
+                    connectionStartWidth: 16,    // Professional, slightly thinner than default preset
+                    connectionEndWidth: 5,    // Still substantial for corporate look
                     connectionGradient: true
                 },
                 2: {
@@ -243,8 +243,8 @@ class MindmapStylePresets {
                     parentConnectionPoints: 'distributeEvenly',
                     parentWidthPortionForConnectionPoints: 0.75,
                     connectionTapered: true,
-                    connectionStartWidth: 12,    // Thicker for vibrant style
-                    connectionEndWidth: 4.5,     // Still substantial for strong visual impact
+                    connectionStartWidth: 16,    // Thicker for vibrant style
+                    connectionEndWidth: 6,     // Still substantial for strong visual impact
                     connectionGradient: true
                 },
                 2: {
@@ -260,7 +260,7 @@ class MindmapStylePresets {
                     parentConnectionPoints: 'distributeEvenly',
                     connectionTapered: true,
                     connectionStartWidth: 10,    // Gradually thinner
-                    connectionEndWidth: 3.5,
+                    connectionEndWidth: 4,
                     connectionGradient: true
                 },
                 3: {
@@ -340,8 +340,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#a35f7c',  // Even darker for better root connections
                     connectionTapered: true,
-                    connectionStartWidth: 9,     // Soft, slightly thinner look for pastel
-                    connectionEndWidth: 3.5,
+                    connectionStartWidth: 16,     // Soft, slightly thinner look for pastel
+                    connectionEndWidth: 4,
                     connectionGradient: true
                 },
                 2: {
@@ -355,8 +355,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#c37a96',  // Much darker than backgroundColor for better visibility
                     connectionTapered: true,
-                    connectionStartWidth: 7.5,   // Gradually thinner
-                    connectionEndWidth: 3,
+                    connectionStartWidth: 8,   // Gradually thinner
+                    connectionEndWidth: 4,
                     connectionGradient: true
                 },
                 3: {
@@ -368,7 +368,7 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#6aa9b0',  // Much darker than backgroundColor
                     connectionTapered: true,
-                    connectionStartWidth: 6,     // Gradually thinner
+                    connectionStartWidth: 7,     // Gradually thinner
                     connectionEndWidth: 2.5,
                     connectionGradient: true
                 },
@@ -431,8 +431,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#34495e',
                     connectionTapered: true,
-                    connectionStartWidth: 8,     // More subdued for monochrome style
-                    connectionEndWidth: 3,
+                    connectionStartWidth: 16,     // More subdued for monochrome style
+                    connectionEndWidth: 4,
                     connectionGradient: false    // No gradients for clean monochrome look
                 },
                 2: {
@@ -447,7 +447,7 @@ class MindmapStylePresets {
                     connectionColor: '#566573',
                     connectionTapered: true,
                     connectionStartWidth: 7,    // Gradually thinner
-                    connectionEndWidth: 2.75,
+                    connectionEndWidth: 3,
                     connectionGradient: false   // No gradients for clean monochrome look
                 },
                 3: {
@@ -522,8 +522,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#556b2f',
                     connectionTapered: true,
-                    connectionStartWidth: 12,    // Thicker, branch-like for nature theme
-                    connectionEndWidth: 4,
+                    connectionStartWidth: 16,    // Thicker, branch-like for nature theme
+                    connectionEndWidth: 6,
                     connectionGradient: true
                 },
                 2: {
@@ -538,7 +538,7 @@ class MindmapStylePresets {
                     connectionColor: '#6b8e23',
                     connectionTapered: true,
                     connectionStartWidth: 10,    // Gradually thinner
-                    connectionEndWidth: 3.5,
+                    connectionEndWidth: 4,
                     connectionGradient: true
                 },
                 3: {
@@ -613,8 +613,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#0078d7',
                     connectionTapered: true,
-                    connectionStartWidth: 10,    // Sleek tech style connections
-                    connectionEndWidth: 3,
+                    connectionStartWidth: 16,    // Sleek tech style connections
+                    connectionEndWidth: 6,
                     connectionGradient: true
                 },
                 2: {
@@ -629,7 +629,7 @@ class MindmapStylePresets {
                     connectionColor: '#528bff',
                     connectionTapered: true,
                     connectionStartWidth: 8,     // Gradually thinner
-                    connectionEndWidth: 2.5,
+                    connectionEndWidth: 3,
                     connectionGradient: true
                 },
                 3: {
@@ -704,8 +704,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#cc3333',
                     connectionTapered: true,
-                    connectionStartWidth: 9,     // Slightly pixelated appearance for retro
-                    connectionEndWidth: 4,
+                    connectionStartWidth: 16,     // Slightly pixelated appearance for retro
+                    connectionEndWidth: 6,
                     connectionGradient: false    // No gradient for pixelated retro feel
                 },
                 2: {
@@ -795,8 +795,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#666666',
                     connectionTapered: true,
-                    connectionStartWidth: 7,     // Subtle, thin for minimal style
-                    connectionEndWidth: 3,
+                    connectionStartWidth: 16,     // Subtle, thin for minimal style
+                    connectionEndWidth: 6,
                     connectionGradient: false    // Clean, flat look without gradients
                 },
                 2: {
@@ -810,8 +810,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#888888',  // Much darker than the original #cccccc for better visibility
                     connectionTapered: true,
-                    connectionStartWidth: 6,     // Gradually thinner
-                    connectionEndWidth: 2.5,
+                    connectionStartWidth: 7,     // Gradually thinner
+                    connectionEndWidth: 3,
                     connectionGradient: false    // Clean, flat look without gradients
                 },
                 3: {
@@ -886,8 +886,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#8e24aa',
                     connectionTapered: true,
-                    connectionStartWidth: 14,   // Extra thick for creative style
-                    connectionEndWidth: 5,
+                    connectionStartWidth: 17,   // Extra thick for creative style
+                    connectionEndWidth: 6,
                     connectionGradient: true
                 },
                 2: {
@@ -901,8 +901,8 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#ba68c8',
                     connectionTapered: true,
-                    connectionStartWidth: 11,   // Gradually thinner
-                    connectionEndWidth: 4,
+                    connectionStartWidth: 12,   // Gradually thinner
+                    connectionEndWidth: 5,
                     connectionGradient: true
                 },
                 3: {
