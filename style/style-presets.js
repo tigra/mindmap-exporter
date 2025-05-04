@@ -57,7 +57,11 @@ class MindmapStylePresets {
                     borderWidth: 3,
                     borderRadius: 12,
                     nodeType: 'box',
-                    connectionColor: '#3a459a'  // Darker for root connections
+                    connectionColor: '#3a459a',  // Darker for root connections
+                    connectionTapered: true,     // Enable tapered connections
+                    connectionStartWidth: 10,    // Thickest for root level
+                    connectionEndWidth: 4,       // Still relatively thick at the end
+                    connectionGradient: true     // Use gradient for more appealing visuals
                 },
                 2: {
                     fontSize: 18,
@@ -68,7 +72,11 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 10,
                     nodeType: 'box',
-                    connectionColor: '#5562b6'  // Darker than the backgroundColor
+                    connectionColor: '#5562b6',  // Darker than the backgroundColor
+                    connectionTapered: true,     // Enable tapered connections
+                    connectionStartWidth: 8,     // Slightly thinner than level 1
+                    connectionEndWidth: 3,       // Gradually thinner
+                    connectionGradient: true     // Use gradient for more appealing visuals
                 },
                 3: {
                     fontSize: 16,
@@ -77,7 +85,11 @@ class MindmapStylePresets {
                     borderColor: '#6a75c9',
                     borderRadius: 8,
                     nodeType: 'box',
-                    connectionColor: '#6a75c9'  // Matches the level 2's borderColor
+                    connectionColor: '#6a75c9',  // Matches the level 2's borderColor
+                    connectionTapered: true,     // Enable tapered connections
+                    connectionStartWidth: 6,     // Thinner than level 2
+                    connectionEndWidth: 2.5,     // Gradually thinner
+                    connectionGradient: true     // Use gradient for more appealing visuals
                 },
                 4: {
                     fontSize: 14,
@@ -86,7 +98,8 @@ class MindmapStylePresets {
                     borderColor: '#8892d8',
                     borderRadius: 6,
                     nodeType: 'box',
-                    connectionColor: '#8892d8'  // Matches the level 3's borderColor
+                    connectionColor: '#8892d8',  // Matches the level 3's borderColor
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 12,
@@ -95,13 +108,15 @@ class MindmapStylePresets {
                     borderColor: '#a5add8',
                     borderRadius: 5,
                     nodeType: 'box',
-                    connectionColor: '#8892d8'  // Matches the level 4's borderColor
+                    connectionColor: '#8892d8',  // Matches the level 4's borderColor
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#5562b6',
                     nodeType: 'text-only',
-                    connectionColor: '#8892d8'  // Darker color to be more visible
+                    connectionColor: '#8892d8',  // Darker color to be more visible
+                    connectionTapered: false     // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -109,7 +124,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#5562b6',
-                connectionColor: '#8892d8'  // Darker color for better visibility
+                connectionColor: '#8892d8',  // Darker color for better visibility
+                connectionTapered: false  // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -132,7 +148,11 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 2,
                     nodeType: 'box',
-                    connectionColor: '#1a5276'
+                    connectionColor: '#1a5276',
+                    connectionTapered: true,
+                    connectionStartWidth: 9,    // Professional, slightly thinner than default preset
+                    connectionEndWidth: 3.5,    // Still substantial for corporate look
+                    connectionGradient: true
                 },
                 2: {
                     fontSize: 18,
@@ -143,7 +163,11 @@ class MindmapStylePresets {
                     borderWidth: 1,
                     borderRadius: 2,
                     nodeType: 'box',
-                    connectionColor: '#2874a6'
+                    connectionColor: '#2874a6',
+                    connectionTapered: true,
+                    connectionStartWidth: 7.5,  // Gradually thinner
+                    connectionEndWidth: 3,
+                    connectionGradient: true
                 },
                 3: {
                     fontSize: 16,
@@ -152,7 +176,11 @@ class MindmapStylePresets {
                     borderColor: '#1a5276',
                     borderRadius: 2,
                     nodeType: 'box',
-                    connectionColor: '#3498db'
+                    connectionColor: '#3498db',
+                    connectionTapered: true,
+                    connectionStartWidth: 6,    // Gradually thinner
+                    connectionEndWidth: 2.5,
+                    connectionGradient: true
                 },
                 4: {
                     fontSize: 14,
@@ -161,7 +189,8 @@ class MindmapStylePresets {
                     borderColor: '#2874a6',
                     borderRadius: 2,
                     nodeType: 'box',
-                    connectionColor: '#85c1e9'
+                    connectionColor: '#85c1e9',
+                    connectionTapered: false    // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -170,13 +199,15 @@ class MindmapStylePresets {
                     borderColor: '#3498db',
                     borderRadius: 2,
                     nodeType: 'box',
-                    connectionColor: '#aed6f1'
+                    connectionColor: '#aed6f1',
+                    connectionTapered: false    // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#1a5276',
                     nodeType: 'text-only',
-                    connectionColor: '#85c1e9'
+                    connectionColor: '#85c1e9',
+                    connectionTapered: false    // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -184,7 +215,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#1a5276',
-                connectionColor: '#85c1e9'
+                connectionColor: '#85c1e9',
+                connectionTapered: false  // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -209,7 +241,11 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#d35400',
                     parentConnectionPoints: 'distributeEvenly',
-                    parentWidthPortionForConnectionPoints: 0.75
+                    parentWidthPortionForConnectionPoints: 0.75,
+                    connectionTapered: true,
+                    connectionStartWidth: 12,    // Thicker for vibrant style
+                    connectionEndWidth: 4.5,     // Still substantial for strong visual impact
+                    connectionGradient: true
                 },
                 2: {
                     fontSize: 18,
@@ -221,7 +257,11 @@ class MindmapStylePresets {
                     borderRadius: 15,
                     nodeType: 'box',
                     connectionColor: '#e67e22',
-                    parentConnectionPoints: 'distributeEvenly' 
+                    parentConnectionPoints: 'distributeEvenly',
+                    connectionTapered: true,
+                    connectionStartWidth: 10,    // Gradually thinner
+                    connectionEndWidth: 3.5,
+                    connectionGradient: true
                 },
                 3: {
                     fontSize: 16,
@@ -231,7 +271,11 @@ class MindmapStylePresets {
                     borderRadius: 15,
                     nodeType: 'box',
                     connectionColor: '#f1c40f',
-                    parentConnectionPoints: 'distributeEvenly'
+                    parentConnectionPoints: 'distributeEvenly',
+                    connectionTapered: true,
+                    connectionStartWidth: 8,     // Gradually thinner
+                    connectionEndWidth: 3,
+                    connectionGradient: true
                 },
                 4: {
                     fontSize: 14,
@@ -241,7 +285,8 @@ class MindmapStylePresets {
                     borderRadius: 15,
                     nodeType: 'box',
                     connectionColor: '#2ecc71',
-                    parentConnectionPoints: 'distributeEvenly'
+                    parentConnectionPoints: 'distributeEvenly',
+                    connectionTapered: false    // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -251,14 +296,16 @@ class MindmapStylePresets {
                     borderRadius: 12,
                     nodeType: 'box',
                     connectionColor: '#7dcea0',
-                    parentConnectionPoints: 'distributeEvenly'
+                    parentConnectionPoints: 'distributeEvenly',
+                    connectionTapered: false    // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#8e44ad',
                     nodeType: 'text-only',
                     connectionColor: '#9b59b6',
-                    parentConnectionPoints: 'distributeEvenly'
+                    parentConnectionPoints: 'distributeEvenly',
+                    connectionTapered: false    // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -267,7 +314,8 @@ class MindmapStylePresets {
                 nodeType: 'text-only',
                 textColor: '#8e44ad',
                 connectionColor: '#9b59b6',
-                parentConnectionPoints: 'distributeEvenly' // Enable evenly distributed connection points for vertical layouts
+                parentConnectionPoints: 'distributeEvenly', // Enable evenly distributed connection points for vertical layouts
+                connectionTapered: false  // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -290,7 +338,11 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 25,
                     nodeType: 'box',
-                    connectionColor: '#a35f7c'  // Even darker for better root connections
+                    connectionColor: '#a35f7c',  // Even darker for better root connections
+                    connectionTapered: true,
+                    connectionStartWidth: 9,     // Soft, slightly thinner look for pastel
+                    connectionEndWidth: 3.5,
+                    connectionGradient: true
                 },
                 2: {
                     fontSize: 18,
@@ -301,7 +353,11 @@ class MindmapStylePresets {
                     borderWidth: 1,
                     borderRadius: 20,
                     nodeType: 'box',
-                    connectionColor: '#c37a96'  // Much darker than backgroundColor for better visibility
+                    connectionColor: '#c37a96',  // Much darker than backgroundColor for better visibility
+                    connectionTapered: true,
+                    connectionStartWidth: 7.5,   // Gradually thinner
+                    connectionEndWidth: 3,
+                    connectionGradient: true
                 },
                 3: {
                     fontSize: 16,
@@ -310,7 +366,11 @@ class MindmapStylePresets {
                     borderColor: '#91cbd3',
                     borderRadius: 20,
                     nodeType: 'box',
-                    connectionColor: '#6aa9b0'  // Much darker than backgroundColor
+                    connectionColor: '#6aa9b0',  // Much darker than backgroundColor
+                    connectionTapered: true,
+                    connectionStartWidth: 6,     // Gradually thinner
+                    connectionEndWidth: 2.5,
+                    connectionGradient: true
                 },
                 4: {
                     fontSize: 14,
@@ -319,7 +379,8 @@ class MindmapStylePresets {
                     borderColor: '#f3dea0',
                     borderRadius: 20,
                     nodeType: 'box',
-                    connectionColor: '#caa550'  // Darker golden tone for connections
+                    connectionColor: '#caa550',  // Darker golden tone for connections
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -328,13 +389,15 @@ class MindmapStylePresets {
                     borderColor: '#b2d18e',
                     borderRadius: 18,
                     nodeType: 'box',
-                    connectionColor: '#86a85b'  // Darker green for connections
+                    connectionColor: '#86a85b',  // Darker green for connections
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#875573',
                     nodeType: 'text-only',
-                    connectionColor: '#c37a96'  // Match level 2 connection color
+                    connectionColor: '#c37a96',  // Match level 2 connection color
+                    connectionTapered: false     // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -342,7 +405,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#875573',
-                connectionColor: '#c37a96'  // Darker pink for better visibility
+                connectionColor: '#c37a96',  // Darker pink for better visibility
+                connectionTapered: false  // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -365,7 +429,11 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#34495e'
+                    connectionColor: '#34495e',
+                    connectionTapered: true,
+                    connectionStartWidth: 8,     // More subdued for monochrome style
+                    connectionEndWidth: 3,
+                    connectionGradient: false    // No gradients for clean monochrome look
                 },
                 2: {
                     fontSize: 18,
@@ -376,7 +444,11 @@ class MindmapStylePresets {
                     borderWidth: 1,
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#566573'
+                    connectionColor: '#566573',
+                    connectionTapered: true,
+                    connectionStartWidth: 7,    // Gradually thinner
+                    connectionEndWidth: 2.75,
+                    connectionGradient: false   // No gradients for clean monochrome look
                 },
                 3: {
                     fontSize: 16,
@@ -385,7 +457,11 @@ class MindmapStylePresets {
                     borderColor: '#2c3e50',
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#808b96'
+                    connectionColor: '#808b96',
+                    connectionTapered: true,
+                    connectionStartWidth: 6,    // Gradually thinner
+                    connectionEndWidth: 2.5,
+                    connectionGradient: false   // No gradients for clean monochrome look
                 },
                 4: {
                     fontSize: 14,
@@ -394,7 +470,8 @@ class MindmapStylePresets {
                     borderColor: '#566573',
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#abb2b9'
+                    connectionColor: '#abb2b9',
+                    connectionTapered: false    // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -403,13 +480,15 @@ class MindmapStylePresets {
                     borderColor: '#808b96',
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#d5dbdb'
+                    connectionColor: '#d5dbdb',
+                    connectionTapered: false    // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#2c3e50',
                     nodeType: 'text-only',
-                    connectionColor: '#abb2b9'
+                    connectionColor: '#abb2b9',
+                    connectionTapered: false    // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -417,7 +496,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#2c3e50',
-                connectionColor: '#abb2b9'
+                connectionColor: '#abb2b9',
+                connectionTapered: false   // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -440,7 +520,11 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 10,
                     nodeType: 'box',
-                    connectionColor: '#556b2f'
+                    connectionColor: '#556b2f',
+                    connectionTapered: true,
+                    connectionStartWidth: 12,    // Thicker, branch-like for nature theme
+                    connectionEndWidth: 4,
+                    connectionGradient: true
                 },
                 2: {
                     fontSize: 18,
@@ -451,7 +535,11 @@ class MindmapStylePresets {
                     borderWidth: 1,
                     borderRadius: 8,
                     nodeType: 'box',
-                    connectionColor: '#6b8e23'
+                    connectionColor: '#6b8e23',
+                    connectionTapered: true,
+                    connectionStartWidth: 10,    // Gradually thinner
+                    connectionEndWidth: 3.5,
+                    connectionGradient: true
                 },
                 3: {
                     fontSize: 16,
@@ -460,7 +548,11 @@ class MindmapStylePresets {
                     borderColor: '#556b2f',
                     borderRadius: 8,
                     nodeType: 'box',
-                    connectionColor: '#8fbc8f'
+                    connectionColor: '#8fbc8f',
+                    connectionTapered: true,
+                    connectionStartWidth: 8,     // Gradually thinner
+                    connectionEndWidth: 3,
+                    connectionGradient: true
                 },
                 4: {
                     fontSize: 14,
@@ -469,7 +561,8 @@ class MindmapStylePresets {
                     borderColor: '#6b8e23',
                     borderRadius: 8,
                     nodeType: 'box',
-                    connectionColor: '#a9dfbf'
+                    connectionColor: '#a9dfbf',
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -478,13 +571,15 @@ class MindmapStylePresets {
                     borderColor: '#8fbc8f',
                     borderRadius: 7,
                     nodeType: 'box',
-                    connectionColor: '#c5e7d0'
+                    connectionColor: '#c5e7d0',
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#556b2f',
                     nodeType: 'text-only',
-                    connectionColor: '#a9dfbf'
+                    connectionColor: '#a9dfbf',
+                    connectionTapered: false     // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -492,7 +587,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#556b2f',
-                connectionColor: '#a9dfbf'
+                connectionColor: '#a9dfbf',
+                connectionTapered: false  // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -515,7 +611,11 @@ class MindmapStylePresets {
                     borderWidth: 3,
                     borderRadius: 6,
                     nodeType: 'box',
-                    connectionColor: '#0078d7'
+                    connectionColor: '#0078d7',
+                    connectionTapered: true,
+                    connectionStartWidth: 10,    // Sleek tech style connections
+                    connectionEndWidth: 3,
+                    connectionGradient: true
                 },
                 2: {
                     fontSize: 18,
@@ -526,7 +626,11 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#528bff'
+                    connectionColor: '#528bff',
+                    connectionTapered: true,
+                    connectionStartWidth: 8,     // Gradually thinner
+                    connectionEndWidth: 2.5,
+                    connectionGradient: true
                 },
                 3: {
                     fontSize: 16,
@@ -535,7 +639,11 @@ class MindmapStylePresets {
                     borderColor: '#1e1e1e',
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#528bff'
+                    connectionColor: '#528bff',
+                    connectionTapered: true,
+                    connectionStartWidth: 6,     // Gradually thinner
+                    connectionEndWidth: 2,
+                    connectionGradient: true
                 },
                 4: {
                     fontSize: 14,
@@ -544,7 +652,8 @@ class MindmapStylePresets {
                     borderColor: '#2d2d2d',
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#528bff'
+                    connectionColor: '#528bff',
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -553,13 +662,15 @@ class MindmapStylePresets {
                     borderColor: '#3c3c3c',
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#528bff'
+                    connectionColor: '#528bff',
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#61dafb',
                     nodeType: 'text-only',
-                    connectionColor: '#528bff'
+                    connectionColor: '#528bff',
+                    connectionTapered: false     // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -567,7 +678,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#61dafb',
-                connectionColor: '#528bff'
+                connectionColor: '#528bff',
+                connectionTapered: false  // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -590,7 +702,11 @@ class MindmapStylePresets {
                     borderWidth: 4,
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#cc3333'
+                    connectionColor: '#cc3333',
+                    connectionTapered: true,
+                    connectionStartWidth: 9,     // Slightly pixelated appearance for retro
+                    connectionEndWidth: 4,
+                    connectionGradient: false    // No gradient for pixelated retro feel
                 },
                 2: {
                     fontSize: 18,
@@ -601,7 +717,11 @@ class MindmapStylePresets {
                     borderWidth: 3,
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#ff9e9e'
+                    connectionColor: '#ff9e9e',
+                    connectionTapered: true,
+                    connectionStartWidth: 8,     // Gradually thinner
+                    connectionEndWidth: 3.5,
+                    connectionGradient: false    // No gradient for pixelated retro feel
                 },
                 3: {
                     fontSize: 16,
@@ -610,7 +730,11 @@ class MindmapStylePresets {
                     borderColor: '#30ada5',
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#83efe8'
+                    connectionColor: '#83efe8',
+                    connectionTapered: true,
+                    connectionStartWidth: 7,     // Gradually thinner
+                    connectionEndWidth: 3,
+                    connectionGradient: false    // No gradient for pixelated retro feel
                 },
                 4: {
                     fontSize: 14,
@@ -619,7 +743,8 @@ class MindmapStylePresets {
                     borderColor: '#d4be4c',
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#efe1a5'
+                    connectionColor: '#efe1a5',
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -628,13 +753,15 @@ class MindmapStylePresets {
                     borderColor: '#ff6b6b',
                     borderRadius: 0,
                     nodeType: 'box',
-                    connectionColor: '#ffc8c8'
+                    connectionColor: '#ffc8c8',
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#ff6b6b',
                     nodeType: 'text-only',
-                    connectionColor: '#ff9e9e'
+                    connectionColor: '#ff9e9e',
+                    connectionTapered: false     // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -642,7 +769,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#ff6b6b',
-                connectionColor: '#ff9e9e'
+                connectionColor: '#ff9e9e',
+                connectionTapered: false   // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -665,7 +793,11 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 6,
                     nodeType: 'box',
-                    connectionColor: '#666666'
+                    connectionColor: '#666666',
+                    connectionTapered: true,
+                    connectionStartWidth: 7,     // Subtle, thin for minimal style
+                    connectionEndWidth: 3,
+                    connectionGradient: false    // Clean, flat look without gradients
                 },
                 2: {
                     fontSize: 18,
@@ -676,7 +808,11 @@ class MindmapStylePresets {
                     borderWidth: 1,
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#888888'  // Much darker than the original #cccccc for better visibility
+                    connectionColor: '#888888',  // Much darker than the original #cccccc for better visibility
+                    connectionTapered: true,
+                    connectionStartWidth: 6,     // Gradually thinner
+                    connectionEndWidth: 2.5,
+                    connectionGradient: false    // Clean, flat look without gradients
                 },
                 3: {
                     fontSize: 16,
@@ -685,7 +821,11 @@ class MindmapStylePresets {
                     borderColor: '#e6e6e6',
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#999999'  // Darker than the original
+                    connectionColor: '#999999',  // Darker than the original
+                    connectionTapered: true,
+                    connectionStartWidth: 5,     // Gradually thinner
+                    connectionEndWidth: 2,
+                    connectionGradient: false    // Clean, flat look without gradients
                 },
                 4: {
                     fontSize: 14,
@@ -694,7 +834,8 @@ class MindmapStylePresets {
                     borderColor: '#e6e6e6',
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#aaaaaa'  // Still darker than original but lighter than level 3
+                    connectionColor: '#aaaaaa',  // Still darker than original but lighter than level 3
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -703,13 +844,15 @@ class MindmapStylePresets {
                     borderColor: '#dddddd',
                     borderRadius: 4,
                     nodeType: 'box',
-                    connectionColor: '#bbbbbb'
+                    connectionColor: '#bbbbbb',
+                    connectionTapered: false     // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#666666',
                     nodeType: 'text-only',
-                    connectionColor: '#888888'  // Match level 2 connection color for consistency
+                    connectionColor: '#888888',  // Match level 2 connection color for consistency
+                    connectionTapered: false     // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -717,7 +860,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#666666',
-                connectionColor: '#888888'  // Darker for better visibility
+                connectionColor: '#888888',  // Darker for better visibility
+                connectionTapered: false     // Use normal connections (non-tapered) in default style
             }
         });
         return style;
@@ -740,7 +884,11 @@ class MindmapStylePresets {
                     borderWidth: 3,
                     borderRadius: 30,
                     nodeType: 'box',
-                    connectionColor: '#8e24aa'
+                    connectionColor: '#8e24aa',
+                    connectionTapered: true,
+                    connectionStartWidth: 14,   // Extra thick for creative style
+                    connectionEndWidth: 5,
+                    connectionGradient: true
                 },
                 2: {
                     fontSize: 18,
@@ -751,7 +899,11 @@ class MindmapStylePresets {
                     borderWidth: 2,
                     borderRadius: 25,
                     nodeType: 'box',
-                    connectionColor: '#ba68c8'
+                    connectionColor: '#ba68c8',
+                    connectionTapered: true,
+                    connectionStartWidth: 11,   // Gradually thinner
+                    connectionEndWidth: 4,
+                    connectionGradient: true
                 },
                 3: {
                     fontSize: 16,
@@ -760,7 +912,11 @@ class MindmapStylePresets {
                     borderColor: '#0097a7',
                     borderRadius: 25,
                     nodeType: 'box',
-                    connectionColor: '#4dd0e1'
+                    connectionColor: '#4dd0e1',
+                    connectionTapered: true,
+                    connectionStartWidth: 9,    // Gradually thinner
+                    connectionEndWidth: 3,
+                    connectionGradient: true
                 },
                 4: {
                     fontSize: 14,
@@ -769,7 +925,8 @@ class MindmapStylePresets {
                     borderColor: '#fdd835',
                     borderRadius: 25,
                     nodeType: 'box',
-                    connectionColor: '#d0d075'
+                    connectionColor: '#d0d075',
+                    connectionTapered: false    // Use normal connections for level 4+
                 },
                 5: {
                     fontSize: 13,
@@ -778,13 +935,15 @@ class MindmapStylePresets {
                     borderColor: '#ab47bc',
                     borderRadius: 22,
                     nodeType: 'box',
-                    connectionColor: '#e1bee7'
+                    connectionColor: '#e1bee7',
+                    connectionTapered: false    // Use normal connections for level 4+
                 },
                 6: {
                     fontSize: 12,
                     textColor: '#9c27b0',
                     nodeType: 'text-only',
-                    connectionColor: '#ce93d8'
+                    connectionColor: '#ce93d8',
+                    connectionTapered: false    // Use normal connections for level 4+
                 }
             },
             defaultStyle: {
@@ -792,7 +951,8 @@ class MindmapStylePresets {
                 fontSize: 9,  // Smaller than level 6 (which is 10)
                 nodeType: 'text-only',
                 textColor: '#9c27b0',
-                connectionColor: '#ce93d8'
+                connectionColor: '#ce93d8',
+                connectionTapered: false  // Use normal connections (non-tapered) in default style
             }
         });
         return style;

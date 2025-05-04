@@ -41,6 +41,13 @@ class StyleConfiguration {
     this.nodeType = options.nodeType || 'box';
     this.connectionColor = options.connectionColor || '#666666';
     this.connectionWidth = options.connectionWidth || 2;
+    
+    // Tapered connection options
+    this.connectionTapered = options.connectionTapered !== undefined ? options.connectionTapered : false;
+    this.connectionStartWidth = options.connectionStartWidth || 8;
+    this.connectionEndWidth = options.connectionEndWidth || 2;
+    this.connectionGradient = options.connectionGradient !== undefined ? options.connectionGradient : false;
+    
     this.boundingBox = options.boundingBox || false;
   }
 
