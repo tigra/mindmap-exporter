@@ -28,9 +28,9 @@ jobs:
           find . \( -name "*.js" -o -name "*.css" -o -name "*.html" \) -type f | while read file; do
             # Create directory structure in target
             dir=$(dirname "$file")
-            mkdir -p "target/specific/path/$dir"
+            mkdir -p "target/mindmap/$dir"
             # Copy file
-            cp "$file" "target/specific/path/$file"
+            cp "$file" "target/mindmap/$file"
           done
 
       - name: Commit and push changes
