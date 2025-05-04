@@ -85,7 +85,7 @@ class MindmapRenderer {
 
     // Create gradients for different levels
     const gradients = [];
-    const levelCount = 4; // Maximum number of distinct level styles to create gradients for
+    const levelCount = 6; // Maximum number of distinct level styles to create gradients for
 
     for (let i = 1; i <= levelCount; i++) {
       const levelStyle = this.styleManager.getLevelStyle(i);

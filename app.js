@@ -268,106 +268,150 @@ class MindmapApp {
     } else if (layoutType === 'taproot') {
       console.log('applying taprooty...');
       style.configure({
-        1: {
-           layoutType: 'taproot'
-        },
-        2: {
-           layoutType: 'horizontal'
-        },
-        3: {
-           layoutType: 'horizontal'
-        },
-        4: {
-           layoutType: 'horizontal'
-        },
-        default: {
-           layoutType: 'horizontal'
-        },
+        levelStyles: {
+          1: {
+             layoutType: 'taproot'
+          },
+          2: {
+             layoutType: 'horizontal'
+          },
+          3: {
+             layoutType: 'horizontal'
+          },
+          4: {
+             layoutType: 'horizontal'
+          },
+          5: {
+             layoutType: 'horizontal'
+          },
+          6: {
+             layoutType: 'horizontal'
+          },
+          default: {
+             layoutType: 'horizontal'
+          }
+        }
       });
     } else if (layoutType === 'classic') {
       console.log('applying classic mindmap layout...');
       style.configure({
-        1: {
-           layoutType: 'classic'
-        },
-        2: {
-           layoutType: 'horizontal'
-        },
-        3: {
-           layoutType: 'horizontal'
-        },
-        4: {
-           layoutType: 'horizontal'
-        },
-        default: {
-           layoutType: 'horizontal'
-        },
+        levelStyles: {
+          1: {
+             layoutType: 'classic'
+          },
+          2: {
+             layoutType: 'horizontal'
+          },
+          3: {
+             layoutType: 'horizontal'
+          },
+          4: {
+             layoutType: 'horizontal'
+          },
+          5: {
+             layoutType: 'horizontal'
+          },
+          6: {
+             layoutType: 'horizontal'
+          },
+          default: {
+             layoutType: 'horizontal'
+          }
+        }
       });
     } else if (layoutType === 'vertical-over-taproot') {
       console.log('applying vertical over taproot...');
       style.configure({
-        1: {
-           layoutType: 'vertical',
-           direction: 'down'
-        },
-        2: {
-           layoutType: 'taproot'
-        },
-        3: {
-           layoutType: 'horizontal'
-        },
-        4: {
-           layoutType: 'horizontal'
-        },
-        default: {
-           layoutType: 'horizontal'
-        },
+        levelStyles: {
+          1: {
+             layoutType: 'vertical',
+             direction: 'down'
+          },
+          2: {
+             layoutType: 'taproot'
+          },
+          3: {
+             layoutType: 'horizontal'
+          },
+          4: {
+             layoutType: 'horizontal'
+          },
+          5: {
+             layoutType: 'horizontal'
+          },
+          6: {
+             layoutType: 'horizontal'
+          },
+          default: {
+             layoutType: 'horizontal'
+          }
+        }
       });
     } else if (layoutType === 'vertical-down' || layoutType === 'vertical') {
              style.configure({
-        1: {
-           layoutType: 'vertical',
-           direction: 'down'
-        },
-        2: {
-           layoutType: 'vertical',
-           direction: 'down'
-        },
-        3: {
-           layoutType: 'vertical',
-           direction: 'down'
-        },
-        4: {
-           layoutType: 'vertical',
-           direction: 'down'
-        },
-        default: {
-           layoutType: 'vertical',
-           direction: 'down'
-        },
+        levelStyles: {
+          1: {
+             layoutType: 'vertical',
+             direction: 'down'
+          },
+          2: {
+             layoutType: 'vertical',
+             direction: 'down'
+          },
+          3: {
+             layoutType: 'vertical',
+             direction: 'down'
+          },
+          4: {
+             layoutType: 'vertical',
+             direction: 'down'
+          },
+          5: {
+             layoutType: 'vertical',
+             direction: 'down'
+          },
+          6: {
+             layoutType: 'vertical',
+             direction: 'down'
+          },
+          default: {
+             layoutType: 'vertical',
+             direction: 'down'
+          }
+        }
       });
     }else if(layoutType === 'vertical-up') {
                     style.configure({
-        1: {
-           layoutType: 'vertical',
-           direction: 'up'
-        },
-        2: {
-           layoutType: 'vertical',
-           direction: 'up'
-        },
-        3: {
-           layoutType: 'vertical',
-           direction: 'up'
-        },
-        4: {
-           layoutType: 'vertical',
-           direction: 'up'
-        },
-        default: {
-           layoutType: 'vertical',
-           direction: 'up'
-        },
+        levelStyles: {
+          1: {
+             layoutType: 'vertical',
+             direction: 'up'
+          },
+          2: {
+             layoutType: 'vertical',
+             direction: 'up'
+          },
+          3: {
+             layoutType: 'vertical',
+             direction: 'up'
+          },
+          4: {
+             layoutType: 'vertical',
+             direction: 'up'
+          },
+          5: {
+             layoutType: 'vertical',
+             direction: 'up'
+          },
+          6: {
+             layoutType: 'vertical',
+             direction: 'up'
+          },
+          default: {
+             layoutType: 'vertical',
+             direction: 'up'
+          }
+        }
       });
     } else {
       style.setGlobalLayoutType(layoutType);
@@ -400,6 +444,13 @@ class MindmapApp {
     // Apply style preset
     if (this.stylePreset) {
       this.controller.handleStyleChange(this.stylePreset.value);
+      
+      // Log the level styles to debug issues with level 5-6
+      console.log("Level styles after preset applied:", {
+        "level5": style.levelStyles[5],
+        "level6": style.levelStyles[6]
+      });
+      
       // TODO make it steerable through the UI
 //      style.configure({
 //        levelStyles: {

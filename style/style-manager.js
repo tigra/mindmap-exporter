@@ -52,7 +52,7 @@ class StyleManager {
         nodeType: 'box'
       }, this),
 
-      // Fourth level and beyond
+      // Fourth level
       4: new StyleConfiguration({
         fontSize: 12,
         horizontalPadding: 5,
@@ -60,6 +60,26 @@ class StyleManager {
         parentPadding: 30,
         childPadding: 15,
 //        layoutType: 'horizontal',
+        nodeType: 'box'
+      }, this),
+      
+      // Fifth level
+      5: new StyleConfiguration({
+        fontSize: 11,
+        horizontalPadding: 5,
+        verticalPadding: 5,
+        parentPadding: 25,
+        childPadding: 12,
+        nodeType: 'box'
+      }, this),
+      
+      // Sixth level and beyond
+      6: new StyleConfiguration({
+        fontSize: 10,
+        horizontalPadding: 3,
+        verticalPadding: 3,
+        parentPadding: 20,
+        childPadding: 10,
         nodeType: 'text-only'
       }, this)
     };
@@ -85,7 +105,7 @@ class StyleManager {
 
     // Start with level style default
     let value = levelStyle[property];
-    console.log('levelstyle value', value);
+//    console.log('levelstyle value', value);
 
     // Check node's own overrides
     if (node.configOverrides && property in node.configOverrides) {
@@ -119,12 +139,12 @@ class StyleManager {
     if (this.levelStyles[level]) {
       return this.levelStyles[level];
     }
-
-    // For levels >= 4, return the level 4 style
-    if (level >= 4 && this.levelStyles[4]) {
-      return this.levelStyles[4];
+    
+    // For levels > 6, return the default style
+    if (level > 6) {
+      return this.defaultLevelStyle;
     }
-
+    
     // Otherwise return the default style
     return this.defaultLevelStyle;
   }

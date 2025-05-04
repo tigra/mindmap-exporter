@@ -300,6 +300,8 @@ logPropertyInheritanceChain(node, property) {
           },
           3: { layoutType: 'horizontal' },
           4: { layoutType: 'horizontal' },
+          5: { layoutType: 'horizontal' },
+          6: { layoutType: 'horizontal' },
           default: { layoutType: 'horizontal' }
         }
       });
@@ -323,6 +325,8 @@ logPropertyInheritanceChain(node, property) {
           2: { layoutType: 'horizontal', direction: null },
           3: { layoutType: 'horizontal', direction: null },
           4: { layoutType: 'horizontal', direction: null },
+          5: { layoutType: 'horizontal', direction: null },
+          6: { layoutType: 'horizontal', direction: null },
           default: { layoutType: 'horizontal' }
         }
       });
@@ -334,6 +338,8 @@ logPropertyInheritanceChain(node, property) {
           2: { layoutType: 'horizontal', direction: null },
           3: { layoutType: 'horizontal', direction: null },
           4: { layoutType: 'horizontal', direction: null },
+          5: { layoutType: 'horizontal', direction: null },
+          6: { layoutType: 'horizontal', direction: null },
           default: { layoutType: 'horizontal' }
         }
       });
@@ -361,6 +367,8 @@ logPropertyInheritanceChain(node, property) {
           2: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           3: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           4: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
+          5: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
+          6: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           default: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 }
         }
       });
@@ -380,6 +388,8 @@ logPropertyInheritanceChain(node, property) {
           2: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           3: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           4: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
+          5: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
+          6: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           default: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 }
         }
       });

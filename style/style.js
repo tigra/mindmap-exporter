@@ -72,11 +72,6 @@ class StyleManager {
       return this.levelStyles[level];
     }
 
-    // For levels >= 4, return the level 4 style
-    if (level >= 4 && this.levelStyles[4]) {
-      return this.levelStyles[4];
-    }
-
     // Otherwise return the default style
     return this.defaultLevelStyle;
   }
@@ -156,12 +151,6 @@ class StyleManager {
 
     return this; // Allow method chaining
   }
-}
-
-// For backward compatibility
-if (typeof window !== 'undefined') {
-  window.StyleManager = StyleManager;
-  window.styleManager = new StyleManager();
 }
 
 //export default StyleManager;
