@@ -1,0 +1,23 @@
+{
+  "name": "mindmap-exporter",
+  "version": "1.0.0",
+  "description": "Browser-based mindmap exporter",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-modules-commonjs": "^7.27.1",
+    "@babel/preset-env": "^7.27.1",
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@babel)/)"
+    ],
+    "testEnvironment": "node"
+  }
+}
