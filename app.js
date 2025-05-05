@@ -127,6 +127,9 @@ class MindmapApp {
 - Functional
 - Performance
 `;
+    
+    // For testing purposes, log when layout is changed
+    this.currentLayout = null;
 
     // Initialize controller
     this.controller = new MindmapController(

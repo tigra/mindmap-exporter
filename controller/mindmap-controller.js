@@ -275,10 +275,12 @@ logPropertyInheritanceChain(node, property) {
    */
   handleLayoutChange(layoutType) {
     console.log('handleLayoutChange(', layoutType, ')');
+    console.log(`LAYOUT CHANGE: Switching to ${layoutType} layout`);
     
     // Always start by clearing all node overrides to ensure consistent behavior
     const rootNode = this.model.getRoot();
     if (rootNode) {
+      console.log(`LAYOUT CHANGE: Clearing all layout overrides`);
       rootNode.clearOverridesRecursive();
     }
 

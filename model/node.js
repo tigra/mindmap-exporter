@@ -38,6 +38,14 @@ class Node {
    * @param {any} value - The value to set
    */
   setOverride(property, value) {
+    // Log overrides for level 4+ nodes to help debug the connection point issue
+    if (this.level >= 4 && ['layoutType', 'direction'].includes(property)) {
+      console.log(`Node "${this.text}" (level ${this.level}) setting override: ${property}=${value}`);
+      
+      // Show the call stack to understand where the override is coming from
+      console.log('Override set from:', new Error().stack);
+    }
+    
     this.configOverrides[property] = value;
   }
 

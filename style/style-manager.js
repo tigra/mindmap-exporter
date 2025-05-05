@@ -93,39 +93,56 @@ class StyleManager {
    * @return {any} The effective value
    */
   getEffectiveValue(node, property, inheritFromParent = true) {
-//  if (property = 'layoutType') {
-//  console.group(`getEffectiveValue(${node}, ${property}`);
-//  }
-//    console.log('getEffectiveValue', node, property, inheritFromParent);
+    // Add debug logging for level 4+ nodes and important properties
+    const isImportantProperty = ['layoutType', 'direction'].includes(property);
+    const isLevel4Plus = node && node.level >= 4;
+    
+    if (isLevel4Plus && isImportantProperty) {
+      console.groupCollapsed(`StyleManager.getEffectiveValue for Level ${node.level} node "${node.text}", property: ${property}`);
+    }
 
     // Get the appropriate level style
     const levelStyle = this.getLevelStyle(node.level);
 
-//    console.log('levelStyle', levelStyle);
-
     // Start with level style default
     let value = levelStyle[property];
-//    console.log('levelstyle value', value);
+    
+    if (isLevel4Plus && isImportantProperty) {
+      console.log(`  Direct level style value: ${value}`);
+    }
 
     // Check node's own overrides
     if (node.configOverrides && property in node.configOverrides) {
-//      console.log('overridden:', property, node.configOverrides[property]);
-      return node.configOverrides[property];
+      const overrideValue = node.configOverrides[property];
+      
+      if (isLevel4Plus && isImportantProperty) {
+        console.log(`  Node override found: ${property} = ${overrideValue}`);
+        console.log(`  Node has these overrides:`, node.configOverrides);
+        console.groupEnd();
+      }
+      
+      return overrideValue;
     }
 
     // Check parent inheritance if enabled
     if (!value && inheritFromParent && node.parent) {
       // Recursively check parent's effective value
       const parentValue = this.getEffectiveValue(node.parent, property, true);
-//      if (parentValue !== undefined && parentValue !== null) {
+      
+      if (isLevel4Plus && isImportantProperty) {
+        console.log(`  Inherited from parent "${node.parent.text}": ${property} = ${parentValue}`);
+      }
+      
       if (parentValue !== undefined) {
-//        console.log('overridden in parent', property, parentValue);
         value = parentValue;
       }
     }
-//      if (property = 'layoutType') {
-//    console.groupEnd();
-//    }
+    
+    if (isLevel4Plus && isImportantProperty) {
+      console.log(`  Final resolved value: ${value}`);
+      console.groupEnd();
+    }
+    
     return value;
   }
 

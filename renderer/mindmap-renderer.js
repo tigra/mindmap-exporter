@@ -443,38 +443,76 @@ class MindmapRenderer {
    * @return {string} SVG path element for the connection
    */
   _drawConnection(parent, child) {
+    console.groupCollapsed(`_drawConnection: parent "${parent.text}" (level ${parent.level}) -> child "${child.text}" (level ${child.level})`);
+    
     const parentStyle = this.styleManager.getLevelStyle(parent.level);
     const childStyle = this.styleManager.getLevelStyle(child.level);
 
     const parentLayout = parentStyle.getLayout();
     const childLayout = childStyle.getLayout();
+    
+    console.log(`Parent layout type: ${parentLayout.constructor.name}`);
+    console.log(`Child layout type: ${childLayout.constructor.name}`);
+    console.log(`Parent style layout type: ${parentStyle.layoutType}`);
+    console.log(`Child style layout type: ${childStyle.layoutType}`);
+    
+    // Extra logging to investigate layout type issue
+    if (child.level >= 4) {
+      console.log(`CHECKING LEVEL ${child.level} NODE "${child.text}" LAYOUT INFO:`);
+      
+      // Check for overrides
+      if (child.configOverrides) {
+        console.log(`  Node has overrides:`, child.configOverrides);
+        
+        if (child.configOverrides.layoutType) {
+          console.log(`  IMPORTANT: Node has layoutType override: ${child.configOverrides.layoutType}`);
+        }
+      } else {
+        console.log(`  Node has no overrides`);
+      }
+      
+      // Check effective value directly
+      if (childStyle.styleManager && childStyle.styleManager.getEffectiveValue) {
+        const effectiveLayoutType = childStyle.styleManager.getEffectiveValue(child, 'layoutType');
+        console.log(`  Effective layoutType: ${effectiveLayoutType}`);
+      }
+    }
 
     // Pass the child node to getParentConnectionPoint to enable multiple connection points
     const startPoint = parentLayout.getParentConnectionPoint(parent, parentStyle, child);
     const endPoint = childLayout.getChildConnectionPoint(child, childStyle);
+    
+    console.log(`Connection points:`);
+    console.log(`  Start: {x: ${startPoint.x}, y: ${startPoint.y}, direction: ${startPoint.direction}}`);
+    console.log(`  End: {x: ${endPoint.x}, y: ${endPoint.y}, direction: ${endPoint.direction}}`);
 
     // Check if tapered connections are enabled
     const useTapered = parentStyle.connectionTapered || false;
+    console.log(`Using tapered connection: ${useTapered}`);
     
+    let result;
     if (useTapered) {
-      return this._drawTaperedConnection(parent, child, parentStyle, childStyle, startPoint, endPoint);
+      result = this._drawTaperedConnection(parent, child, parentStyle, childStyle, startPoint, endPoint);
+    } else {
+      // If not using tapered, proceed with the original stroke-based connection
+      // Calculate the Bezier curve control points
+      const [cp1x, cp1y, cp2x, cp2y] = this._calculateBezierControlPoints(startPoint, endPoint);
+      
+      // Create the path with the calculated control points
+      const path = `M ${startPoint.x} ${startPoint.y}
+                     C ${cp1x} ${cp1y},
+                       ${cp2x} ${cp2y},
+                       ${endPoint.x} ${endPoint.y}`;
+
+      // Get connection color from style
+      const connectionColor = parentStyle.connectionColor || '#666';
+      const connectionWidth = parentStyle.connectionWidth || 2;
+
+      result = `<path d="${path}" stroke="${connectionColor}" stroke-width="${connectionWidth}" fill="none" />`;
     }
-
-    // If not using tapered, proceed with the original stroke-based connection
-    // Calculate the Bezier curve control points
-    const [cp1x, cp1y, cp2x, cp2y] = this._calculateBezierControlPoints(startPoint, endPoint);
     
-    // Create the path with the calculated control points
-    const path = `M ${startPoint.x} ${startPoint.y}
-                   C ${cp1x} ${cp1y},
-                     ${cp2x} ${cp2y},
-                     ${endPoint.x} ${endPoint.y}`;
-
-    // Get connection color from style
-    const connectionColor = parentStyle.connectionColor || '#666';
-    const connectionWidth = parentStyle.connectionWidth || 2;
-
-    return `<path d="${path}" stroke="${connectionColor}" stroke-width="${connectionWidth}" fill="none" />`;
+    console.groupEnd();
+    return result;
   }
 
     _drawBoundingBox(node) {

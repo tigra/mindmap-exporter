@@ -22,25 +22,35 @@ class LayoutFactory {
     parentPadding = parentPadding || 80;
     childPadding = childPadding || 20;
 
+    console.log(`LayoutFactory.createLayout: type=${type}, parentPadding=${parentPadding}, childPadding=${childPadding}, direction=${direction}`);
+    
+    let layout;
     // Create appropriate layout based on type
     switch (type) {
       case 'taproot':
-        return new TaprootLayout(parentPadding, childPadding);
+        layout = new TaprootLayout(parentPadding, childPadding);
+        break;
         
       case 'classic':
-        return new ClassicMindmapLayout(parentPadding, childPadding);
+        layout = new ClassicMindmapLayout(parentPadding, childPadding);
+        break;
 
       case 'vertical':
         // Default direction for vertical layout is 'down'
         const verticalDirection = direction === 'up' ? 'up' : 'down';
-        return new VerticalLayout(parentPadding, childPadding, verticalDirection);
+        layout = new VerticalLayout(parentPadding, childPadding, verticalDirection);
+        break;
 
       case 'horizontal':
       default:
         // Default direction for horizontal layout is 'right'
         const horizontalDirection = direction === 'left' ? 'left' : 'right';
-        return new HorizontalLayout(parentPadding, childPadding, horizontalDirection);
+        layout = new HorizontalLayout(parentPadding, childPadding, horizontalDirection);
+        break;
     }
+    
+    console.log(`Created layout: ${layout.constructor.name}`);
+    return layout;
   }
 }
 

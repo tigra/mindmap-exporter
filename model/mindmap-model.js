@@ -24,9 +24,15 @@ class MindmapModel {
     const root = new Node('', 0);
     const stack = [root];
     let currentHeadingLevel = 0;
-
+    
+    // Track bullet indentation levels - map from indent size to level
+    const indentToLevelMap = new Map();
+    // Store the previous line's indentation for bullet points
+    let prevIndent = 0;
+    
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+      const rawLine = lines[i];
+      const line = rawLine.trim();
       if (!line) continue;
 
       let level = 0;
@@ -34,6 +40,10 @@ class MindmapModel {
 
       // Check if it's a heading
       if (line.startsWith('#')) {
+        // Reset bullet indentation tracking when we hit a new heading
+        indentToLevelMap.clear();
+        prevIndent = 0;
+        
         // Count # characters to determine level
         for (let j = 0; j < line.length; j++) {
           if (line[j] === '#') level++;
@@ -46,13 +56,45 @@ class MindmapModel {
       }
       // Check if it's a bullet point
       else if (line.startsWith('-') || line.startsWith('*')) {
-        // Get raw line to calculate actual indentation
-        const rawLine = lines[i];
+        // Calculate actual indentation
         const indentLength = rawLine.length - rawLine.trimLeft().length;
-        const bulletDepth = Math.floor(indentLength / 2); // Assuming 2 spaces per level
-
-        // Bullet points should be children of the current heading
-        level = currentHeadingLevel + bulletDepth + 1;
+        
+        // First bullet after a heading starts at heading level + 1
+        if (indentToLevelMap.size === 0) {
+          // First bullet point after a heading
+          level = currentHeadingLevel + 1;
+          indentToLevelMap.set(indentLength, level);
+        } else if (indentLength > prevIndent) {
+          // This bullet is more indented than the previous one - it's a child
+          level = indentToLevelMap.get(prevIndent) + 1;
+          indentToLevelMap.set(indentLength, level);
+        } else if (indentLength === prevIndent) {
+          // Same indentation as previous - same level
+          level = indentToLevelMap.get(indentLength);
+        } else {
+          // Less indented - need to find the matching indent level
+          // or assign a new level if this is a new indentation amount
+          if (indentToLevelMap.has(indentLength)) {
+            level = indentToLevelMap.get(indentLength);
+          } else {
+            // If we don't have this exact indentation yet, find the closest smaller indent
+            const smallerIndents = Array.from(indentToLevelMap.keys())
+              .filter(indent => indent < indentLength)
+              .sort((a, b) => b - a); // Sort descending
+              
+            if (smallerIndents.length > 0) {
+              // Use one level deeper than the closest smaller indent
+              level = indentToLevelMap.get(smallerIndents[0]) + 1;
+            } else {
+              // Fallback if no smaller indent found
+              level = currentHeadingLevel + 1;
+            }
+            indentToLevelMap.set(indentLength, level);
+          }
+        }
+        
+        // Update prevIndent for next iteration
+        prevIndent = indentLength;
 
         // Extract text
         text = line.substring(1).trim(); // Remove the '-' character
@@ -158,10 +200,9 @@ if (typeof window !== 'undefined') {
   window.parseMindmap = function(markdown) {
     return window.mindmapModel.parseFromMarkdown(markdown);
   };
-}
-
-if (window !== null) {
-    window.MindmapModel = MindmapModel;
+  
+  // Export the class to window
+  window.MindmapModel = MindmapModel;
 }
 
 export default MindmapModel;

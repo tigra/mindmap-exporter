@@ -36,6 +36,17 @@ class VerticalLayout extends Layout {
     if (node.level == 1) {
         console.log('style', style);
     }
+    
+    // Log additional details for level 4+ nodes
+    if (node.level >= 4) {
+        console.log(`LEVEL ${node.level} NODE: "${node.text}"`);
+        console.log(`  Original position: x=${x}, y=${y}`);
+        if (node.overrides) {
+            console.log(`  Overrides:`, node.overrides);
+        }
+        console.log(`  Parent: "${node.parent ? node.parent.text : 'none'}"`);
+    }
+    
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
@@ -49,6 +60,14 @@ class VerticalLayout extends Layout {
     // Get direction from StyleManager with fallback to default
     const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
     console.log('effectiveDirection', effectiveDirection);
+    
+    // For level 4+ nodes, log layout information
+    if (node.level >= 4) {
+        console.log(`  Layout info for "${node.text}":`);
+        console.log(`    node.x=${node.x}, node.y=${node.y}, width=${node.width}, height=${node.height}`);
+        console.log(`    Layout type: ${levelStyle.layoutType || 'not set'}`);
+        console.log(`    Effective direction: ${effectiveDirection}`);
+    }
 
     // Direction multiplier for positioning (1 for down, -1 for up)
     const directionMultiplier = effectiveDirection === 'down' ? 1 : -1;
@@ -189,12 +208,40 @@ class VerticalLayout extends Layout {
 
     // In vertical layout, child connects on its top or bottom depending on direction
     const x = node.x + node.width / 2;
-
+    
+    // Add detailed logging for connection point calculation
+    console.log(`VerticalLayout.getChildConnectionPoint for node "${node.text}" (level ${node.level}):`);
+    console.log(`  node.x: ${node.x}, node.width: ${node.width}, calculated x (center): ${x}`);
+    console.log(`  node.y: ${node.y}, node.height: ${node.height}`);
+    console.log(`  effectiveDirection: ${effectiveDirection}`);
+    
+    // Calculate node center for comparison
+    const nodeCenter = {
+      x: node.x + node.width / 2,
+      y: node.y + node.height / 2
+    };
+    
+    let connectionPoint;
     if (effectiveDirection === 'down') {
-      return new ConnectionPoint(x, node.y, 'top');
+      connectionPoint = new ConnectionPoint(x, node.y, 'top');
     } else {
-      return new ConnectionPoint(x, node.y + node.height, 'bottom');
+      connectionPoint = new ConnectionPoint(x, node.y + node.height, 'bottom');
     }
+    
+    // Calculate signum (sign) of differences between connection point and node center
+    const signX = Math.sign(connectionPoint.x - nodeCenter.x);
+    const signY = Math.sign(connectionPoint.y - nodeCenter.y);
+    
+    console.log(`  Node center coordinates: {x: ${nodeCenter.x}, y: ${nodeCenter.y}}`);
+    console.log(`  Created ConnectionPoint: {x: ${connectionPoint.x}, y: ${connectionPoint.y}, direction: ${connectionPoint.direction}}`);
+    console.log(`  CONNECTION_SIGNUM: Level ${node.level}, signX=${signX}, signY=${signY}, layoutType=${levelStyle.layoutType || 'not set'}`);
+    
+    // Log if this is likely a case where layout is wrong (level 4+ with no vertical position)
+    if (node.level >= 4 && signX !== 0 && signY === 0) {
+      console.warn(`  WARNING: Level ${node.level} node might have incorrect layout type. Connection point is horizontally offset from center.`);
+    }
+    
+    return connectionPoint;
   }
 }
 
