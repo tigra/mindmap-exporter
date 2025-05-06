@@ -109,7 +109,7 @@ class StyleManager {
         nodeType: 'box'
       }, this),
       
-      // Sixth level and beyond
+      // Sixth level
       6: new StyleConfiguration({
         fontSize: 10,
         horizontalPadding: 3,
@@ -130,12 +130,12 @@ class StyleManager {
    */
   getEffectiveValue(node, property, inheritFromParent = true) {
     // Add debug logging for level 4+ nodes and important properties
-    const isImportantProperty = ['layoutType', 'direction'].includes(property);
-    const isLevel4Plus = node && node.level >= 4;
-    
-    if (isLevel4Plus && isImportantProperty) {
-      console.groupCollapsed(`StyleManager.getEffectiveValue for Level ${node.level} node "${node.text}", property: ${property}`);
-    }
+//    const isImportantProperty = ['layoutType', 'direction'].includes(property);
+//    const isLevel4Plus = node && node.level >= 4;
+//
+//    if (isLevel4Plus && isImportantProperty) {
+//      console.groupCollapsed(`StyleManager.getEffectiveValue for Level ${node.level} node "${node.text}", property: ${property}`);
+//    }
 
     // Get the appropriate level style
     const levelStyle = this.getLevelStyle(node.level);
@@ -143,19 +143,19 @@ class StyleManager {
     // Start with level style default
     let value = levelStyle[property];
     
-    if (isLevel4Plus && isImportantProperty) {
-      console.log(`  Direct level style value: ${value}`);
-    }
+//    if (isLevel4Plus && isImportantProperty) {
+//      console.log(`  Direct level style value: ${value}`);
+//    }
 
     // Check node's own overrides
     if (node.configOverrides && property in node.configOverrides) {
       const overrideValue = node.configOverrides[property];
       
-      if (isLevel4Plus && isImportantProperty) {
-        console.log(`  Node override found: ${property} = ${overrideValue}`);
-        console.log(`  Node has these overrides:`, node.configOverrides);
-        console.groupEnd();
-      }
+//      if (isLevel4Plus && isImportantProperty) {
+//        console.log(`  Node override found: ${property} = ${overrideValue}`);
+//        console.log(`  Node has these overrides:`, node.configOverrides);
+//        console.groupEnd();
+//      }
       
       return overrideValue;
     }
@@ -165,19 +165,19 @@ class StyleManager {
       // Recursively check parent's effective value
       const parentValue = this.getEffectiveValue(node.parent, property, true);
       
-      if (isLevel4Plus && isImportantProperty) {
-        console.log(`  Inherited from parent "${node.parent.text}": ${property} = ${parentValue}`);
-      }
+//      if (isLevel4Plus && isImportantProperty) {
+//        console.log(`  Inherited from parent "${node.parent.text}": ${property} = ${parentValue}`);
+//      }
       
       if (parentValue !== undefined) {
         value = parentValue;
       }
     }
     
-    if (isLevel4Plus && isImportantProperty) {
-      console.log(`  Final resolved value: ${value}`);
-      console.groupEnd();
-    }
+//    if (isLevel4Plus && isImportantProperty) {
+//      console.log(`  Final resolved value: ${value}`);
+//      console.groupEnd();
+//    }
     
     return value;
   }
@@ -218,7 +218,7 @@ class StyleManager {
 
     if (options.defaultStyle) {
       this.defaultLevelStyle = new StyleConfiguration({
-        ...this.defaultStyle,
+        ...this.defaultLevelStyle,
         ...options.defaultStyle     // Specific properties defined for defaultStyle
       }, this);
     }
