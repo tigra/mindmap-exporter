@@ -256,7 +256,10 @@ class MindmapApp {
     this.loadingIndicator.textContent = 'Generating mindmap...';
     this.loadingIndicator.style.display = 'block';
 
-    var style = window.styleManager;
+    // Reset the style manager to get a clean slate
+    var style = window.styleManager.reset();
+    
+    // Apply the selected style preset
     const presetName = this.stylePreset.value;
     MindmapStylePresets.applyPreset(presetName, style);
 
@@ -289,10 +292,10 @@ class MindmapApp {
           },
           6: {
              layoutType: 'horizontal'
-          },
-          default: {
-             layoutType: 'horizontal'
           }
+        },
+        defaultStyle: {
+             layoutType: 'horizontal'
         }
       });
     } else if (layoutType === 'classic') {
@@ -316,10 +319,10 @@ class MindmapApp {
           },
           6: {
              layoutType: 'horizontal'
-          },
-          default: {
-             layoutType: 'horizontal'
           }
+        },
+        defaultStyle: {
+             layoutType: 'horizontal'
         }
       });
     } else if (layoutType === 'vertical-over-taproot') {
@@ -344,10 +347,10 @@ class MindmapApp {
           },
           6: {
              layoutType: 'horizontal'
-          },
-          default: {
-             layoutType: 'horizontal'
           }
+        },
+        defaultStyle: {
+             layoutType: 'horizontal'
         }
       });
     } else if (layoutType === 'vertical-down' || layoutType === 'vertical') {
@@ -376,11 +379,11 @@ class MindmapApp {
           6: {
              layoutType: 'vertical',
              direction: 'down'
-          },
-          default: {
+          }
+        },
+        defaultStyle: {
              layoutType: 'vertical',
              direction: 'down'
-          }
         }
       });
     }else if(layoutType === 'vertical-up') {
@@ -409,11 +412,11 @@ class MindmapApp {
           6: {
              layoutType: 'vertical',
              direction: 'up'
-          },
-          default: {
+          }
+        },
+        defaultStyle: {
              layoutType: 'vertical',
              direction: 'up'
-          }
         }
       });
     } else {
@@ -629,6 +632,11 @@ class MindmapApp {
           parentPadding: 50,
           childPadding: 20
         }
+      },
+      defaultStyle: {
+        layoutType: 'horizontal',
+        parentPadding: 40,
+        childPadding: 15
       }
     });
     

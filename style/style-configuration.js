@@ -32,13 +32,14 @@ class StyleConfiguration {
     this.parentWidthPortionForConnectionPoints = options.parentWidthPortionForConnectionPoints || 0.8;
 
     // Colors and appearance
-    this.backgroundColor = options.backgroundColor || '#ffffff';
+    this.backgroundColor = options.backgroundColor || '#090909';
+//    this.backgroundColor = options.backgroundColor || '#ffffff';
     this.fillOpacity = options.fillOpacity || 0.9;
     this.textColor = options.textColor || '#000000';
     this.borderColor = options.borderColor || '#cccccc';
     this.borderWidth = options.borderWidth || 2;
     this.borderRadius = options.borderRadius || 5;
-    this.nodeType = options.nodeType || 'box';
+    this.nodeType = options.nodeType || 'text-only';
     this.connectionColor = options.connectionColor || '#666666';
     this.connectionWidth = options.connectionWidth || 2;
     

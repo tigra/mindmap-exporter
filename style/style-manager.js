@@ -10,11 +10,47 @@ class StyleManager {
    * Create a new StyleManager
    */
   constructor() {
+    // Initialize the level styles and default style
+    this.reset();
+  }
+  
+  /**
+   * Reset all styles to their initial state
+   * This ensures a clean slate when applying new styles
+   */
+  reset() {
     // Define default styles for different levels
     this.levelStyles = this.createInitialLevelStyles();
 
+    // Initialize defaultLevelStyle with properties from level 6
+    // This ensures level 7+ nodes have consistent styling with level 6
+//    const level6Style = this.levelStyles[6];
+//    const defaultStyleProps = {};
+//
+//    // Copy visual properties from level 6 to defaultLevelStyle
+//    if (level6Style) {
+//      // Copy visual properties (but not layout properties)
+//      const visualProps = [
+//        'fontSize', 'fontWeight', 'fontFamily',
+//        'verticalPadding', 'horizontalPadding',
+//        'backgroundColor', 'fillOpacity', 'textColor',
+//        'borderColor', 'borderWidth', 'borderRadius',
+//        'nodeType', 'connectionColor', 'connectionWidth',
+//        'connectionTapered', 'connectionStartWidth', 'connectionEndWidth',
+//        'connectionGradient'
+//      ];
+      
+//      visualProps.forEach(prop => {
+//        if (level6Style[prop] !== undefined) {
+//          defaultStyleProps[prop] = level6Style[prop];
+//        }
+//      });
+//    }
+    
     // Default style for any level not explicitly defined
-    this.defaultLevelStyle = new StyleConfiguration({}, this);
+//    this.defaultLevelStyle = new StyleConfiguration(defaultStyleProps, this);
+    
+    return this;
   }
 
   createInitialLevelStyles() {
@@ -157,11 +193,6 @@ class StyleManager {
       return this.levelStyles[level];
     }
     
-    // For levels > 6, return the default style
-    if (level > 6) {
-      return this.defaultLevelStyle;
-    }
-    
     // Otherwise return the default style
     return this.defaultLevelStyle;
   }
@@ -186,7 +217,10 @@ class StyleManager {
     }
 
     if (options.defaultStyle) {
-      this.defaultLevelStyle = new StyleConfiguration(options.defaultStyle, this);
+      this.defaultLevelStyle = new StyleConfiguration({
+        ...this.defaultStyle,
+        ...options.defaultStyle     // Specific properties defined for defaultStyle
+      }, this);
     }
   }
 
@@ -208,7 +242,34 @@ class StyleManager {
 
     // Update default level style
     if (!excludeLevels.includes(0)) {
+      // Store existing visual properties before changing layout properties
+      const visualProperties = {};
+      const visualProps = [
+        'fontSize', 'fontWeight', 'fontFamily',
+        'verticalPadding', 'horizontalPadding',
+        'backgroundColor', 'fillOpacity', 'textColor',
+        'borderColor', 'borderWidth', 'borderRadius',
+        'nodeType', 'connectionColor', 'connectionWidth',
+        'connectionTapered', 'connectionStartWidth', 'connectionEndWidth',
+        'connectionGradient'
+      ];
+      
+      visualProps.forEach(prop => {
+        if (this.defaultLevelStyle[prop] !== undefined) {
+          visualProperties[prop] = this.defaultLevelStyle[prop];
+        }
+      });
+      
+      // Apply layout properties
       this.defaultLevelStyle.layoutType = layoutType;
+
+      if (direction) {
+        this.defaultLevelStyle.direction = direction;
+      } else if (layoutType === 'horizontal') {
+        this.defaultLevelStyle.direction = 'right';
+      } else if (layoutType === 'vertical') {
+        this.defaultLevelStyle.direction = 'down';
+      }
 
       // Adjust padding values based on the layout type if needed
       if (customPadding.default) {

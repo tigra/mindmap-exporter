@@ -277,6 +277,16 @@ logPropertyInheritanceChain(node, property) {
     console.log('handleLayoutChange(', layoutType, ')');
     console.log(`LAYOUT CHANGE: Switching to ${layoutType} layout`);
     
+    // Reset the styleManager to its initial state before applying new layout
+    this.styleManager.reset();
+    
+    // Apply current style preset to the reset styleManager
+    const styleSelectElement = document.getElementById('style-preset');
+    if (styleSelectElement) {
+      const currentPreset = styleSelectElement.value;
+      MindmapStylePresets.applyPreset(currentPreset, this.styleManager);
+    }
+    
     // Always start by clearing all node overrides to ensure consistent behavior
     const rootNode = this.model.getRoot();
     if (rootNode) {
@@ -303,8 +313,10 @@ logPropertyInheritanceChain(node, property) {
           3: { layoutType: 'horizontal' },
           4: { layoutType: 'horizontal' },
           5: { layoutType: 'horizontal' },
-          6: { layoutType: 'horizontal' },
-          default: { layoutType: 'horizontal' }
+          6: { layoutType: 'horizontal' }
+        },
+        defaultStyle: { 
+          layoutType: 'horizontal' 
         }
       });
       
@@ -328,8 +340,10 @@ logPropertyInheritanceChain(node, property) {
           3: { layoutType: 'horizontal', direction: null },
           4: { layoutType: 'horizontal', direction: null },
           5: { layoutType: 'horizontal', direction: null },
-          6: { layoutType: 'horizontal', direction: null },
-          default: { layoutType: 'horizontal' }
+          6: { layoutType: 'horizontal', direction: null }
+        },
+        defaultStyle: { 
+          layoutType: 'horizontal' 
         }
       });
     } else if (layoutType === 'classic') {
@@ -341,8 +355,10 @@ logPropertyInheritanceChain(node, property) {
           3: { layoutType: 'horizontal', direction: null },
           4: { layoutType: 'horizontal', direction: null },
           5: { layoutType: 'horizontal', direction: null },
-          6: { layoutType: 'horizontal', direction: null },
-          default: { layoutType: 'horizontal' }
+          6: { layoutType: 'horizontal', direction: null }
+        },
+        defaultStyle: { 
+          layoutType: 'horizontal' 
         }
       });
     } else if (layoutType === 'horizontal-left') {
@@ -370,8 +386,13 @@ logPropertyInheritanceChain(node, property) {
           3: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           4: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           5: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
-          6: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
-          default: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 }
+          6: { layoutType: 'vertical', direction: 'up', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 }
+        },
+        defaultStyle: { 
+          layoutType: 'vertical', 
+          direction: 'up', 
+          parentConnectionPoints: 'distributeEvenly', 
+          parentWidthPortionForConnectionPoints: 0.75 
         }
       });
       
@@ -391,8 +412,13 @@ logPropertyInheritanceChain(node, property) {
           3: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           4: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
           5: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
-          6: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 },
-          default: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 }
+          6: { layoutType: 'vertical', direction: 'down', parentConnectionPoints: 'distributeEvenly', parentWidthPortionForConnectionPoints: 0.75 }
+        },
+        defaultStyle: { 
+          layoutType: 'vertical', 
+          direction: 'down', 
+          parentConnectionPoints: 'distributeEvenly', 
+          parentWidthPortionForConnectionPoints: 0.75 
         }
       });
       
@@ -422,8 +448,31 @@ logPropertyInheritanceChain(node, property) {
   handleStyleChange(presetName) {
     console.log('handleStyleChange(', presetName, ')');
 
-    // Apply the style preset
+    // Reset the styleManager to its initial state before applying new style
+    this.styleManager.reset();
+    
+    // Apply the style preset to the reset styleManager
     MindmapStylePresets.applyPreset(presetName, this.styleManager);
+    
+    // Reapply the current layout type after style change
+    const layoutSelectElement = document.getElementById('layout-type');
+    if (layoutSelectElement) {
+      // Get current layout type but don't trigger full handleLayoutChange
+      const currentLayout = layoutSelectElement.value;
+      console.log(`Reapplying layout type: ${currentLayout} after style change`);
+
+      this.handleLayoutChange(currentLayout);
+//      // Apply appropriate layout configuration
+//      if (['vertical-over-taproot', 'taproot', 'classic', 'horizontal-left',
+//           'horizontal-right', 'vertical-up', 'vertical', 'vertical-down'].includes(currentLayout)) {
+//        // For specialized layouts, we need to reapply the configurations from handleLayoutChange
+//        this.handleLayoutChange(currentLayout);
+//        return; // handleLayoutChange already handles applyLayout and render
+//      } else {
+//        // For basic layouts, we can just set the global layout type
+//        this.styleManager.setGlobalLayoutType(currentLayout);
+//      }
+    }
 
     // Reapply layout since style properties might affect positioning
     this.applyLayout();
