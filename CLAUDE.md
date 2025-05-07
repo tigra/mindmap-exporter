@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Browser-based mindmap exporter that converts Markdown to visual mindmaps (SVG/PNG).
 
 ## Running the Application
-- Open `simple-mindmap-exporter.html` directly in a browser
+- Open `index.html` directly in a browser
 - Python script: `python transform.py` (for markdown preprocessing)
 
 ## Code Style Guidelines

@@ -52,6 +52,10 @@ class MindmapController {
 
     // Apply layout starting from root node
     layout.applyLayout(rootNode, 0, 0, this.styleManager);
+    
+    // Regenerate all node IDs to ensure they remain consistent between renders
+    // This is important for keeping SVG element IDs stable across exports
+    this.model.regenerateAllIds();
   }
 
   // Initialize the mindmap container for scrolling and zooming
@@ -489,6 +493,10 @@ logPropertyInheritanceChain(node, property) {
   exportToSVG(filename) {
     return new Promise((resolve, reject) => {
       try {
+        // Log node IDs to verify consistency between exports - helpful for debugging
+        console.log('Node IDs before export:');
+        this._logNodeIds();
+        
         // Get SVG content with a small delay to ensure it's ready
         setTimeout(() => {
           const svgContent = this.container.dataset.svgContent;
@@ -532,6 +540,42 @@ logPropertyInheritanceChain(node, property) {
         reject(error);
       }
     });
+  }
+  
+  /**
+   * Log the IDs of all nodes in the mindmap
+   * Useful for testing ID stability between renders
+   * @private
+   */
+  _logNodeIds() {
+    const rootNode = this.model.getRoot();
+    if (!rootNode) {
+      console.log('No root node found');
+      return;
+    }
+    
+    const nodeIds = {};
+    this._collectNodeIds(rootNode, nodeIds);
+    
+    console.table(nodeIds);
+  }
+  
+  /**
+   * Recursively collect node IDs for testing stability
+   * @private
+   * @param {Node} node - The current node
+   * @param {Object} result - The object to collect results in
+   */
+  _collectNodeIds(node, result) {
+    if (!node) return;
+    
+    // Add this node's ID and text to the result
+    result[node.text] = node.id;
+    
+    // Process all children
+    for (let i = 0; i < node.children.length; i++) {
+      this._collectNodeIds(node.children[i], result);
+    }
   }
 
   /**

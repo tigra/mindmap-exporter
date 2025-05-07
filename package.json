@@ -18,6 +18,9 @@
     "transformIgnorePatterns": [
       "node_modules/(?!(@babel)/)"
     ],
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ]
   }
 }

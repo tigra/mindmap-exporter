@@ -23,7 +23,10 @@ class Node {
 
     this.style = {};
     this.collapsed = collapsed;
-    this.id = 'node_' + Node.generateUniqueId();
+    
+    // Start with a temporary ID, will be updated properly at the right time
+    this.id = 'node_temp_' + (Date.now() + Math.random()).toString(36);
+    
     this.boundingBox = {
         x: 0, y: 0, width: 0, height: 0
     };
@@ -72,7 +75,97 @@ class Node {
     }
   }
 
-  // Existing methods remain unchanged
+  /**
+   * Sanitize text for use in ID generation
+   * Removes problematic characters and trims the text
+   * @private
+   * @param {string} text - The text to sanitize
+   * @returns {string} Sanitized text
+   */
+  _sanitizeTextForId(text) {
+    if (!text) return '';
+    
+    // Replace spaces, special characters, and trim to keep IDs clean
+    return text
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '_') // Replace non-alphanumeric with underscores
+      .replace(/_+/g, '_')        // Replace multiple underscores with a single one
+      .replace(/^_|_$/g, '')      // Remove leading/trailing underscores
+      .substring(0, 20);          // Limit length to avoid very long IDs
+  }
+
+  /**
+   * Generate a deterministic ID based on node content and position in tree
+   * This ensures IDs remain consistent between renderings
+   * @private
+   * @returns {string} A deterministic hash for this node
+   */
+  _generateDeterministicId() {
+    // Start with the sanitized text content
+    let idBase = this._sanitizeTextForId(this.text);
+    
+    // Add level information for hierarchy
+    idBase += `_lvl${this.level}`;
+    
+    // Add position in parent's children array if available
+    if (this.parent && this.parent.children) {
+      const indexInParent = this.parent.children.indexOf(this);
+      if (indexInParent !== -1) {
+        idBase += `_idx${indexInParent}`;
+      }
+    }
+    
+    // Add parent's sanitized text if available (for more uniqueness)
+    if (this.parent && this.parent.text) {
+      idBase += `_p${this._sanitizeTextForId(this.parent.text).substring(0, 10)}`;
+    }
+    
+    // Create a simple hash from the string
+    const hash = this._simpleHash(idBase);
+    return 'node_' + hash;
+  }
+  
+  /**
+   * Create a simple hash from a string
+   * @private
+   * @param {string} str - String to hash
+   * @returns {string} Hash value as a hex string
+   */
+  _simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash &= hash; // Convert to 32bit integer
+    }
+    // Ensure positive number and convert to hex string
+    return Math.abs(hash).toString(16);
+  }
+  
+  /**
+   * Regenerate IDs for this node and all its children
+   * Useful to ensure consistent IDs after the tree structure changes
+   */
+  regenerateAllIds() {
+    this.id = this._generateDeterministicId();
+    
+    // Recursively update all children
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      
+      // First ensure the child's parent pointer is correct
+      child.parent = this;
+      
+      // Then regenerate IDs for the child and its subtree
+      child.regenerateAllIds();
+    }
+  }
+  
+  /**
+   * For backward compatibility
+   * @deprecated Use _generateDeterministicId() instead
+   */
   static generateUniqueId() {
     if (!Node.lastId) {
       Node.lastId = 0;
@@ -103,6 +196,8 @@ class Node {
 
   setParent(node) {
     this.parent = node;
+    // Regenerate ID now that parent relationship is established
+    this.id = this._generateDeterministicId();
   }
   
   /**

@@ -122,7 +122,48 @@ class MindmapModel {
     }
 
     this.rootNode = root.hasChildren() ? root.children[0] : null;
+    
+    // Once the tree is built, regenerate all IDs to ensure they're deterministic
+    // based on the final tree structure
+    if (this.rootNode) {
+      this.regenerateAllIds();
+    }
+    
     return this.rootNode;
+  }
+  
+  /**
+   * Regenerate deterministic IDs for all nodes in the tree
+   * This ensures consistent IDs based on node content and position in the tree
+   */
+  regenerateAllIds() {
+    if (!this.rootNode) return;
+    
+    // Clear the existing node map
+    this.nodeMap.clear();
+    
+    // Regenerate IDs for the entire tree, starting from the root
+    this.rootNode.regenerateAllIds();
+    
+    // Rebuild the node map with the new IDs
+    this._rebuildNodeMap(this.rootNode);
+  }
+  
+  /**
+   * Recursively rebuild the node map with the current node IDs
+   * @private
+   * @param {Node} node - The node to start from
+   */
+  _rebuildNodeMap(node) {
+    if (!node) return;
+    
+    // Add this node to the map
+    this.nodeMap.set(node.id, node);
+    
+    // Process all children
+    for (let i = 0; i < node.children.length; i++) {
+      this._rebuildNodeMap(node.children[i]);
+    }
   }
 
   /**
