@@ -54,7 +54,7 @@ class StyleConfiguration {
     // Text wrapping options
     this.textWrap = options.textWrap || 'word'; // 'none' or 'word'
     this.maxWidth = options.maxWidth || 200; // Target width for text wrapping in pixels
-    this.maxWordLength = options.maxWordLength || 15; // Maximum length of a word before it's split
+    this.maxWordLength = options.maxWordLength || 20; // Maximum length of a word before it's split
   }
 
   /**

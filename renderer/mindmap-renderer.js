@@ -629,11 +629,19 @@ class MindmapRenderer {
                         
       // Add each line as a tspan element
       for (let i = 0; i < wrappedText.lines.length; i++) {
-        const lineY = startY + (i * lineHeight);
-        
-        textSVG += `<tspan x="${x}" y="${lineY}" dy="${i === 0 ? 0 : lineHeight}px">
+        // Only use y for the first line, then use dy for subsequent lines
+        // This avoids the double spacing issue
+        if (i === 0) {
+          // First line - set the initial position
+          textSVG += `<tspan x="${x}" y="${startY}">
                      ${this._escapeXml(wrappedText.lines[i])}
                    </tspan>`;
+        } else {
+          // Subsequent lines - use dy for consistent line spacing
+          textSVG += `<tspan x="${x}" dy="${lineHeight}">
+                     ${this._escapeXml(wrappedText.lines[i])}
+                   </tspan>`;
+        }
       }
       
       textSVG += `</text>`;
