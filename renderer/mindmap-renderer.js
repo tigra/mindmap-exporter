@@ -566,6 +566,12 @@ class MindmapRenderer {
     const fontSize = levelStyle.fontSize || 14;
     const fontWeight = levelStyle.fontWeight || 'normal';
     const fontFamily = levelStyle.fontFamily || 'Arial, sans-serif';
+    
+    // Get text wrapping configuration
+    const wrapConfig = levelStyle.getTextWrapConfig();
+    const textWrap = wrapConfig.textWrap;
+    const maxWidth = wrapConfig.maxWidth;
+    const maxWordLength = wrapConfig.maxWordLength;
 
     let x, y, fill, textAnchor;
 
@@ -582,14 +588,58 @@ class MindmapRenderer {
       fill = levelStyle.textColor || "#333";
       textAnchor = "start";
     }
-
-    return `<text x="${x}" y="${y}"
-                      id="${node.id}_text"
-                      font-family="${fontFamily}" font-size="${fontSize}px" font-weight="${fontWeight}"
-                      fill="${fill}" text-anchor="${textAnchor}" dominant-baseline="middle"
-                      class="node-text" pointer-events="none">
-                      ${this._escapeXml(node.text)}
-                </text>`;
+    
+    // Get text wrapping calculation from textMetrics
+    // Ensure we have a reference to textMetrics
+    const textMetrics = typeof window !== 'undefined' ? window.textMetrics : require('../utils/text-metrics').default;
+    
+    const wrappedText = textMetrics.wrapText(
+      node.text,
+      maxWidth,
+      fontFamily,
+      fontSize,
+      fontWeight,
+      textWrap,
+      maxWordLength
+    );
+    
+    let textSVG;
+    if (wrappedText.lines.length === 1 || textWrap === 'none') {
+      // Simple case - just one line
+      textSVG = `<text x="${x}" y="${y}"
+                        id="${node.id}_text"
+                        font-family="${fontFamily}" font-size="${fontSize}px" font-weight="${fontWeight}"
+                        fill="${fill}" text-anchor="${textAnchor}" dominant-baseline="middle"
+                        class="node-text" pointer-events="none">
+                        ${this._escapeXml(node.text)}
+                  </text>`;
+    } else {
+      // Multi-line text with tspans
+      const lineHeight = wrappedText.lineHeight;
+      const totalHeight = wrappedText.height;
+      
+      // Calculate starting y position to center text block
+      let startY = y - (totalHeight / 2) + (lineHeight / 2);
+      
+      // Build text with tspans for each line
+      textSVG = `<text id="${node.id}_text"
+                        font-family="${fontFamily}" font-size="${fontSize}px" font-weight="${fontWeight}"
+                        fill="${fill}" text-anchor="${textAnchor}"
+                        class="node-text" pointer-events="none">`;
+                        
+      // Add each line as a tspan element
+      for (let i = 0; i < wrappedText.lines.length; i++) {
+        const lineY = startY + (i * lineHeight);
+        
+        textSVG += `<tspan x="${x}" y="${lineY}" dy="${i === 0 ? 0 : lineHeight}px">
+                     ${this._escapeXml(wrappedText.lines[i])}
+                   </tspan>`;
+      }
+      
+      textSVG += `</text>`;
+    }
+    
+    return textSVG;
   }
 
   /**

@@ -7,7 +7,6 @@ Browser-based mindmap exporter that converts Markdown to visual mindmaps (SVG/PN
 
 ## Running the Application
 - Open `index.html` directly in a browser
-- Python script: `python transform.py` (for markdown preprocessing)
 
 ## Code Style Guidelines
 - **Formatting**: 2-space indentation, ES6 module syntax

@@ -7,6 +7,7 @@ import MindmapModel from '../../model/mindmap-model.js';
 import StyleManager from '../../style/style-manager.js';
 import MindmapStylePresets from '../../style/style-presets.js';
 import MindmapRenderer from '../../renderer/mindmap-renderer.js';
+import MindmapController from '../../controller/mindmap-controller.js';
 
 // Note: DOM setup is now handled directly in test files before module imports
 
@@ -180,11 +181,23 @@ function setupDomEnvironment() {
   // Additional DOM mocks can be added here as needed
 }
 
+/**
+ * Create a mindmap controller for testing
+ * @param {Object} container - The container to render into
+ * @returns {MindmapController} The controller instance
+ */
+function createMindmapController(container) {
+  const model = new MindmapModel();
+  const styleManager = new StyleManager();
+  return new MindmapController(model, styleManager, container);
+}
+
 export {
   createTestContainer,
   expandAllNodes,
   setupMindmap,
   generateMindmapSnapshot,
   getAllStylePresets,
-  setupDomEnvironment
+  setupDomEnvironment,
+  createMindmapController
 };
