@@ -61,7 +61,8 @@ class MindmapStylePresets {
                     connectionTapered: true,     // Enable tapered connections
                     connectionStartWidth: 16,    // Thickest for root level
                     connectionEndWidth: 6,       // Still relatively thick at the end
-                    connectionGradient: true     // Use gradient for more appealing visuals
+                    connectionGradient: true,    // Use gradient for more appealing visuals
+                    maxWidth: 400                // Wider max width for the root level
                 },
                 2: {
                     fontSize: 18,
@@ -152,7 +153,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 16,    // Professional, slightly thinner than default preset
                     connectionEndWidth: 5,    // Still substantial for corporate look
-                    connectionGradient: true
+                    connectionGradient: true,
+                    maxWidth: 400             // Wider max width for the root level
                 },
                 2: {
                     fontSize: 18,
@@ -245,7 +247,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 16,    // Thicker for vibrant style
                     connectionEndWidth: 6,     // Still substantial for strong visual impact
-                    connectionGradient: true
+                    connectionGradient: true,
+                    maxWidth: 400
                 },
                 2: {
                     fontSize: 18,
@@ -342,7 +345,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 16,     // Soft, slightly thinner look for pastel
                     connectionEndWidth: 4,
-                    connectionGradient: true
+                    connectionGradient: true,
+                    maxWidth: 400
                 },
                 2: {
                     fontSize: 18,
@@ -433,7 +437,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 16,     // More subdued for monochrome style
                     connectionEndWidth: 4,
-                    connectionGradient: false    // No gradients for clean monochrome look
+                    connectionGradient: false,
+                    maxWidth: 400
                 },
                 2: {
                     fontSize: 18,
@@ -524,7 +529,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 16,    // Thicker, branch-like for nature theme
                     connectionEndWidth: 6,
-                    connectionGradient: true
+                    connectionGradient: true,
+                    maxWidth: 400
                 },
                 2: {
                     fontSize: 18,
@@ -615,7 +621,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 16,    // Sleek tech style connections
                     connectionEndWidth: 6,
-                    connectionGradient: true
+                    connectionGradient: true,
+                    maxWidth: 400
                 },
                 2: {
                     fontSize: 18,
@@ -706,7 +713,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 16,     // Slightly pixelated appearance for retro
                     connectionEndWidth: 6,
-                    connectionGradient: false    // No gradient for pixelated retro feel
+                    connectionGradient: false,
+                    maxWidth: 400
                 },
                 2: {
                     fontSize: 18,
@@ -797,7 +805,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 16,     // Subtle, thin for minimal style
                     connectionEndWidth: 6,
-                    connectionGradient: false    // Clean, flat look without gradients
+                    connectionGradient: false,
+                    maxWidth: 400
                 },
                 2: {
                     fontSize: 18,
@@ -888,7 +897,8 @@ class MindmapStylePresets {
                     connectionTapered: true,
                     connectionStartWidth: 17,   // Extra thick for creative style
                     connectionEndWidth: 6,
-                    connectionGradient: true
+                    connectionGradient: true,
+                    maxWidth: 400
                 },
                 2: {
                     fontSize: 18,

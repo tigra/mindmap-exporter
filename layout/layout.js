@@ -14,17 +14,41 @@ class Layout {
    * @return {Object} The calculated width and height
    */
   getNodeSize(text, levelStyle) {
-    // Use TextMetricsService to measure text
-    const { width, height } = textMetrics.measureText(
-      text,
-      levelStyle.fontFamily,
-      levelStyle.fontSize,
-      levelStyle.fontWeight
-    );
+    // Get text wrapping configuration
+    const wrapConfig = levelStyle.getTextWrapConfig();
+    const textWrap = wrapConfig.textWrap;
+    const maxWidth = wrapConfig.maxWidth;
+    const maxWordLength = wrapConfig.maxWordLength;
+
+    let textDimensions;
+
+    if (textWrap === 'none') {
+      // Simple case - just measure without wrapping
+      textDimensions = textMetrics.measureText(
+        text,
+        levelStyle.fontFamily,
+        levelStyle.fontSize,
+        levelStyle.fontWeight
+      );
+    } else {
+      // Use text wrapping measurement
+      textDimensions = textMetrics.wrapText(
+        text,
+        maxWidth,
+        levelStyle.fontFamily,
+        levelStyle.fontSize,
+        levelStyle.fontWeight,
+        textWrap,
+        maxWordLength
+      );
+    }
+
+    // The textDimensions.width now already accounts for the appropriate width calculation
+    // from our improved TextMetricsService
 
     return {
-      width: width + (levelStyle.horizontalPadding * 2),
-      height: height + (levelStyle.verticalPadding * 2)
+      width: textDimensions.width + (levelStyle.horizontalPadding * 2),
+      height: textDimensions.height + (levelStyle.verticalPadding * 2)
     };
   }
 

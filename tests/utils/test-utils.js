@@ -7,6 +7,7 @@ import MindmapModel from '../../model/mindmap-model.js';
 import StyleManager from '../../style/style-manager.js';
 import MindmapStylePresets from '../../style/style-presets.js';
 import MindmapRenderer from '../../renderer/mindmap-renderer.js';
+import MindmapController from '../../controller/mindmap-controller.js';
 
 // Note: DOM setup is now handled directly in test files before module imports
 
@@ -95,10 +96,19 @@ function setupMindmap(markdown, presetName, expandAll = false) {
  * @param {string} markdown - The markdown content to parse
  * @param {string} presetName - The style preset to apply
  * @param {boolean} expandAll - Whether to expand all nodes
+ * @param {Object} customStyleManager - Optional custom style manager to use instead of creating a new one
  * @returns {string} The SVG content for snapshot testing
  */
-function generateMindmapSnapshot(markdown, presetName, expandAll = false) {
-  const { model, styleManager, renderer, container } = setupMindmap(markdown, presetName, expandAll);
+function generateMindmapSnapshot(markdown, presetName, expandAll = false, customStyleManager = null) {
+  // Use provided custom style manager or create a new one
+  let { model, styleManager, renderer, container } = setupMindmap(markdown, presetName, expandAll);
+  
+  // Replace style manager if a custom one was provided
+  if (customStyleManager) {
+    styleManager = customStyleManager;
+    // Recreate renderer with new style manager
+    renderer = new MindmapRenderer(model, styleManager);
+  }
   
   // Apply the layout
   const rootLevelStyle = styleManager.getLevelStyle(1);
@@ -180,11 +190,23 @@ function setupDomEnvironment() {
   // Additional DOM mocks can be added here as needed
 }
 
+/**
+ * Create a mindmap controller for testing
+ * @param {Object} container - The container to render into
+ * @returns {MindmapController} The controller instance
+ */
+function createMindmapController(container) {
+  const model = new MindmapModel();
+  const styleManager = new StyleManager();
+  return new MindmapController(model, styleManager, container);
+}
+
 export {
   createTestContainer,
   expandAllNodes,
   setupMindmap,
   generateMindmapSnapshot,
   getAllStylePresets,
-  setupDomEnvironment
+  setupDomEnvironment,
+  createMindmapController
 };

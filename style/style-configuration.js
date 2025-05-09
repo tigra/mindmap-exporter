@@ -50,6 +50,11 @@ class StyleConfiguration {
     this.connectionGradient = options.connectionGradient !== undefined ? options.connectionGradient : false;
     
     this.boundingBox = options.boundingBox || false;
+    
+    // Text wrapping options
+    this.textWrap = options.textWrap || 'word'; // 'none' or 'word'
+    this.maxWidth = options.maxWidth || 200; // Target width for text wrapping in pixels
+    this.maxWordLength = options.maxWordLength || 20; // Maximum length of a word before it's split
   }
 
   /**
@@ -72,6 +77,18 @@ class StyleConfiguration {
    */
   getLayoutType() {
     return this.layoutType;
+  }
+  
+  /**
+   * Get text wrapping parameters
+   * @return {Object} Text wrapping configuration
+   */
+  getTextWrapConfig() {
+    return {
+      textWrap: this.textWrap,
+      maxWidth: this.maxWidth,
+      maxWordLength: this.maxWordLength
+    };
   }
 }
 
