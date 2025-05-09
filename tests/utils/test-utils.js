@@ -96,10 +96,19 @@ function setupMindmap(markdown, presetName, expandAll = false) {
  * @param {string} markdown - The markdown content to parse
  * @param {string} presetName - The style preset to apply
  * @param {boolean} expandAll - Whether to expand all nodes
+ * @param {Object} customStyleManager - Optional custom style manager to use instead of creating a new one
  * @returns {string} The SVG content for snapshot testing
  */
-function generateMindmapSnapshot(markdown, presetName, expandAll = false) {
-  const { model, styleManager, renderer, container } = setupMindmap(markdown, presetName, expandAll);
+function generateMindmapSnapshot(markdown, presetName, expandAll = false, customStyleManager = null) {
+  // Use provided custom style manager or create a new one
+  let { model, styleManager, renderer, container } = setupMindmap(markdown, presetName, expandAll);
+  
+  // Replace style manager if a custom one was provided
+  if (customStyleManager) {
+    styleManager = customStyleManager;
+    // Recreate renderer with new style manager
+    renderer = new MindmapRenderer(model, styleManager);
+  }
   
   // Apply the layout
   const rootLevelStyle = styleManager.getLevelStyle(1);

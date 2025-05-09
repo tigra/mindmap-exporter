@@ -13,6 +13,9 @@ import {
 
 import StyleManager from '../../style/style-manager';
 import StyleConfiguration from '../../style/style-configuration';
+import MindmapController from '../../controller/mindmap-controller';
+import MindmapRenderer from '../../renderer/mindmap-renderer';
+import MindmapModel from '../../model/mindmap-model';
 
 describe('Text Wrapping Snapshots', () => {
   // Test markdown with long text for wrapping
@@ -33,71 +36,111 @@ describe('Text Wrapping Snapshots', () => {
   test('Text with wrap=none should not wrap regardless of length', () => {
     // Create a custom style where wrap is set to 'none'
     const container = createTestContainer();
-    const controller = createMindmapController(container);
     
-    // Override the style to force 'none' wrapping
-    const styleManager = controller.styleManager;
+    // Create a fresh style manager with no wrapping
+    const styleManager = new StyleManager();
     
-    // Apply wrapping configuration to all levels
-    for (let i = 1; i <= 8; i++) {
-      const levelStyle = styleManager.getLevelStyle(i);
-      levelStyle.textWrap = 'none';
-    }
+    // Add getLevelStyle method since we override levelStyles directly
+    styleManager.getLevelStyle = function(level) {
+      return this.levelStyles[level] || this.levelStyles[1]; // Fallback to level 1
+    };
     
-    // Parse the markdown and render
-    controller.parseMarkdown(longTextMarkdown);
-    controller.render();
+    // Create our own level styles with explicit 'none' wrapping
+    styleManager.levelStyles = {
+      1: new StyleConfiguration({ 
+        fontSize: 18, 
+        fontWeight: 'bold', 
+        textWrap: 'none',
+        nodeType: 'box'
+      }, styleManager),
+      2: new StyleConfiguration({ 
+        fontSize: 16, 
+        textWrap: 'none',
+        nodeType: 'box'
+      }, styleManager),
+      3: new StyleConfiguration({ 
+        fontSize: 14, 
+        textWrap: 'none',
+        nodeType: 'box'
+      }, styleManager)
+    };
     
-    // Get the generated SVG
-    const svg = container.innerHTML;
+    // Using generateMindmapSnapshot which handles the parsing and rendering
+    const svg = generateMindmapSnapshot(longTextMarkdown, 'default', true, styleManager);
     expect(svg).toMatchSnapshot();
   });
 
   test('Custom maxWidth should control wrapping width', () => {
-    // Create a custom style with different maxWidth
-    const container = createTestContainer();
-    const controller = createMindmapController(container);
+    // Create a fresh style manager with custom wrapping width
+    const styleManager = new StyleManager();
     
-    // Override the style to have narrow width
-    const styleManager = controller.styleManager;
+    // Add getLevelStyle method since we override levelStyles directly
+    styleManager.getLevelStyle = function(level) {
+      return this.levelStyles[level] || this.levelStyles[1]; // Fallback to level 1
+    };
     
-    // Apply narrow wrapping width to all levels
-    for (let i = 1; i <= 8; i++) {
-      const levelStyle = styleManager.getLevelStyle(i);
-      levelStyle.textWrap = 'word';
-      levelStyle.maxWidth = 100; // Narrow width to force more wrapping
-    }
+    // Create our own level styles with narrow maxWidth
+    styleManager.levelStyles = {
+      1: new StyleConfiguration({ 
+        fontSize: 18, 
+        fontWeight: 'bold', 
+        textWrap: 'word',
+        maxWidth: 100, // Narrow width to force more wrapping
+        nodeType: 'box'
+      }, styleManager),
+      2: new StyleConfiguration({ 
+        fontSize: 16, 
+        textWrap: 'word',
+        maxWidth: 100, // Narrow width to force more wrapping
+        nodeType: 'box'
+      }, styleManager),
+      3: new StyleConfiguration({ 
+        fontSize: 14, 
+        textWrap: 'word',
+        maxWidth: 100, // Narrow width to force more wrapping
+        nodeType: 'box'
+      }, styleManager)
+    };
     
-    // Parse the markdown and render
-    controller.parseMarkdown(longTextMarkdown);
-    controller.render();
-    
-    // Get the generated SVG
-    const svg = container.innerHTML;
+    // Using generateMindmapSnapshot which handles the parsing and rendering
+    const svg = generateMindmapSnapshot(longTextMarkdown, 'default', true, styleManager);
     expect(svg).toMatchSnapshot();
   });
 
   test('Custom maxWordLength should control word splitting', () => {
-    // Create a custom style with different maxWordLength
-    const container = createTestContainer();
-    const controller = createMindmapController(container);
+    // Create a fresh style manager with aggressive word splitting
+    const styleManager = new StyleManager();
     
-    // Override the style to force more aggressive word splitting
-    const styleManager = controller.styleManager;
+    // Add getLevelStyle method since we override levelStyles directly
+    styleManager.getLevelStyle = function(level) {
+      return this.levelStyles[level] || this.levelStyles[1]; // Fallback to level 1
+    };
     
-    // Apply short maxWordLength to all levels
-    for (let i = 1; i <= 8; i++) {
-      const levelStyle = styleManager.getLevelStyle(i);
-      levelStyle.textWrap = 'word';
-      levelStyle.maxWordLength = 5; // Very short to force aggressive splitting
-    }
+    // Create our own level styles with short maxWordLength
+    styleManager.levelStyles = {
+      1: new StyleConfiguration({ 
+        fontSize: 18, 
+        fontWeight: 'bold', 
+        textWrap: 'word',
+        maxWordLength: 5, // Very short to force aggressive splitting
+        nodeType: 'box'
+      }, styleManager),
+      2: new StyleConfiguration({ 
+        fontSize: 16, 
+        textWrap: 'word',
+        maxWordLength: 5, // Very short to force aggressive splitting
+        nodeType: 'box'
+      }, styleManager),
+      3: new StyleConfiguration({ 
+        fontSize: 14, 
+        textWrap: 'word',
+        maxWordLength: 5, // Very short to force aggressive splitting
+        nodeType: 'box'
+      }, styleManager)
+    };
     
-    // Parse the markdown and render
-    controller.parseMarkdown(longTextMarkdown);
-    controller.render();
-    
-    // Get the generated SVG
-    const svg = container.innerHTML;
+    // Using generateMindmapSnapshot which handles the parsing and rendering
+    const svg = generateMindmapSnapshot(longTextMarkdown, 'default', true, styleManager);
     expect(svg).toMatchSnapshot();
   });
 });

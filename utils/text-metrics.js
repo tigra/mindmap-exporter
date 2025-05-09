@@ -83,10 +83,10 @@ class TextMetricsService {
     temp.textContent = 'gjpqy';
     const lineHeight = temp.offsetHeight;
 
+    // First, perform wrapping to get the lines
     const lines = [];
     let currentLine = '';
     let currentLineWidth = 0;
-    let maxLineWidth = 0;
 
     // Split text into words
     const words = text.split(' ');
@@ -100,7 +100,6 @@ class TextMetricsService {
         // If current line is not empty, add it to lines
         if (currentLine) {
           lines.push(currentLine);
-          maxLineWidth = Math.max(maxLineWidth, currentLineWidth);
           currentLine = '';
           currentLineWidth = 0;
         }
@@ -124,7 +123,6 @@ class TextMetricsService {
           } else {
             // Start a new line
             lines.push(currentLine);
-            maxLineWidth = Math.max(maxLineWidth, currentLineWidth);
             currentLine = segment;
             currentLineWidth = segmentWidth;
             remainingWord = remainingWord.substring(segmentLength);
@@ -133,7 +131,6 @@ class TextMetricsService {
           // If there's more word remaining, finish current line
           if (remainingWord.length > 0 && currentLine) {
             lines.push(currentLine);
-            maxLineWidth = Math.max(maxLineWidth, currentLineWidth);
             currentLine = '';
             currentLineWidth = 0;
           }
@@ -167,13 +164,32 @@ class TextMetricsService {
     // Add the last line if not empty
     if (currentLine) {
       lines.push(currentLine);
-      maxLineWidth = Math.max(maxLineWidth, currentLineWidth);
+    }
+    
+    // Now measure each line accurately
+    const lineWidths = [];
+    let maxLineWidth = 0;
+    
+    for (let i = 0; i < lines.length; i++) {
+      temp.textContent = lines[i];
+      const actualWidth = temp.offsetWidth;
+      lineWidths.push(actualWidth);
+      maxLineWidth = Math.max(maxLineWidth, actualWidth);
+    }
+    
+    // If lines were wrapped, ensure the width accounts for the maximum possible allowed width
+    if (lines.length > 1) {
+      // For text that actually needed wrapping, use the minimum of maxWidth and the measured max line width
+      // This prevents narrow last lines from making nodes too narrow
+      // It also prevents ultra-wide text from exceeding our wrapping target
+      maxLineWidth = Math.min(Math.max(maxLineWidth, maxWidth * 0.8), maxWidth);
     }
     
     document.body.removeChild(temp);
     
     return {
       lines: lines,
+      lineWidths: lineWidths,
       width: maxLineWidth,
       height: lines.length * lineHeight,
       lineHeight: lineHeight

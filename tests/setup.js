@@ -77,6 +77,7 @@ jest.mock('../utils/text-metrics.js', () => ({
       if (wrapType === 'none' || !maxWidth) {
         return {
           lines: [text],
+          lineWidths: [text.length * (fontSize / 2)],
           width: text.length * (fontSize / 2),
           height: fontSize * 1.2,
           lineHeight: fontSize * 1.2
@@ -112,10 +113,23 @@ jest.mock('../utils/text-metrics.js', () => ({
         lines.push(currentLine);
       }
       
+      // Calculate width of each line
+      const lineWidths = lines.map(line => line.length * charWidthEstimate);
+      let maxLineWidth = Math.max(...lineWidths);
+      
+      // Apply the same logic as in the real implementation
+      if (lines.length > 1) {
+        maxLineWidth = Math.min(
+          Math.max(maxLineWidth, maxWidth * 0.8), 
+          maxWidth
+        );
+      }
+      
       const lineHeight = fontSize * 1.2;
       return {
         lines: lines,
-        width: Math.min(maxWidth, text.length * (fontSize / 2)),
+        lineWidths: lineWidths,
+        width: maxLineWidth,
         height: lines.length * lineHeight,
         lineHeight: lineHeight
       };

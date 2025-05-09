@@ -43,20 +43,11 @@ class Layout {
       );
     }
 
-    // Calculate final width - ensuring it meets minimum width requirements
-    // In wrapped text case, use at least a reasonable minimum width based on the configured maxWidth
-    let finalWidth = textDimensions.width;
-    
-    // If we're wrapping text, ensure we have a sensible minimum width
-    // This prevents very short last lines from making nodes too narrow
-    if (textWrap !== 'none' && textDimensions.lines && textDimensions.lines.length > 1) {
-      // Use at least a reasonable portion of maxWidth, as this was our target wrapping width
-      const minTargetWidth = maxWidth * 0.7; // Use at least 70% of target width
-      finalWidth = Math.max(finalWidth, minTargetWidth);
-    }
+    // The textDimensions.width now already accounts for the appropriate width calculation
+    // from our improved TextMetricsService
 
     return {
-      width: finalWidth + (levelStyle.horizontalPadding * 2),
+      width: textDimensions.width + (levelStyle.horizontalPadding * 2),
       height: textDimensions.height + (levelStyle.verticalPadding * 2)
     };
   }
