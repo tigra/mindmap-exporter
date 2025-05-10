@@ -693,27 +693,20 @@ class MindmapRenderer {
     const connectionColor = levelStyle.connectionColor || '#666';
     const fillColor = this._darkenColor(connectionColor, 20);  // Darken the connection color
     const borderColor = this._darkenColor(connectionColor, 40);  // Even darker for the border
-    
-    // Use symbols for cleaner SVG
-    let svg = `<g class="collapse-indicator" id="${node.id}_indicator">`;
-    
+
     // Use the appropriate symbol based on collapsed state
     // Center the indicator at the calculated position (indicators are 12x12)
     const indicatorOffset = 6; // Half of the 12x12 indicator size
     
     if (node.collapsed) {
       // Collapsed indicator with plus icon
-      svg += `<use href="#indicator-collapsed" x="${indicatorX - indicatorOffset}" y="${indicatorY - indicatorOffset}" 
+      return `<use id="${node.id}_indicator" href="#indicator-collapsed" x="${indicatorX - indicatorOffset}" y="${indicatorY - indicatorOffset}"
                 fill="${fillColor}" stroke="${borderColor}" />`;
     } else {
       // Expanded indicator with minus icon
-      svg += `<use href="#indicator-expanded" x="${indicatorX - indicatorOffset}" y="${indicatorY - indicatorOffset}" 
+      return  `<use id="${node.id}_indicator" href="#indicator-expanded" x="${indicatorX - indicatorOffset}" y="${indicatorY - indicatorOffset}"
                 fill="${fillColor}" stroke="${borderColor}" />`;
     }
-    
-    svg += `</g>`;
-    
-    return svg;
   }
 
   /**
