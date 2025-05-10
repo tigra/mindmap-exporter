@@ -117,17 +117,6 @@ class MindmapRenderer {
 
     // Store the gradients for use in node rendering
     this.gradients = gradients;
-    
-    // Add specific connection gradients if needed
-    if (this.connectionGradients && this.connectionGradients.size > 0) {
-      for (const gradientInfo of this.connectionGradients) {
-        const baseColor = gradientInfo.color;
-        const lightColor = this._lightenColor(baseColor, 20);
-        const darkColor = this._darkenColor(baseColor, 10);
-        
-        defs += this._createGradient(gradientInfo.id, lightColor, darkColor);
-      }
-    }
 
     // Drop shadow filter
     defs += `<filter id="dropShadow">
@@ -136,6 +125,38 @@ class MindmapRenderer {
                     <feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer>
                     <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
                 </filter>`;
+    
+    // Base components for reuse
+    defs += `<symbol id="circle-base" viewBox="0 0 12 12">
+              <circle cx="6" cy="6" r="5.5" stroke-width="1"/>
+            </symbol>`;
+    
+    defs += `<symbol id="plus-shape" viewBox="0 0 12 12">
+              <line x1="3" y1="6" x2="9" y2="6" stroke="#ffffff" stroke-width="1.5"/>
+              <line x1="6" y1="3" x2="6" y2="9" stroke="#ffffff" stroke-width="1.5"/>
+            </symbol>`;
+    
+    defs += `<symbol id="minus-shape" viewBox="0 0 12 12">
+              <line x1="3" y1="6" x2="9" y2="6" stroke="#ffffff" stroke-width="1.5"/>
+            </symbol>`;
+    
+    // Generic wrappers
+    defs += `<symbol id="indicator-collapsed" viewBox="0 0 12 12" width="12" height="12">
+              <use href="#circle-base" width="12" height="12"/>
+              <use href="#plus-shape" width="12" height="12"/>
+            </symbol>`;
+            
+    defs += `<symbol id="indicator-expanded" viewBox="0 0 12 12" width="12" height="12">
+              <use href="#circle-base" width="12" height="12"/>
+              <use href="#minus-shape" width="12" height="12"/>
+            </symbol>`;
+            
+    // Mindmap node templates - basic example, can be extended
+    defs += `<symbol id="node-base" viewBox="0 0 200 40">
+              <rect width="200" height="40" rx="5" stroke-width="2"/>
+              <!-- Position for text will be at center -->
+              <!-- Position for indicator will be at -6,20 -->
+            </symbol>`;
 
     defs += '</defs>';
     return defs;
@@ -415,20 +436,8 @@ class MindmapRenderer {
     // Check if gradient should be used
     let fill = connectionColor;
     if (parentStyle.connectionGradient) {
-      const gradientId = `gradient_${parent.id}_${child.id}`;
-      // Create a gradient in the defs section if it doesn't exist
-      if (!this.connectionGradients) {
-        this.connectionGradients = new Set();
-      }
-      
-      // Add this gradient to the set to be created in createDefs
-      this.connectionGradients.add({
-        id: gradientId,
-        color: connectionColor,
-        parent: parent,
-        child: child
-      });
-      
+      // Use level-based connection gradient instead of per-connection gradient
+      const gradientId = `level${parent.level}ConnectionGradient`;
       fill = `url(#${gradientId})`;
     }
     
@@ -680,25 +689,31 @@ class MindmapRenderer {
       indicatorY = connectionPoint.y;
     }
 
-    // Draw different icons based on collapsed state
     // Use the connection color for the indicator but darker
     const connectionColor = levelStyle.connectionColor || '#666';
     const fillColor = this._darkenColor(connectionColor, 20);  // Darken the connection color
     const borderColor = this._darkenColor(connectionColor, 40);  // Even darker for the border
-    let icon;
-
+    
+    // Use symbols for cleaner SVG
+    let svg = `<g class="collapse-indicator" id="${node.id}_indicator">`;
+    
+    // Use the appropriate symbol based on collapsed state
+    // Center the indicator at the calculated position (indicators are 12x12)
+    const indicatorOffset = 6; // Half of the 12x12 indicator size
+    
     if (node.collapsed) {
-      // Plus icon for collapsed nodes
-      icon = `<circle cx="${indicatorX}" cy="${indicatorY}" r="${radius}" fill="${fillColor}" stroke="${borderColor}" stroke-width="1" />
-              <line x1="${indicatorX - 3}" y1="${indicatorY}" x2="${indicatorX + 3}" y2="${indicatorY}" stroke="#fff" stroke-width="1.5" />
-              <line x1="${indicatorX}" y1="${indicatorY - 3}" x2="${indicatorX}" y2="${indicatorY + 3}" stroke="#fff" stroke-width="1.5" />`;
+      // Collapsed indicator with plus icon
+      svg += `<use href="#indicator-collapsed" x="${indicatorX - indicatorOffset}" y="${indicatorY - indicatorOffset}" 
+                fill="${fillColor}" stroke="${borderColor}" />`;
     } else {
-      // Minus icon for expanded nodes
-      icon = `<circle cx="${indicatorX}" cy="${indicatorY}" r="${radius}" fill="${fillColor}" stroke="${borderColor}" stroke-width="1" />
-              <line x1="${indicatorX - 3}" y1="${indicatorY}" x2="${indicatorX + 3}" y2="${indicatorY}" stroke="#fff" stroke-width="1.5" />`;
+      // Expanded indicator with minus icon
+      svg += `<use href="#indicator-expanded" x="${indicatorX - indicatorOffset}" y="${indicatorY - indicatorOffset}" 
+                fill="${fillColor}" stroke="${borderColor}" />`;
     }
-
-    return `<g class="collapse-indicator" id="${node.id}_indicator">${icon}</g>`;
+    
+    svg += `</g>`;
+    
+    return svg;
   }
 
   /**
