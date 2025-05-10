@@ -81,7 +81,7 @@ class MindmapRenderer {
    * @return {string} SVG defs element with gradients and filters
    */
   createDefs() {
-    let defs = '<defs>';
+    let defs = '<defs>\n';
 
     // Create gradients for different levels
     const gradients = [];
@@ -119,39 +119,39 @@ class MindmapRenderer {
     this.gradients = gradients;
 
     // Drop shadow filter
-    defs += `<filter id="dropShadow">
-                    <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
-                    <feOffset dx="2" dy="2" result="offsetblur"/>
-                    <feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer>
-                    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>`;
+    defs += '\n<filter id="dropShadow">' +
+            '<feGaussianBlur in="SourceAlpha" stdDeviation="2"/>' +
+            '<feOffset dx="2" dy="2" result="offsetblur"/>' +
+            '<feComponentTransfer><feFuncA type="linear" slope="0.2"/></feComponentTransfer>' +
+            '<feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>' +
+            '</filter>';
     
     // Base components for reuse
-    defs += `<symbol id="circle-base" viewBox="0 0 12 12">
-              <circle cx="6" cy="6" r="5.5" stroke-width="1"/>
-            </symbol>`;
+    defs += '\n<symbol id="circle-base" viewBox="0 0 12 12">' +
+            '<circle cx="6" cy="6" r="5.5" stroke-width="1"/>' +
+            '</symbol>';
     
-    defs += `<symbol id="plus-shape" viewBox="0 0 12 12">
-              <line x1="3" y1="6" x2="9" y2="6" stroke="#ffffff" stroke-width="1.5"/>
-              <line x1="6" y1="3" x2="6" y2="9" stroke="#ffffff" stroke-width="1.5"/>
-            </symbol>`;
+    defs += '\n<symbol id="plus-shape" viewBox="0 0 12 12">' +
+            '<line x1="3" y1="6" x2="9" y2="6" stroke="#ffffff" stroke-width="1.5"/>' +
+            '<line x1="6" y1="3" x2="6" y2="9" stroke="#ffffff" stroke-width="1.5"/>' +
+            '</symbol>';
     
-    defs += `<symbol id="minus-shape" viewBox="0 0 12 12">
-              <line x1="3" y1="6" x2="9" y2="6" stroke="#ffffff" stroke-width="1.5"/>
-            </symbol>`;
+    defs += '\n<symbol id="minus-shape" viewBox="0 0 12 12">' +
+            '<line x1="3" y1="6" x2="9" y2="6" stroke="#ffffff" stroke-width="1.5"/>' +
+            '</symbol>';
     
     // Generic wrappers for indicators
-    defs += `<symbol id="indicator-collapsed" viewBox="0 0 12 12" width="12" height="12">
-              <use href="#circle-base" width="12" height="12"/>
-              <use href="#plus-shape" width="12" height="12"/>
-            </symbol>`;
+    defs += '\n<symbol id="indicator-collapsed" viewBox="0 0 12 12" width="12" height="12">' +
+            '<use href="#circle-base" width="12" height="12"/>' +
+            '<use href="#plus-shape" width="12" height="12"/>' +
+            '</symbol>';
             
-    defs += `<symbol id="indicator-expanded" viewBox="0 0 12 12" width="12" height="12">
-              <use href="#circle-base" width="12" height="12"/>
-              <use href="#minus-shape" width="12" height="12"/>
-            </symbol>`;
+    defs += '\n<symbol id="indicator-expanded" viewBox="0 0 12 12" width="12" height="12">' +
+            '<use href="#circle-base" width="12" height="12"/>' +
+            '<use href="#minus-shape" width="12" height="12"/>' +
+            '</symbol>';
 
-    defs += '</defs>';
+    defs += '\n</defs>';
     return defs;
   }
 
@@ -164,10 +164,10 @@ class MindmapRenderer {
    * @return {string} SVG linearGradient element
    */
   _createGradient(id, color1, color2) {
-    return `<linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:${color1};stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:${color2};stop-opacity:1" />
-                </linearGradient>`;
+    return '\n<linearGradient id="' + id + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
+           '<stop offset="0%" style="stop-color:' + color1 + ';stop-opacity:1" />' +
+           '<stop offset="100%" style="stop-color:' + color2 + ';stop-opacity:1" />' +
+           '</linearGradient>';
   }
 
   /**
@@ -413,15 +413,15 @@ class MindmapRenderer {
       this._calculatePerpendicularOffsets(endPoint, endWidth);
     
     // Create the filled path - always going clockwise
-    const path = `M ${startLeftX} ${startLeftY}
-                   C ${cp1x + (startLeftX - startPoint.x)} ${cp1y + (startLeftY - startPoint.y)},
-                     ${cp2x + (endLeftX - endPoint.x)} ${cp2y + (endLeftY - endPoint.y)},
-                     ${endLeftX} ${endLeftY}
-                   L ${endRightX} ${endRightY}
-                   C ${cp2x + (endRightX - endPoint.x)} ${cp2y + (endRightY - endPoint.y)},
-                     ${cp1x + (startRightX - startPoint.x)} ${cp1y + (startRightY - startPoint.y)},
-                     ${startRightX} ${startRightY}
-                   Z`;
+    const path = 'M ' + startLeftX + ' ' + startLeftY + 
+               ' C ' + (cp1x + (startLeftX - startPoint.x)) + ' ' + (cp1y + (startLeftY - startPoint.y)) + 
+               ', ' + (cp2x + (endLeftX - endPoint.x)) + ' ' + (cp2y + (endLeftY - endPoint.y)) + 
+               ', ' + endLeftX + ' ' + endLeftY + 
+               ' L ' + endRightX + ' ' + endRightY + 
+               ' C ' + (cp2x + (endRightX - endPoint.x)) + ' ' + (cp2y + (endRightY - endPoint.y)) + 
+               ', ' + (cp1x + (startRightX - startPoint.x)) + ' ' + (cp1y + (startRightY - startPoint.y)) + 
+               ', ' + startRightX + ' ' + startRightY + 
+               ' Z';
     
     // Get connection color from style
     const connectionColor = parentStyle.connectionColor || '#666';
@@ -434,7 +434,7 @@ class MindmapRenderer {
       fill = `url(#${gradientId})`;
     }
     
-    return `<path d="${path}" fill="${fill}" />`;
+    return '<path d="' + path + '" fill="' + fill + '" />\n';
   }
 
   /**
@@ -507,7 +507,7 @@ class MindmapRenderer {
       const connectionColor = parentStyle.connectionColor || '#666';
       const connectionWidth = parentStyle.connectionWidth || 2;
 
-      result = `<path d="${path}" stroke="${connectionColor}" stroke-width="${connectionWidth}" fill="none" />`;
+      result = '<path d="' + path + '" stroke="' + connectionColor + '" stroke-width="' + connectionWidth + '" fill="none" />\n';
     }
     
     console.groupEnd();
@@ -517,11 +517,10 @@ class MindmapRenderer {
     _drawBoundingBox(node) {
         if (node.boundingBox) {
 //            console.log(node.boundingBox);
-            return `<rect x="${node.boundingBox.x}" y="${node.boundingBox.y}"
-                          width="${node.boundingBox.width}" height="${node.boundingBox.height}"
-                          rx="2" ry="2" fill="#101010" fill-opacity="0.05"
-                          stroke="#001000" stroke-width="1" filter="url(#dropShadow)"
-                          id="${node.id}_bbox" class="node-shape" />`;
+            return '<rect x="' + node.boundingBox.x + '" y="' + node.boundingBox.y + '" ' +
+           'width="' + node.boundingBox.width + '" height="' + node.boundingBox.height + '" ' +
+           'rx="2" ry="2" fill="#101010" fill-opacity="0.05" stroke="#001000" stroke-width="1" ' +
+           'filter="url(#dropShadow)" id="' + node.id + '_bbox" class="node-shape" />\n';
         } else {
 //            console.log('no bounding box!');
             return '';
@@ -542,11 +541,12 @@ class MindmapRenderer {
     const borderWidth = levelStyle.borderWidth || 1.5;
     const fillOpacity = levelStyle.fillOpacity || 0.5;
 
-    return `<rect x="${node.x}" y="${node.y}"
-                  width="${node.width}" height="${node.height}"
-                  rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}" fill-opacity="${fillOpacity}"
-                  stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)"
-                  id="${node.id}_rect" class="node-shape" />`;
+    return '<rect x="' + node.x + '" y="' + node.y + '" ' +
+           'width="' + node.width + '" height="' + node.height + '" ' +
+           'rx="' + borderRadius + '" ry="' + borderRadius + '" ' +
+           'fill="' + fillColor + '" fill-opacity="' + fillOpacity + '" ' +
+           'stroke="' + borderColor + '" stroke-width="' + borderWidth + '" ' +
+           'filter="url(#dropShadow)" id="' + node.id + '_rect" class="node-shape" />\n';
   }
 
   /**
@@ -601,13 +601,12 @@ class MindmapRenderer {
     let textSVG;
     if (wrappedText.lines.length === 1 || textWrap === 'none') {
       // Simple case - just one line
-      textSVG = `<text x="${x}" y="${y}"
-                        id="${node.id}_text"
-                        font-family="${fontFamily}" font-size="${fontSize}px" font-weight="${fontWeight}"
-                        fill="${fill}" text-anchor="${textAnchor}" dominant-baseline="middle"
-                        class="node-text" pointer-events="none">
-                        ${this._escapeXml(node.text)}
-                  </text>`;
+      textSVG = '<text x="' + x + '" y="' + y + '" id="' + node.id + '_text" ' +
+               'font-family="' + fontFamily + '" font-size="' + fontSize + 'px" ' +
+               'font-weight="' + fontWeight + '" fill="' + fill + '" ' +
+               'text-anchor="' + textAnchor + '" dominant-baseline="middle" ' +
+               'class="node-text" pointer-events="none">' + 
+               this._escapeXml(node.text) + '</text>\n';
     } else {
       // Multi-line text with tspans
       const lineHeight = wrappedText.lineHeight;
@@ -617,10 +616,11 @@ class MindmapRenderer {
       let startY = y - (totalHeight / 2) + (lineHeight / 2);
       
       // Build text with tspans for each line
-      textSVG = `<text id="${node.id}_text"
-                        font-family="${fontFamily}" font-size="${fontSize}px" font-weight="${fontWeight}"
-                        fill="${fill}" text-anchor="${textAnchor}"
-                        class="node-text" pointer-events="none">`;
+      textSVG = '<text id="' + node.id + '_text" ' +
+               'font-family="' + fontFamily + '" font-size="' + fontSize + 'px" ' +
+               'font-weight="' + fontWeight + '" fill="' + fill + '" ' +
+               'text-anchor="' + textAnchor + '" ' +
+               'class="node-text" pointer-events="none">';
                         
       // Add each line as a tspan element
       for (let i = 0; i < wrappedText.lines.length; i++) {
@@ -628,18 +628,16 @@ class MindmapRenderer {
         // This avoids the double spacing issue
         if (i === 0) {
           // First line - set the initial position
-          textSVG += `<tspan x="${x}" y="${startY}">
-                     ${this._escapeXml(wrappedText.lines[i])}
-                   </tspan>`;
+          textSVG += '\n<tspan x="' + x + '" y="' + startY + '">' + 
+                   this._escapeXml(wrappedText.lines[i]) + '</tspan>';
         } else {
           // Subsequent lines - use dy for consistent line spacing
-          textSVG += `<tspan x="${x}" dy="${lineHeight}">
-                     ${this._escapeXml(wrappedText.lines[i])}
-                   </tspan>`;
+          textSVG += '\n<tspan x="' + x + '" dy="' + lineHeight + '">' + 
+                   this._escapeXml(wrappedText.lines[i]) + '</tspan>';
         }
       }
       
-      textSVG += `</text>`;
+      textSVG += `\n</text>`;
     }
     
     return textSVG;
@@ -686,12 +684,14 @@ class MindmapRenderer {
     
     if (node.collapsed) {
       // Collapsed indicator with plus icon
-      return `<use id="${node.id}_indicator" href="#indicator-collapsed" x="${indicatorX - indicatorOffset}" y="${indicatorY - indicatorOffset}"
-                fill="${fillColor}" stroke="${borderColor}" />`;
+      return '<use id="' + node.id + '_indicator" href="#indicator-collapsed" ' + 
+             'x="' + (indicatorX - indicatorOffset) + '" y="' + (indicatorY - indicatorOffset) + '" ' +
+             'fill="' + fillColor + '" stroke="' + borderColor + '" />\n';
     } else {
       // Expanded indicator with minus icon
-      return  `<use id="${node.id}_indicator" href="#indicator-expanded" x="${indicatorX - indicatorOffset}" y="${indicatorY - indicatorOffset}"
-                fill="${fillColor}" stroke="${borderColor}" />`;
+      return '<use id="' + node.id + '_indicator" href="#indicator-expanded" ' +
+             'x="' + (indicatorX - indicatorOffset) + '" y="' + (indicatorY - indicatorOffset) + '" ' +
+             'fill="' + fillColor + '" stroke="' + borderColor + '" />\n';
     }
   }
 
