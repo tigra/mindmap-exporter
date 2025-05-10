@@ -6,6 +6,22 @@ import eventBridge from '../utils/event-bridge.js';
  * MindmapRenderer class for SVG generation with interactive expand/collapse
  */
 class MindmapRenderer {
+  // Class constants
+  static DEFAULT_PADDING = 100;
+  static DEFAULT_BORDER_RADIUS = 5;
+  static DEFAULT_BORDER_WIDTH = 1.5;
+  static DEFAULT_FILL_OPACITY = 0.5;
+  static DEFAULT_CONNECTION_COLOR = '#666';
+  static DEFAULT_CONNECTION_WIDTH = 2;
+  static DEFAULT_FONT_SIZE = 14;
+  static DEFAULT_FONT_WEIGHT = 'normal';
+  static DEFAULT_FONT_FAMILY = 'Arial, sans-serif';
+  static DEFAULT_TEXT_COLOR_BOXED = 'white';
+  static DEFAULT_TEXT_COLOR_PLAIN = '#333';
+  static LIGHTEN_PERCENT = 30;
+  static DARKEN_PERCENT = 10;
+  static INDICATOR_RADIUS = 6;
+  
   /**
    * Create a new MindmapRenderer
    * @param {Object} model - The mindmap model
@@ -18,19 +34,26 @@ class MindmapRenderer {
     this.minY = Infinity;
     this.maxX = -Infinity;
     this.maxY = -Infinity;
-    this.padding = 100;
+    this.padding = MindmapRenderer.DEFAULT_PADDING;
     this.nodeMap = new Map(); // Store references to nodes by id
+  }
+
+  /**
+   * Reset bounds to initial values
+   * @private
+   */
+  _resetBounds() {
+    this.minX = Infinity;
+    this.minY = Infinity;
+    this.maxX = -Infinity;
+    this.maxY = -Infinity;
   }
 
   /**
    * Find the bounds of the entire mindmap
    */
   findBounds() {
-    this.minX = Infinity;
-    this.minY = Infinity;
-    this.maxX = -Infinity;
-    this.maxY = -Infinity;
-
+    this._resetBounds();
     this._findBoundsRecursive(this.model.getRoot());
 
     // Add padding
@@ -98,8 +121,8 @@ class MindmapRenderer {
 
         // Create a gradient variant of the background color
         const baseColor = levelStyle.backgroundColor;
-        const lightColor = this._lightenColor(baseColor, 30);
-        const darkColor = this._darkenColor(baseColor, 10);
+        const lightColor = this._lightenColor(baseColor, MindmapRenderer.LIGHTEN_PERCENT);
+        const darkColor = this._darkenColor(baseColor, MindmapRenderer.DARKEN_PERCENT);
 
         defs += this._createGradient(`level${i}Gradient`, lightColor, darkColor);
         gradients.push(i);
@@ -108,8 +131,8 @@ class MindmapRenderer {
       // Create connection gradients if tapered connections are enabled
       if (levelStyle && levelStyle.connectionTapered && levelStyle.connectionGradient && levelStyle.connectionColor) {
         const baseColor = levelStyle.connectionColor;
-        const lightColor = this._lightenColor(baseColor, 20);
-        const darkColor = this._darkenColor(baseColor, 10);
+        const lightColor = this._lightenColor(baseColor, MindmapRenderer.LIGHTEN_PERCENT - 10); // Slightly less lightening for connections
+        const darkColor = this._darkenColor(baseColor, MindmapRenderer.DARKEN_PERCENT);
         
         defs += this._createGradient(`level${i}ConnectionGradient`, lightColor, darkColor);
       }
@@ -424,7 +447,7 @@ class MindmapRenderer {
                ' Z';
     
     // Get connection color from style
-    const connectionColor = parentStyle.connectionColor || '#666';
+    const connectionColor = parentStyle.connectionColor || MindmapRenderer.DEFAULT_CONNECTION_COLOR;
     
     // Check if gradient should be used
     let fill = connectionColor;
@@ -504,8 +527,8 @@ class MindmapRenderer {
       const path = `M ${startPoint.x} ${startPoint.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endPoint.x} ${endPoint.y}`;
 
       // Get connection color from style
-      const connectionColor = parentStyle.connectionColor || '#666';
-      const connectionWidth = parentStyle.connectionWidth || 2;
+      const connectionColor = parentStyle.connectionColor || MindmapRenderer.DEFAULT_CONNECTION_COLOR;
+      const connectionWidth = parentStyle.connectionWidth || MindmapRenderer.DEFAULT_CONNECTION_WIDTH;
 
       result = '<path d="' + path + '" stroke="' + connectionColor + '" stroke-width="' + connectionWidth + '" fill="none" />\n';
     }
@@ -536,10 +559,10 @@ class MindmapRenderer {
   _drawNodeShape(node) {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     const fillColor = this.getFillColor(node);
-    const borderRadius = levelStyle.borderRadius || 5;
+    const borderRadius = levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS;
     const borderColor = levelStyle.borderColor || '#fff';
-    const borderWidth = levelStyle.borderWidth || 1.5;
-    const fillOpacity = levelStyle.fillOpacity || 0.5;
+    const borderWidth = levelStyle.borderWidth || MindmapRenderer.DEFAULT_BORDER_WIDTH;
+    const fillOpacity = levelStyle.fillOpacity || MindmapRenderer.DEFAULT_FILL_OPACITY;
 
     return '<rect x="' + node.x + '" y="' + node.y + '" ' +
            'width="' + node.width + '" height="' + node.height + '" ' +
@@ -558,9 +581,9 @@ class MindmapRenderer {
    */
   _drawNodeText(node, insideBox) {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
-    const fontSize = levelStyle.fontSize || 14;
-    const fontWeight = levelStyle.fontWeight || 'normal';
-    const fontFamily = levelStyle.fontFamily || 'Arial, sans-serif';
+    const fontSize = levelStyle.fontSize || MindmapRenderer.DEFAULT_FONT_SIZE;
+    const fontWeight = levelStyle.fontWeight || MindmapRenderer.DEFAULT_FONT_WEIGHT;
+    const fontFamily = levelStyle.fontFamily || MindmapRenderer.DEFAULT_FONT_FAMILY;
     
     // Get text wrapping configuration
     const wrapConfig = levelStyle.getTextWrapConfig();
@@ -574,13 +597,13 @@ class MindmapRenderer {
       // Text inside a box (centered)
       x = node.x + node.width / 2;
       y = node.y + node.height / 2;
-      fill = levelStyle.textColor || "white";
+      fill = levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_BOXED;
       textAnchor = "middle";
     } else {
       // Standalone text (no box)
       x = node.x;
       y = node.y + node.height / 2;
-      fill = levelStyle.textColor || "#333";
+      fill = levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_PLAIN;
       textAnchor = "start";
     }
     
@@ -656,7 +679,7 @@ class MindmapRenderer {
     // Get the connection point where the indicator should be placed
     // For collapse indicator, we pass null as childNode to get the default position
     const connectionPoint = parentLayout.getParentConnectionPoint(node, levelStyle, null);
-    const radius = 6;
+    const radius = MindmapRenderer.INDICATOR_RADIUS;
 
     // Determine position based on layout direction
     let indicatorX, indicatorY;
@@ -702,68 +725,77 @@ class MindmapRenderer {
    * @return {string} Escaped text
    */
   _escapeXml(text) {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
+    // Use a single regex replacement with a lookup table for better performance
+    const xmlEntities = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&apos;'
+    };
+    
+    return text.replace(/[&<>"']/g, char => xmlEntities[char]);
   }
 
   /**
-   * Lighten a color
+   * Adjust a color by lightening or darkening
+   * @private
+   * @param {string} color - The base color in hex format
+   * @param {number} percent - The percentage to adjust (positive = lighten, negative = darken)
+   * @return {string} Adjusted color in hex format
+   */
+  _adjustColor(color, percent) {
+    // Remove # if present
+    color = color.replace('#', '');
+
+    // Parse the hex values
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+
+    // Adjust the colors based on whether percent is positive (lighten) or negative (darken)
+    const adjustFactor = percent / 100;
+    let newR, newG, newB;
+
+    if (adjustFactor >= 0) {
+      // Lighten
+      newR = Math.min(255, r + (255 - r) * adjustFactor);
+      newG = Math.min(255, g + (255 - g) * adjustFactor);
+      newB = Math.min(255, b + (255 - b) * adjustFactor);
+    } else {
+      // Darken
+      newR = Math.max(0, r + (r * adjustFactor));
+      newG = Math.max(0, g + (g * adjustFactor));
+      newB = Math.max(0, b + (b * adjustFactor));
+    }
+
+    // Convert back to hex
+    return '#' +
+      Math.round(newR).toString(16).padStart(2, '0') +
+      Math.round(newG).toString(16).padStart(2, '0') +
+      Math.round(newB).toString(16).padStart(2, '0');
+  }
+  
+  /**
+   * Lighten a color (wrapper for _adjustColor)
    * @private
    * @param {string} color - The base color in hex format
    * @param {number} percent - The percentage to lighten
    * @return {string} Lightened color in hex format
    */
   _lightenColor(color, percent) {
-    // Remove # if present
-    color = color.replace('#', '');
-
-    // Parse the hex values
-    const r = parseInt(color.substring(0, 2), 16);
-    const g = parseInt(color.substring(2, 4), 16);
-    const b = parseInt(color.substring(4, 6), 16);
-
-    // Lighten the colors
-    const newR = Math.min(255, r + (255 - r) * (percent / 100));
-    const newG = Math.min(255, g + (255 - g) * (percent / 100));
-    const newB = Math.min(255, b + (255 - b) * (percent / 100));
-
-    // Convert back to hex
-    return '#' +
-      Math.round(newR).toString(16).padStart(2, '0') +
-      Math.round(newG).toString(16).padStart(2, '0') +
-      Math.round(newB).toString(16).padStart(2, '0');
+    return this._adjustColor(color, percent);
   }
 
   /**
-   * Darken a color
+   * Darken a color (wrapper for _adjustColor)
    * @private
    * @param {string} color - The base color in hex format
    * @param {number} percent - The percentage to darken
    * @return {string} Darkened color in hex format
    */
   _darkenColor(color, percent) {
-    // Remove # if present
-    color = color.replace('#', '');
-
-    // Parse the hex values
-    const r = parseInt(color.substring(0, 2), 16);
-    const g = parseInt(color.substring(2, 4), 16);
-    const b = parseInt(color.substring(4, 6), 16);
-
-    // Darken the colors
-    const newR = Math.max(0, r - (r * (percent / 100)));
-    const newG = Math.max(0, g - (g * (percent / 100)));
-    const newB = Math.max(0, b - (b * (percent / 100)));
-
-    // Convert back to hex
-    return '#' +
-      Math.round(newR).toString(16).padStart(2, '0') +
-      Math.round(newG).toString(16).padStart(2, '0') +
-      Math.round(newB).toString(16).padStart(2, '0');
+    return this._adjustColor(color, -percent);
   }
 
   /**
@@ -798,49 +830,53 @@ class MindmapRenderer {
   }
 
   /**
+   * Attach a click event handler to an element
+   * @private
+   * @param {string} elementId - The ID of the element
+   * @param {string} eventType - The event type
+   * @param {function} handler - The event handler function
+   */
+  _attachEventHandler(elementId, eventType, handler) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.addEventListener(eventType, handler);
+    }
+  }
+
+  /**
    * Attach event handlers to nodes
    */
-attachEventHandlers() {
-  this.nodeMap.forEach((node, nodeId) => {
-    // Add event listener to node shape
-    const nodeRect = document.getElementById(`${nodeId}_rect`);
-    if (nodeRect) {
-      // Double-click event for toggling collapse state
-      nodeRect.addEventListener('dblclick', () => {
+  attachEventHandlers() {
+    this.nodeMap.forEach((node, nodeId) => {
+      // Add event listener to node shape for double-click (toggle)
+      this._attachEventHandler(`${nodeId}_rect`, 'dblclick', () => {
         eventBridge.handleNodeEvent(nodeId, 'toggle');
       });
 
-      // Single-click event for debugging node properties
-      nodeRect.addEventListener('click', (event) => {
+      // Add event listener to node shape for single-click (debug)
+      this._attachEventHandler(`${nodeId}_rect`, 'click', (event) => {
         // Prevent event from triggering unwanted behaviors
         if (!event.ctrlKey) {
           event.stopPropagation();
           eventBridge.handleNodeEvent(nodeId, 'debug');
         }
       });
-    }
 
-    // Add event listener to text as well for better UX
-    const nodeText = document.getElementById(`${nodeId}_text`);
-    if (nodeText) {
-      nodeText.addEventListener('click', (event) => {
+      // Add event listener to text as well for better UX
+      this._attachEventHandler(`${nodeId}_text`, 'click', (event) => {
         // Prevent event from triggering unwanted behaviors
         if (!event.ctrlKey) {
           event.stopPropagation();
           eventBridge.handleNodeEvent(nodeId, 'debug');
         }
       });
-    }
 
-    // Add event listener to collapse/expand indicator
-    const nodeIndicator = document.getElementById(`${nodeId}_indicator`);
-    if (nodeIndicator) {
-      nodeIndicator.addEventListener('click', () => {
+      // Add event listener to collapse/expand indicator
+      this._attachEventHandler(`${nodeId}_indicator`, 'click', () => {
         eventBridge.handleNodeEvent(nodeId, 'toggle');
       });
-    }
-  });
-}
+    });
+  }
 
   /**
    * Get the node map
