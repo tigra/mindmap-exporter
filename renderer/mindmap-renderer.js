@@ -140,7 +140,7 @@ class MindmapRenderer {
               <line x1="3" y1="6" x2="9" y2="6" stroke="#ffffff" stroke-width="1.5"/>
             </symbol>`;
     
-    // Generic wrappers
+    // Generic wrappers for indicators
     defs += `<symbol id="indicator-collapsed" viewBox="0 0 12 12" width="12" height="12">
               <use href="#circle-base" width="12" height="12"/>
               <use href="#plus-shape" width="12" height="12"/>
@@ -149,13 +149,6 @@ class MindmapRenderer {
     defs += `<symbol id="indicator-expanded" viewBox="0 0 12 12" width="12" height="12">
               <use href="#circle-base" width="12" height="12"/>
               <use href="#minus-shape" width="12" height="12"/>
-            </symbol>`;
-            
-    // Mindmap node templates - basic example, can be extended
-    defs += `<symbol id="node-base" viewBox="0 0 200 40">
-              <rect width="200" height="40" rx="5" stroke-width="2"/>
-              <!-- Position for text will be at center -->
-              <!-- Position for indicator will be at -6,20 -->
             </symbol>`;
 
     defs += '</defs>';
@@ -508,10 +501,7 @@ class MindmapRenderer {
       const [cp1x, cp1y, cp2x, cp2y] = this._calculateBezierControlPoints(startPoint, endPoint);
       
       // Create the path with the calculated control points
-      const path = `M ${startPoint.x} ${startPoint.y}
-                     C ${cp1x} ${cp1y},
-                       ${cp2x} ${cp2y},
-                       ${endPoint.x} ${endPoint.y}`;
+      const path = `M ${startPoint.x} ${startPoint.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endPoint.x} ${endPoint.y}`;
 
       // Get connection color from style
       const connectionColor = parentStyle.connectionColor || '#666';
@@ -552,16 +542,12 @@ class MindmapRenderer {
     const borderWidth = levelStyle.borderWidth || 1.5;
     const fillOpacity = levelStyle.fillOpacity || 0.5;
 
-//    return `<rect x="${node.x}" y="${node.y}"
-//                      width="${node.width}" height="${node.height}"
-//                      rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}"
-//                      stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)"
-//                      id="${node.id}_rect" class="node-shape" />`;
     return `<rect x="${node.x}" y="${node.y}"
-                      width="${node.width}" height="${node.height}"
-                      rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}" fill-opacity="${fillOpacity}"
-                      stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)"
-                      id="${node.id}_rect" class="node-shape" />`;  }
+                  width="${node.width}" height="${node.height}"
+                  rx="${borderRadius}" ry="${borderRadius}" fill="${fillColor}" fill-opacity="${fillOpacity}"
+                  stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#dropShadow)"
+                  id="${node.id}_rect" class="node-shape" />`;
+  }
 
   /**
    * Draw text for a node
