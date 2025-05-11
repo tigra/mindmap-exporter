@@ -62,18 +62,21 @@ viewBox="-100 -272 1043 765.1999999999999">
     </symbol>
   </defs>
   <path d="M 100 168.79999999999995 C 112 168.79999999999995, 118 37.19999999999996, 130 37.19999999999996"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_195b867_node_2908721" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 246 37.19999999999996 C 258 37.19999999999996, 264 52.79999999999997, 276 52.79999999999997"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_2908721_node_7d12c1d8" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 394 52.79999999999997 C 406 52.79999999999997, 412 0, 424 0"
-  stroke="#666666" stroke-width="2" fill="none" />
-  <path d="M 544 0 C 556 0, 562 21.6, 574 21.6" stroke="#666666" stroke-width="2"
-  fill="none" />
-  <path d="M 693 21.6 C 705 21.6, 711 0, 723 0" stroke="#666666" stroke-width="2"
-  fill="none" />
+  id="connection_node_7d12c1d8_node_2fe81c0a" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
+  <path d="M 544 0 C 556 0, 562 21.6, 574 21.6" id="connection_node_2fe81c0a_node_3296cfa7"
+  class="connection" fill="none" stroke="#666666" stroke-width="2" />
+  <path d="M 693 21.6 C 705 21.6, 711 0, 723 0" id="connection_node_3296cfa7_node_6ebf66eb"
+  class="connection" fill="none" stroke="#666666" stroke-width="2" />
   <rect x="723" y="-63.99999999999999" width="120" height="127.99999999999999"
   rx="5" ry="5" fill="url(#level6Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_6ebf66eb_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_6ebf66eb_rect" filter="url(#dropShadow)"
   />
   <text id="node_6ebf66eb_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
@@ -87,7 +90,7 @@ viewBox="-100 -272 1043 765.1999999999999">
   </text>
   <rect x="574" y="-20.799999999999997" width="119" height="84.8" rx="5"
   ry="5" fill="url(#level5Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_3296cfa7_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_3296cfa7_rect" filter="url(#dropShadow)"
   />
   <text id="node_3296cfa7_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
@@ -96,11 +99,11 @@ viewBox="-100 -272 1043 765.1999999999999">
     <tspan x="633.5" dy="21.599999999999998">with normal</tspan>
     <tspan x="633.5" dy="21.599999999999998">text</tspan>
   </text>
-  <use id="node_3296cfa7_indicator" href="#indicator-expanded" x="693" y="15.600000000000001"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="693" y="15.600000000000001" fill="#525252"
+  stroke="#3d3d3d" id="node_3296cfa7_indicator" />
   <rect x="424" y="-171.99999999999997" width="120" height="343.99999999999994"
   rx="5" ry="5" fill="url(#level4Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_2fe81c0a_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_2fe81c0a_rect" filter="url(#dropShadow)"
   />
   <text id="node_2fe81c0a_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
@@ -121,11 +124,11 @@ viewBox="-100 -272 1043 765.1999999999999">
     <tspan x="484" dy="21.599999999999998">on</tspan>
     <tspan x="484" dy="21.599999999999998">maxWordLength</tspan>
   </text>
-  <use id="node_2fe81c0a_indicator" href="#indicator-expanded" x="544" y="-6"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="544" y="-6" fill="#525252" stroke="#3d3d3d"
+  id="node_2fe81c0a_indicator" />
   <rect x="276" y="-66.40000000000003" width="118" height="238.4" rx="5"
   ry="5" fill="url(#level3Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_7d12c1d8_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_7d12c1d8_rect" filter="url(#dropShadow)"
   />
   <text id="node_7d12c1d8_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="14px" font-weight="normal" fill="#000000" text-anchor="middle"
@@ -144,11 +147,11 @@ viewBox="-100 -272 1043 765.1999999999999">
     <tspan x="335" dy="16.8">node width</tspan>
     <tspan x="335" dy="16.8">limit</tspan>
   </text>
-  <use id="node_7d12c1d8_indicator" href="#indicator-expanded" x="394" y="46.79999999999997"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="394" y="46.79999999999997" fill="#525252"
+  stroke="#3d3d3d" id="node_7d12c1d8_indicator" />
   <rect x="130" y="-97.60000000000005" width="116" height="269.6" rx="5"
   ry="5" fill="url(#level2Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_2908721_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_2908721_rect" filter="url(#dropShadow)"
   />
   <text id="node_2908721_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="16px" font-weight="normal" fill="#000000" text-anchor="middle"
@@ -167,22 +170,24 @@ viewBox="-100 -272 1043 765.1999999999999">
     <tspan x="188" dy="19.2">maximum</tspan>
     <tspan x="188" dy="19.2">width</tspan>
   </text>
-  <use id="node_2908721_indicator" href="#indicator-expanded" x="246" y="31.19999999999996"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="246" y="31.19999999999996" fill="#525252"
+  stroke="#3d3d3d" id="node_2908721_indicator" />
   <path d="M 100 168.79999999999995 C 112 168.79999999999995, 118 363.99999999999994, 130 363.99999999999994"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_195b867_node_7ada6a38" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 230 363.99999999999994 C 242 363.99999999999994, 248 363.99999999999994, 260 363.99999999999994"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_7ada6a38_node_614144a8" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <rect x="260" y="345.59999999999997" width="104" height="36.8" rx="5"
   ry="5" fill="url(#level3Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_614144a8_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_614144a8_rect" filter="url(#dropShadow)"
   />
   <text x="312" y="363.99999999999994" id="node_614144a8_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="14px" font-weight="normal" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Short bullet</text>
+  class="node-text" pointer-events="none" dominant-baseline="middle">Short bullet</text>
   <rect x="130" y="334.79999999999995" width="100" height="58.4"
   rx="5" ry="5" fill="url(#level2Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_7ada6a38_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_7ada6a38_rect" filter="url(#dropShadow)"
   />
   <text id="node_7ada6a38_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="16px" font-weight="normal" fill="#000000" text-anchor="middle"
@@ -190,11 +195,11 @@ viewBox="-100 -272 1043 765.1999999999999">
     <tspan x="180" y="354.4">Regular</tspan>
     <tspan x="180" dy="19.2">heading</tspan>
   </text>
-  <use id="node_7ada6a38_indicator" href="#indicator-expanded" x="230" y="357.99999999999994"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="230" y="357.99999999999994" fill="#525252"
+  stroke="#3d3d3d" id="node_7ada6a38_indicator" />
   <rect x="0" y="126.39999999999995" width="100" height="84.8" rx="5" ry="5"
   fill="url(#level1Gradient)" fill-opacity="0.9" stroke="#cccccc" stroke-width="2"
-  filter="url(#dropShadow)" id="node_195b867_rect" class="node-shape" />
+  class="node-shape" id="node_195b867_rect" filter="url(#dropShadow)" />
   <text id="node_195b867_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
   class="node-text" pointer-events="none">
@@ -202,8 +207,8 @@ viewBox="-100 -272 1043 765.1999999999999">
     <tspan x="50" dy="21.599999999999998">Wrapping</tspan>
     <tspan x="50" dy="21.599999999999998">Test</tspan>
   </text>
-  <use id="node_195b867_indicator" href="#indicator-expanded" x="100" y="162.79999999999995"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="100" y="162.79999999999995" fill="#525252"
+  stroke="#3d3d3d" id="node_195b867_indicator" />
 </svg>
 `;
 
@@ -268,18 +273,21 @@ exports[`Text Wrapping Snapshots Custom maxWordLength should control word splitt
     </symbol>
   </defs>
   <path d="M 182 105.2 C 194 105.2, 200 38.39999999999999, 212 38.39999999999999"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_195b867_node_2908721" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 432 38.39999999999999 C 444 38.39999999999999, 450 35.999999999999986, 462 35.999999999999986"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_2908721_node_7d12c1d8" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 671 35.999999999999986 C 683 35.999999999999986, 689 0, 701 0"
-  stroke="#666666" stroke-width="2" fill="none" />
-  <path d="M 921 0 C 933 0, 939 10.8, 951 10.8" stroke="#666666" stroke-width="2"
-  fill="none" />
-  <path d="M 1142 10.8 C 1154 10.8, 1160 0, 1172 0" stroke="#666666" stroke-width="2"
-  fill="none" />
+  id="connection_node_7d12c1d8_node_2fe81c0a" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
+  <path d="M 921 0 C 933 0, 939 10.8, 951 10.8" id="connection_node_2fe81c0a_node_3296cfa7"
+  class="connection" fill="none" stroke="#666666" stroke-width="2" />
+  <path d="M 1142 10.8 C 1154 10.8, 1160 0, 1172 0" id="connection_node_3296cfa7_node_6ebf66eb"
+  class="connection" fill="none" stroke="#666666" stroke-width="2" />
   <rect x="1172" y="-42.4" width="220" height="84.8" rx="5" ry="5" fill="url(#level6Gradient)"
-  fill-opacity="0.9" stroke="#cccccc" stroke-width="2" filter="url(#dropShadow)"
-  id="node_6ebf66eb_rect" class="node-shape" />
+  fill-opacity="0.9" stroke="#cccccc" stroke-width="2" class="node-shape"
+  id="node_6ebf66eb_rect" filter="url(#dropShadow)" />
   <text id="node_6ebf66eb_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
   class="node-text" pointer-events="none">
@@ -290,7 +298,7 @@ exports[`Text Wrapping Snapshots Custom maxWordLength should control word splitt
   </text>
   <rect x="951" y="-20.799999999999997" width="191" height="63.199999999999996"
   rx="5" ry="5" fill="url(#level5Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_3296cfa7_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_3296cfa7_rect" filter="url(#dropShadow)"
   />
   <text id="node_3296cfa7_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
@@ -298,11 +306,11 @@ exports[`Text Wrapping Snapshots Custom maxWordLength should control word splitt
     <tspan x="1046.5" y="1.7763568394002505e-15">Level 5 with normal</tspan>
     <tspan x="1046.5" dy="21.599999999999998">text</tspan>
   </text>
-  <use id="node_3296cfa7_indicator" href="#indicator-expanded" x="1142"
-  y="4.800000000000001" fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="1142" y="4.800000000000001" fill="#525252"
+  stroke="#3d3d3d" id="node_3296cfa7_indicator" />
   <rect x="701" y="-96.39999999999999" width="220" height="192.79999999999998"
   rx="5" ry="5" fill="url(#level4Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_2fe81c0a_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_2fe81c0a_rect" filter="url(#dropShadow)"
   />
   <text id="node_2fe81c0a_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
@@ -316,11 +324,11 @@ exports[`Text Wrapping Snapshots Custom maxWordLength should control word splitt
     <tspan x="811" dy="21.599999999999998">which should be split</tspan>
     <tspan x="811" dy="21.599999999999998">based on maxWordLength</tspan>
   </text>
-  <use id="node_2fe81c0a_indicator" href="#indicator-expanded" x="921" y="-6"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="921" y="-6" fill="#525252" stroke="#3d3d3d"
+  id="node_2fe81c0a_indicator" />
   <rect x="462" y="-24.40000000000002" width="209" height="120.80000000000001"
   rx="5" ry="5" fill="url(#level3Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_7d12c1d8_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_7d12c1d8_rect" filter="url(#dropShadow)"
   />
   <text id="node_7d12c1d8_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="14px" font-weight="normal" fill="#000000" text-anchor="middle"
@@ -332,11 +340,11 @@ exports[`Text Wrapping Snapshots Custom maxWordLength should control word splitt
     <tspan x="566.5" dy="16.8">exceeds any reasonable node</tspan>
     <tspan x="566.5" dy="16.8">width limit</tspan>
   </text>
-  <use id="node_7d12c1d8_indicator" href="#indicator-expanded" x="671" y="29.999999999999986"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="671" y="29.999999999999986" fill="#525252"
+  stroke="#3d3d3d" id="node_7d12c1d8_indicator" />
   <rect x="212" y="-19.60000000000001" width="220" height="116" rx="5" ry="5"
   fill="url(#level2Gradient)" fill-opacity="0.9" stroke="#cccccc" stroke-width="2"
-  filter="url(#dropShadow)" id="node_2908721_rect" class="node-shape" />
+  class="node-shape" id="node_2908721_rect" filter="url(#dropShadow)" />
   <text id="node_2908721_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="16px" font-weight="normal" fill="#000000" text-anchor="middle"
   class="node-text" pointer-events="none">
@@ -346,36 +354,38 @@ exports[`Text Wrapping Snapshots Custom maxWordLength should control word splitt
     <tspan x="322" dy="19.2">multiple lines based on</tspan>
     <tspan x="322" dy="19.2">configured maximum width</tspan>
   </text>
-  <use id="node_2908721_indicator" href="#indicator-expanded" x="432" y="32.39999999999999"
-  fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="432" y="32.39999999999999" fill="#525252"
+  stroke="#3d3d3d" id="node_2908721_indicator" />
   <path d="M 182 105.2 C 194 105.2, 200 212.79999999999998, 212 212.79999999999998"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_195b867_node_7ada6a38" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 352 212.79999999999998 C 364 212.79999999999998, 370 212.79999999999998, 382 212.79999999999998"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_7ada6a38_node_614144a8" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <rect x="382" y="194.39999999999998" width="104" height="36.8" rx="5"
   ry="5" fill="url(#level3Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_614144a8_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_614144a8_rect" filter="url(#dropShadow)"
   />
   <text x="434" y="212.79999999999998" id="node_614144a8_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="14px" font-weight="normal" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Short bullet</text>
+  class="node-text" pointer-events="none" dominant-baseline="middle">Short bullet</text>
   <rect x="212" y="193.2" width="140" height="39.2" rx="5"
   ry="5" fill="url(#level2Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_7ada6a38_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_7ada6a38_rect" filter="url(#dropShadow)"
   />
   <text x="282" y="212.79999999999998" id="node_7ada6a38_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="16px" font-weight="normal" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Regular heading</text>
-  <use id="node_7ada6a38_indicator" href="#indicator-expanded"
-  x="352" y="206.79999999999998" fill="#525252" stroke="#3d3d3d" />
+  class="node-text" pointer-events="none" dominant-baseline="middle">Regular heading</text>
+  <use href="#indicator-expanded" x="352" y="206.79999999999998"
+  fill="#525252" stroke="#3d3d3d" id="node_7ada6a38_indicator" />
   <rect x="0" y="84.4" width="182" height="41.599999999999994" rx="5" ry="5"
   fill="url(#level1Gradient)" fill-opacity="0.9" stroke="#cccccc" stroke-width="2"
-  filter="url(#dropShadow)" id="node_195b867_rect" class="node-shape" />
+  class="node-shape" id="node_195b867_rect" filter="url(#dropShadow)" />
   <text x="91" y="105.2" id="node_195b867_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Text Wrapping Test</text>
-  <use id="node_195b867_indicator" href="#indicator-expanded"
-  x="182" y="99.2" fill="#525252" stroke="#3d3d3d" />
+  class="node-text" pointer-events="none" dominant-baseline="middle">Text Wrapping Test</text>
+  <use href="#indicator-expanded" x="182" y="99.2"
+  fill="#525252" stroke="#3d3d3d" id="node_195b867_indicator" />
 </svg>
 `;
 
@@ -455,15 +465,20 @@ exports[`Text Wrapping Snapshots Default preset with word wrapping renders corre
     </symbol>
   </defs>
   <path d="M 256 74 C 288 74, 304 -3, 336 -3 L 336 3 C 304 3, 288 90, 256 90 Z"
-  fill="url(#level1ConnectionGradient)" />
+  id="connection_node_195b867_node_2908721" class="tapered-connection" fill="url(#level1ConnectionGradient)"
+  />
   <path d="M 554 -4 C 578 -4, 590 -2, 614 -2 L 614 2 C 590 2, 578 4, 554 4 Z"
-  fill="url(#level2ConnectionGradient)" />
+  id="connection_node_2908721_node_7d12c1d8" class="tapered-connection" fill="url(#level2ConnectionGradient)"
+  />
   <path d="M 818 -3 C 834 -3, 842 -1.25, 858 -1.25 L 858 1.25 C 842 1.25, 834 3, 818 3 Z"
+  id="connection_node_7d12c1d8_node_2fe81c0a" class="tapered-connection"
   fill="url(#level3ConnectionGradient)" />
   <path d="M 1068 0 C 1080 0, 1086 12.399999999999999, 1098 12.399999999999999"
-  stroke="#8892d8" stroke-width="2" fill="none" />
+  id="connection_node_2fe81c0a_node_3296cfa7" class="connection" fill="none"
+  stroke="#8892d8" stroke-width="2" />
   <path d="M 1252 12.399999999999999 C 1262 12.399999999999999, 1267 0, 1277 0"
-  stroke="#8892d8" stroke-width="2" fill="none" />
+  id="connection_node_3296cfa7_node_6ebf66eb" class="connection" fill="none"
+  stroke="#8892d8" stroke-width="2" />
   <text id="node_6ebf66eb_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="12px" font-weight="normal" fill="#5562b6" text-anchor="start"
   class="node-text" pointer-events="none">
@@ -474,16 +489,17 @@ exports[`Text Wrapping Snapshots Default preset with word wrapping renders corre
   </text>
   <rect x="1098" y="0.1999999999999993" width="154" height="24.4" rx="5"
   ry="5" fill="url(#level5Gradient)" fill-opacity="0.9" stroke="#a5add8"
-  stroke-width="2" filter="url(#dropShadow)" id="node_3296cfa7_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_3296cfa7_rect" filter="url(#dropShadow)"
   />
   <text x="1175" y="12.399999999999999" id="node_3296cfa7_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="12px" font-weight="normal" fill="#5562b6" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Level 5 with normal text</text>
-  <use id="node_3296cfa7_indicator" href="#indicator-expanded"
-  x="1252" y="6.399999999999999" fill="#6d75ad" stroke="#525882" />
+  class="node-text" pointer-events="none" dominant-baseline="middle">Level 5 with normal text</text>
+  <use href="#indicator-expanded" x="1252"
+  y="6.399999999999999" fill="#6d75ad" stroke="#525882" id="node_3296cfa7_indicator"
+  />
   <rect x="858" y="-63.800000000000004" width="210" height="127.60000000000001"
   rx="6" ry="6" fill="url(#level4Gradient)" fill-opacity="0.9" stroke="#8892d8"
-  stroke-width="2" filter="url(#dropShadow)" id="node_2fe81c0a_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_2fe81c0a_rect" filter="url(#dropShadow)"
   />
   <text id="node_2fe81c0a_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="14px" font-weight="normal" fill="#ffffff" text-anchor="middle"
@@ -496,11 +512,11 @@ exports[`Text Wrapping Snapshots Default preset with word wrapping renders corre
     <tspan x="963" dy="16.8">which should be split based</tspan>
     <tspan x="963" dy="16.8">on maxWordLength</tspan>
   </text>
-  <use id="node_2fe81c0a_indicator" href="#indicator-expanded" x="1068"
-  y="-6" fill="#6d75ad" stroke="#525882" />
+  <use href="#indicator-expanded" x="1068" y="-6" fill="#6d75ad" stroke="#525882"
+  id="node_2fe81c0a_indicator" />
   <rect x="614" y="-77.2" width="204" height="154.4" rx="8" ry="8" fill="url(#level3Gradient)"
-  fill-opacity="0.9" stroke="#6a75c9" stroke-width="2" filter="url(#dropShadow)"
-  id="node_7d12c1d8_rect" class="node-shape" />
+  fill-opacity="0.9" stroke="#6a75c9" stroke-width="2" class="node-shape"
+  id="node_7d12c1d8_rect" filter="url(#dropShadow)" />
   <text id="node_7d12c1d8_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="16px" font-weight="normal" fill="#ffffff" text-anchor="middle"
   class="node-text" pointer-events="none">
@@ -512,11 +528,11 @@ exports[`Text Wrapping Snapshots Default preset with word wrapping renders corre
     <tspan x="716" dy="19.2">reasonable node width</tspan>
     <tspan x="716" dy="19.2">limit</tspan>
   </text>
-  <use id="node_7d12c1d8_indicator" href="#indicator-expanded" x="818" y="-6"
-  fill="#555ea1" stroke="#404679" />
+  <use href="#indicator-expanded" x="818" y="-6" fill="#555ea1" stroke="#404679"
+  id="node_7d12c1d8_indicator" />
   <rect x="336" y="-85.6" width="218" height="171.2" rx="10" ry="10" fill="url(#level2Gradient)"
-  fill-opacity="0.9" stroke="#5562b6" stroke-width="2" filter="url(#dropShadow)"
-  id="node_2908721_rect" class="node-shape" />
+  fill-opacity="0.9" stroke="#5562b6" stroke-width="2" class="node-shape"
+  id="node_2908721_rect" filter="url(#dropShadow)" />
   <text id="node_2908721_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#ffffff" text-anchor="middle"
   class="node-text" pointer-events="none">
@@ -528,35 +544,37 @@ exports[`Text Wrapping Snapshots Default preset with word wrapping renders corre
     <tspan x="445" dy="21.599999999999998">configured maximum</tspan>
     <tspan x="445" dy="21.599999999999998">width</tspan>
   </text>
-  <use id="node_2908721_indicator" href="#indicator-expanded" x="554" y="-6"
-  fill="#444e92" stroke="#333b6d" />
+  <use href="#indicator-expanded" x="554" y="-6" fill="#444e92" stroke="#333b6d"
+  id="node_2908721_indicator" />
   <path d="M 256 74 C 288 74, 304 188.2, 336 188.2 L 336 194.2 C 304 194.2, 288 90, 256 90 Z"
-  fill="url(#level1ConnectionGradient)" />
+  id="connection_node_195b867_node_7ada6a38" class="tapered-connection" fill="url(#level1ConnectionGradient)"
+  />
   <path d="M 491 187.2 C 515 187.2, 527 189.2, 551 189.2 L 551 193.2 C 527 193.2, 515 195.2, 491 195.2 Z"
+  id="connection_node_7ada6a38_node_614144a8" class="tapered-connection"
   fill="url(#level2ConnectionGradient)" />
   <rect x="551" y="171.6" width="116" height="39.2" rx="8" ry="8" fill="url(#level3Gradient)"
-  fill-opacity="0.9" stroke="#6a75c9" stroke-width="2" filter="url(#dropShadow)"
-  id="node_614144a8_rect" class="node-shape" />
+  fill-opacity="0.9" stroke="#6a75c9" stroke-width="2" class="node-shape"
+  id="node_614144a8_rect" filter="url(#dropShadow)" />
   <text x="609" y="191.2" id="node_614144a8_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="16px" font-weight="normal" fill="#ffffff" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Short bullet</text>
+  class="node-text" pointer-events="none" dominant-baseline="middle">Short bullet</text>
   <rect x="336" y="170.39999999999998" width="155" height="41.599999999999994"
   rx="10" ry="10" fill="url(#level2Gradient)" fill-opacity="0.9" stroke="#5562b6"
-  stroke-width="2" filter="url(#dropShadow)" id="node_7ada6a38_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_7ada6a38_rect" filter="url(#dropShadow)"
   />
   <text x="413.5" y="191.2" id="node_7ada6a38_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#ffffff" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Regular heading</text>
-  <use id="node_7ada6a38_indicator" href="#indicator-expanded"
-  x="491" y="185.2" fill="#444e92" stroke="#333b6d" />
+  class="node-text" pointer-events="none" dominant-baseline="middle">Regular heading</text>
+  <use href="#indicator-expanded" x="491" y="185.2"
+  fill="#444e92" stroke="#333b6d" id="node_7ada6a38_indicator" />
   <rect x="0" y="47.6" width="256" height="68.8" rx="12" ry="12" fill="url(#level1Gradient)"
-  fill-opacity="0.9" stroke="#3a459a" stroke-width="3" filter="url(#dropShadow)"
-  id="node_195b867_rect" class="node-shape" />
+  fill-opacity="0.9" stroke="#3a459a" stroke-width="3" class="node-shape"
+  id="node_195b867_rect" filter="url(#dropShadow)" />
   <text x="128" y="82" id="node_195b867_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="24px" font-weight="bold" fill="#ffffff" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Text Wrapping Test</text>
-  <use id="node_195b867_indicator" href="#indicator-expanded"
-  x="256" y="76" fill="#2e377b" stroke="#23295c" />
+  class="node-text" pointer-events="none" dominant-baseline="middle">Text Wrapping Test</text>
+  <use href="#indicator-expanded" x="256" y="76"
+  fill="#2e377b" stroke="#23295c" id="node_195b867_indicator" />
 </svg>
 `;
 
@@ -621,92 +639,97 @@ exports[`Text Wrapping Snapshots Text with wrap=none should not wrap regardless 
     </symbol>
   </defs>
   <path d="M 182 29.599999999999994 C 194 29.599999999999994, 200 1.1999999999999957, 212 1.1999999999999957"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_195b867_node_2908721" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 1208 1.1999999999999957 C 1220 1.1999999999999957, 1226 2.3999999999999986, 1238 2.3999999999999986"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_2908721_node_7d12c1d8" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 2217 2.3999999999999986 C 2229 2.3999999999999986, 2235 0, 2247 0"
-  stroke="#666666" stroke-width="2" fill="none" />
-  <path d="M 3734 0 C 3746 0, 3752 0, 3764 0" stroke="#666666" stroke-width="2"
-  fill="none" />
-  <path d="M 4000 0 C 4012 0, 4018 0, 4030 0" stroke="#666666" stroke-width="2"
-  fill="none" />
+  id="connection_node_7d12c1d8_node_2fe81c0a" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
+  <path d="M 3734 0 C 3746 0, 3752 0, 3764 0" id="connection_node_2fe81c0a_node_3296cfa7"
+  class="connection" fill="none" stroke="#666666" stroke-width="2" />
+  <path d="M 4000 0 C 4012 0, 4018 0, 4030 0" id="connection_node_3296cfa7_node_6ebf66eb"
+  class="connection" fill="none" stroke="#666666" stroke-width="2" />
   <rect x="4030" y="-20.799999999999997" width="1127" height="41.599999999999994"
   rx="5" ry="5" fill="url(#level6Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_6ebf66eb_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_6ebf66eb_rect" filter="url(#dropShadow)"
   />
   <text x="4593.5" y="0" id="node_6ebf66eb_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Level 6 with ThisIsAReallyLongWordWithNoSpacesThatShouldBeSplitIntoMultipleChunksWhenWrappingIsEnabled
+  class="node-text" pointer-events="none" dominant-baseline="middle">Level 6 with ThisIsAReallyLongWordWithNoSpacesThatShouldBeSplitIntoMultipleChunksWhenWrappingIsEnabled
     for testing purposes</text>
   <rect x="3764" y="-20.799999999999997" width="236"
   height="41.599999999999994" rx="5" ry="5" fill="url(#level5Gradient)" fill-opacity="0.9"
-  stroke="#cccccc" stroke-width="2" filter="url(#dropShadow)" id="node_3296cfa7_rect"
-  class="node-shape" />
+  stroke="#cccccc" stroke-width="2" class="node-shape" id="node_3296cfa7_rect"
+  filter="url(#dropShadow)" />
   <text x="3882" y="0" id="node_3296cfa7_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Level 5 with normal text</text>
-  <use id="node_3296cfa7_indicator" href="#indicator-expanded"
-  x="4000" y="-6" fill="#525252" stroke="#3d3d3d" />
+  class="node-text" pointer-events="none" dominant-baseline="middle">Level 5 with normal text</text>
+  <use href="#indicator-expanded" x="4000"
+  y="-6" fill="#525252" stroke="#3d3d3d" id="node_3296cfa7_indicator" />
   <rect x="2247" y="-20.799999999999997" width="1487" height="41.599999999999994"
   rx="5" ry="5" fill="url(#level4Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_2fe81c0a_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_2fe81c0a_rect" filter="url(#dropShadow)"
   />
   <text x="2990.5" y="0" id="node_2fe81c0a_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Level 4 contains a very very very very very very very very very very very
+  class="node-text" pointer-events="none" dominant-baseline="middle">Level 4 contains a very very very very very very very very very very very
     long word supercalifragilisticexpialidocious which should be split based
     on maxWordLength</text>
-  <use id="node_2fe81c0a_indicator" href="#indicator-expanded"
-  x="3734" y="-6" fill="#525252" stroke="#3d3d3d" />
+  <use href="#indicator-expanded" x="3734" y="-6"
+  fill="#525252" stroke="#3d3d3d" id="node_2fe81c0a_indicator" />
   <rect x="1238" y="-16" width="979" height="36.8" rx="5" ry="5" fill="url(#level3Gradient)"
-  fill-opacity="0.9" stroke="#cccccc" stroke-width="2" filter="url(#dropShadow)"
-  id="node_7d12c1d8_rect" class="node-shape" />
+  fill-opacity="0.9" stroke="#cccccc" stroke-width="2" class="node-shape"
+  id="node_7d12c1d8_rect" filter="url(#dropShadow)" />
   <text x="1727.5" y="2.3999999999999986" id="node_7d12c1d8_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="14px" font-weight="normal" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Level 3 bullet with a significantly long text string that will definitely
+  class="node-text" pointer-events="none" dominant-baseline="middle">Level 3 bullet with a significantly long text string that will definitely
     need to wrap because it exceeds any reasonable node width limit</text>
   <use
-  id="node_7d12c1d8_indicator" href="#indicator-expanded" x="2217" y="-3.6000000000000014"
-  fill="#525252" stroke="#3d3d3d" />
+  href="#indicator-expanded" x="2217" y="-3.6000000000000014" fill="#525252"
+  stroke="#3d3d3d" id="node_7d12c1d8_indicator" />
   <rect x="212" y="-18.400000000000006" width="996" height="39.2" rx="5"
   ry="5" fill="url(#level2Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_2908721_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_2908721_rect" filter="url(#dropShadow)"
   />
   <text x="710" y="1.1999999999999957" id="node_2908721_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="16px" font-weight="normal" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">This is a level 2 heading with a very long text that should be wrapped
+  class="node-text" pointer-events="none" dominant-baseline="middle">This is a level 2 heading with a very long text that should be wrapped
     to multiple lines based on configured maximum width</text>
-  <use id="node_2908721_indicator"
-  href="#indicator-expanded" x="1208" y="-4.800000000000004" fill="#525252"
-  stroke="#3d3d3d" />
+  <use href="#indicator-expanded"
+  x="1208" y="-4.800000000000004" fill="#525252" stroke="#3d3d3d" id="node_2908721_indicator"
+  />
   <path d="M 182 29.599999999999994 C 194 29.599999999999994, 200 61.599999999999994, 212 61.599999999999994"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_195b867_node_7ada6a38" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <path d="M 352 61.599999999999994 C 364 61.599999999999994, 370 61.599999999999994, 382 61.599999999999994"
-  stroke="#666666" stroke-width="2" fill="none" />
+  id="connection_node_7ada6a38_node_614144a8" class="connection" fill="none"
+  stroke="#666666" stroke-width="2" />
   <rect x="382" y="43.199999999999996" width="104" height="36.8" rx="5"
   ry="5" fill="url(#level3Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_614144a8_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_614144a8_rect" filter="url(#dropShadow)"
   />
   <text x="434" y="61.599999999999994" id="node_614144a8_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="14px" font-weight="normal" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Short bullet</text>
+  class="node-text" pointer-events="none" dominant-baseline="middle">Short bullet</text>
   <rect x="212" y="41.99999999999999" width="140" height="39.2"
   rx="5" ry="5" fill="url(#level2Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_7ada6a38_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_7ada6a38_rect" filter="url(#dropShadow)"
   />
   <text x="282" y="61.599999999999994" id="node_7ada6a38_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="16px" font-weight="normal" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Regular heading</text>
-  <use id="node_7ada6a38_indicator" href="#indicator-expanded"
-  x="352" y="55.599999999999994" fill="#525252" stroke="#3d3d3d" />
+  class="node-text" pointer-events="none" dominant-baseline="middle">Regular heading</text>
+  <use href="#indicator-expanded" x="352" y="55.599999999999994"
+  fill="#525252" stroke="#3d3d3d" id="node_7ada6a38_indicator" />
   <rect x="0" y="8.799999999999997" width="182" height="41.599999999999994"
   rx="5" ry="5" fill="url(#level1Gradient)" fill-opacity="0.9" stroke="#cccccc"
-  stroke-width="2" filter="url(#dropShadow)" id="node_195b867_rect" class="node-shape"
+  stroke-width="2" class="node-shape" id="node_195b867_rect" filter="url(#dropShadow)"
   />
   <text x="91" y="29.599999999999994" id="node_195b867_text" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
   font-size="18px" font-weight="bold" fill="#000000" text-anchor="middle"
-  dominant-baseline="middle" class="node-text" pointer-events="none">Text Wrapping Test</text>
-  <use id="node_195b867_indicator" href="#indicator-expanded"
-  x="182" y="23.599999999999994" fill="#525252" stroke="#3d3d3d" />
+  class="node-text" pointer-events="none" dominant-baseline="middle">Text Wrapping Test</text>
+  <use href="#indicator-expanded" x="182" y="23.599999999999994"
+  fill="#525252" stroke="#3d3d3d" id="node_195b867_indicator" />
 </svg>
 `;
