@@ -32,7 +32,7 @@ jobs:
       - name: Copy files
         run: |
           # Find and copy web files while maintaining relative paths
-          find . \( -name "*.js" -o -name "*.css" -o -name "*.html" -o -name "*.png" \) -type f -not -path "./target_repo/*" | while read file; do
+          find . \( -name "*.js" -o -name "*.css" -o -name "*.html" -o -name "*.png" \) -type f -not -path "./target_repo/*" -not -path "./node_modules/*" | while read file; do
             # Get the relative path within the source repo
             rel_path="${file#./}"
             # Create directory structure in target
