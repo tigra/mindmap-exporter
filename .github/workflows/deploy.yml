@@ -2,50 +2,83 @@ name: Deploy to GitHub Pages
 
 on:
   workflow_dispatch:  # This enables manual triggering
+#  push:
+#    branches: [ main ]  # Automatically deploy on pushes to main branch
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read  # Read content from the source repository
-
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
     steps:
-      - name: Checkout source repository
-        uses: actions/checkout@v3
-
-      - name: Configure Git
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Setup public directory for build
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Clone target repository
+          # Create public directory and copy images and CSS to it before build
+          echo "Setting up public directory..."
+          mkdir -p public
+          cp -f *.png public/ 2>/dev/null || true
+          cp -f style.css public/ 2>/dev/null || true
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Copy index file
         run: |
-          git clone https://${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository_owner }}/${{ github.repository_owner }}.github.io.git target_repo
-
-      - name: Prepare destination directory
+          # Copy index-vite.html as index.html
+          cp -f index-vite.html dist/index.html
+      
+      - name: Ensure assets are properly deployed
         run: |
-          # Create a clean mindmap directory in the target repo
-          mkdir -p target_repo/mindmap
-          # Clean any existing content (optional - remove if you want to keep existing files)
-          rm -rf target_repo/mindmap/*
+          # Double-check if CSS exists in dist
+          if [ ! -f dist/style.css ]; then
+            echo "Style.css not found in dist, copying directly..."
+            cp -f style.css dist/
+          fi
 
-      - name: Copy files
-        run: |
-          # Find and copy web files while maintaining relative paths
-          find . \( -name "*.js" -o -name "*.css" -o -name "*.html" -o -name "*.png" \) -type f -not -path "./target_repo/*" -not -path "./node_modules/*" | while read file; do
-            # Get the relative path within the source repo
-            rel_path="${file#./}"
-            # Create directory structure in target
-            target_dir="target_repo/mindmap/$(dirname "$rel_path")"
-            mkdir -p "$target_dir"
-            # Copy file
-            cp "$file" "target_repo/mindmap/$rel_path"
-            echo "Copied $file to target_repo/mindmap/$rel_path"
+          # Copy any PNG files not already in dist
+          for img in *.png; do
+            if [ -f "$img" ] && [ ! -f "dist/$img" ]; then
+              echo "Copying $img to dist..."
+              cp -f "$img" dist/
+            fi
           done
 
-      - name: Commit and push changes
-        run: |
-          cd target_repo
-          git add .
-          git diff --quiet && git diff --staged --quiet || git commit -m "Deploy from ${{ github.repository }}@${{ github.sha }}"
-          git push
+          echo "Contents of dist directory after build and fixes:"
+          ls -la dist/
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'dist'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

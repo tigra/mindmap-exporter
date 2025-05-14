@@ -1,14 +1,39 @@
 # Simple Markdown to Mindmap converter
 
-[Try it online](https://tigra.github.io/simple-mindmap-exporter.html)
+[Try it online](https://tigra.github.io/mindmap/)
 
 Convert your Markdown (e.g. edited in Obsidian, with Enhancing Mindmap plugin, or elsewhere) with headings and bullet points to a mindmap (.png, .svg).
 
 ## HOWTO
-1. Open `simple-mindmap-exporter.html` in a browser
-2. Copy-paste the contents of `file2.md` (or, just the output from the console)
-to the text area. Play with the settings. Click `Generate MindMap`.
-3. Then click `Export` to save the result as .png or .svg.
+1. Open the [online demo](https://tigra.github.io/mindmap/) or serve locally (see [Development](#development) below)
+2. Copy-paste your Markdown content with headings and/or bullet points into the text area
+3. Play with the settings and click `Generate MindMap`
+4. Click `Export` to save the result as SVG or PNG
+
+## Development
+
+This project uses Vite for modern ES module bundling.
+
+### Setup
+```bash
+# Install dependencies
+npm install
+```
+
+### Development server
+```bash
+# Start local development server
+npm run dev
+```
+
+### Build for production
+```bash
+# Build optimized bundle
+npm run build
+
+# Preview the production build
+npm run preview
+```
 
 ## Navigation Controls
 * Scroll: Mouse wheel to scroll vertically or Arrow keys

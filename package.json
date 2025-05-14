@@ -2,15 +2,30 @@
   "name": "mindmap-exporter",
   "version": "1.0.0",
   "description": "Browser-based mindmap exporter",
-  "main": "app.js",
+  "type": "module",
+  "main": "dist/mindmap-exporter.umd.js",
+  "module": "dist/mindmap-exporter.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/mindmap-exporter.es.js",
+      "require": "./dist/mindmap-exporter.umd.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "jest"
   },
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.27.1",
     "@babel/preset-env": "^7.27.1",
     "jest": "^29.7.0",
-    "jest-serializer-html-string": "^1.0.1"
+    "jest-serializer-html-string": "^1.0.1",
+    "vite": "^6.3.5"
   },
   "jest": {
     "transform": {
