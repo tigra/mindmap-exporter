@@ -44,12 +44,8 @@ jobs:
           cp -f *.png public/ 2>/dev/null || true
           cp -f style.css public/ 2>/dev/null || true
           
-          # Copy index.html to public to ensure we have a valid index file
-          if [ -f "index-vite.html" ]; then
-            cp -f index-vite.html public/index.html
-          else
-            cp -f index.html public/index.html
-          fi
+          # Copy index.html to public
+          cp -f index.html public/index.html
       
       - name: Build
         run: npm run build
