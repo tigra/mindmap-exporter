@@ -41,5 +41,10 @@
     "snapshotSerializers": [
       "jest-serializer-html-string"
     ]
+  },
+  "dependencies": {
+    "dom-to-svg": "^0.12.2",
+    "dompurify": "^3.2.5",
+    "marked": "^15.0.11"
   }
 }

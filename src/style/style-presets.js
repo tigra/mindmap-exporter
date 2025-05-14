@@ -18,7 +18,8 @@ class MindmapStylePresets {
             'tech': MindmapStylePresets.techStyle,
             'retro': MindmapStylePresets.retroStyle,
             'minimal': MindmapStylePresets.minimalStyle,
-            'creative': MindmapStylePresets.creativeStyle
+            'creative': MindmapStylePresets.creativeStyle,
+            'markdown': MindmapStylePresets.markdownStyle
         };
     }
 
@@ -963,6 +964,111 @@ class MindmapStylePresets {
                 textColor: '#9c27b0',
                 connectionColor: '#ce93d8',
                 connectionTapered: false  // Use normal connections (non-tapered) in default style
+            }
+        });
+        return style;
+    }
+    
+    /**
+     * Markdown style preset - with markdown support enabled
+     * @param {Style} style - The style object to configure
+     * @return {Style} The configured style object
+     */
+    static markdownStyle(style) {
+        style.configure({
+            levelStyles: {
+                1: {
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    backgroundColor: '#2980b9',
+                    textColor: '#ffffff',
+                    borderColor: '#1a5276',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    nodeType: 'box',
+                    connectionColor: '#3498db',
+                    connectionTapered: true,
+                    connectionStartWidth: 16,
+                    connectionEndWidth: 6,
+                    connectionGradient: true,
+                    enableMarkdown: true,
+                    maxWidth: 400
+                },
+                2: {
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    backgroundColor: '#3498db',
+                    textColor: '#ffffff',
+                    borderColor: '#2980b9',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    nodeType: 'box',
+                    connectionColor: '#5dade2',
+                    connectionTapered: true,
+                    connectionStartWidth: 10,
+                    connectionEndWidth: 4,
+                    connectionGradient: true,
+                    enableMarkdown: true,
+                    maxWidth: 300
+                },
+                3: {
+                    fontSize: 16,
+                    backgroundColor: '#5dade2',
+                    textColor: '#ffffff',
+                    borderColor: '#3498db',
+                    borderRadius: 8,
+                    nodeType: 'box',
+                    connectionColor: '#85c1e9',
+                    connectionTapered: true,
+                    connectionStartWidth: 8,
+                    connectionEndWidth: 3,
+                    connectionGradient: true,
+                    enableMarkdown: true,
+                    maxWidth: 250
+                },
+                4: {
+                    fontSize: 14,
+                    backgroundColor: '#85c1e9',
+                    textColor: '#1a5276',
+                    borderColor: '#5dade2',
+                    borderRadius: 8,
+                    nodeType: 'box',
+                    connectionColor: '#aed6f1',
+                    connectionTapered: false,
+                    enableMarkdown: true,
+                    maxWidth: 200
+                },
+                5: {
+                    fontSize: 13,
+                    backgroundColor: '#aed6f1',
+                    textColor: '#1a5276',
+                    borderColor: '#85c1e9',
+                    borderRadius: 8,
+                    nodeType: 'box',
+                    connectionColor: '#d6eaf8',
+                    connectionTapered: false,
+                    enableMarkdown: true,
+                    maxWidth: 180
+                },
+                6: {
+                    fontSize: 12,
+                    textColor: '#2980b9',
+                    nodeType: 'text-only',
+                    connectionColor: '#aed6f1',
+                    connectionTapered: false,
+                    enableMarkdown: true,
+                    maxWidth: 160
+                }
+            },
+            defaultStyle: {
+                fontFamily: 'Segoe UI, Arial, sans-serif',
+                fontSize: 9,
+                nodeType: 'text-only',
+                textColor: '#2980b9',
+                connectionColor: '#aed6f1',
+                connectionTapered: false,
+                enableMarkdown: true,
+                maxWidth: 150
             }
         });
         return style;

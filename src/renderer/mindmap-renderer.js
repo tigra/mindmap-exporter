@@ -1,6 +1,7 @@
 // src/renderer/mindmap-renderer.js
 
 import eventBridge from '../utils/event-bridge.js';
+import { markdownToText } from '../utils/markdown-to-svg.js';
 
 /**
  * MindmapRenderer class for SVG generation with interactive expand/collapse
@@ -934,13 +935,79 @@ class MindmapRenderer {
   }
 
   /**
-   * Draw text for a node
+   * Draw text for a node - supports markdown if enabled
+   * @private
+   * @param {Object} node - The node to draw text for
+   * @param {boolean} insideBox - Whether the text is inside a box
+   * @return {string} SVG text element or SVG foreignObject with markdown
+   */
+  _drawNodeText(node, insideBox) {
+    const levelStyle = this.styleManager.getLevelStyle(node.level);
+    const useMarkdown = levelStyle.enableMarkdown || false;
+    
+    // If markdown is not enabled, use the traditional text rendering
+    if (!useMarkdown) {
+      return this._drawPlainNodeText(node, insideBox);
+    }
+    
+    // For markdown rendering, we'll use a foreignObject that will be populated
+    // with markdown content when the SVG is fully rendered
+    
+    // Calculate position based on node type
+    let x, y, width, height;
+    if (insideBox) {
+      // Inside a box - use the node's dimensions
+      x = node.x;
+      y = node.y;
+      width = node.width;
+      height = node.height;
+    } else {
+      // Standalone text - use the node's position but adjust for text
+      x = node.x;
+      y = node.y;
+      width = node.width;
+      height = node.height;
+    }
+    
+    // Create a unique identifier for this node's markdown content
+    const markdownId = `markdown-${node.id}`;
+    
+    // Extract the text color to ensure visibility
+    const textColor = insideBox 
+      ? (levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_BOXED)
+      : (levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_PLAIN);
+    
+    // Create a foreignObject that will be populated with markdown content
+    return `<foreignObject id="${markdownId}" 
+                         x="${x}" 
+                         y="${y}" 
+                         width="${width}" 
+                         height="${height}" 
+                         data-markdown="${this._escapeXml(node.text)}"
+                         data-node-id="${node.id}">
+              <div xmlns="http://www.w3.org/1999/xhtml"
+                   style="width:100%;height:100%;display:flex;align-items:center;
+                         justify-content:${insideBox ? 'center' : 'flex-start'};
+                         text-align:${insideBox ? 'center' : 'left'};
+                         color:${textColor};
+                         font-family:${levelStyle.fontFamily || MindmapRenderer.DEFAULT_FONT_FAMILY};
+                         font-size:${levelStyle.fontSize || MindmapRenderer.DEFAULT_FONT_SIZE}px;
+                         font-weight:${levelStyle.fontWeight || MindmapRenderer.DEFAULT_FONT_WEIGHT};">
+                <div style="max-width:100%;">
+                  ${this._escapeXml(node.text)}
+                </div>
+              </div>
+            </foreignObject>`;
+  }
+  
+  /**
+   * Draw plain text for a node (traditional method)
    * @private
    * @param {Object} node - The node to draw text for
    * @param {boolean} insideBox - Whether the text is inside a box
    * @return {string} SVG text element
    */
-  _drawNodeText(node, insideBox) {
+  _drawPlainNodeText(node, insideBox) {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     
     // Calculate text position based on node type
@@ -1214,6 +1281,52 @@ class MindmapRenderer {
 
     // Attach event handlers
     this.attachEventHandlers();
+    
+    // Process any markdown elements in the SVG
+    this._processMarkdownElements(container);
+  }
+  
+  /**
+   * Process markdown elements in the rendered SVG
+   * @private
+   * @param {HTMLElement} container - The container with the rendered SVG
+   */
+  async _processMarkdownElements(container) {
+    // Find all foreignObject elements with data-markdown attribute
+    const markdownElements = container.querySelectorAll('foreignObject[data-markdown]');
+    if (markdownElements.length === 0) return;
+    
+    // Dynamically import the dependencies needed for markdown rendering
+    let marked, DOMPurify;
+    try {
+      marked = (await import('marked')).marked;
+      DOMPurify = (await import('dompurify')).default;
+    } catch (error) {
+      console.error('Error loading markdown libraries:', error);
+      return;
+    }
+    
+    // Process each markdown element
+    markdownElements.forEach(element => {
+      try {
+        // Get the markdown content from the data attribute
+        const markdownContent = element.getAttribute('data-markdown');
+        
+        // Get the inner div that will hold the rendered content
+        const contentDiv = element.querySelector('div > div');
+        if (!contentDiv) return;
+        
+        // Convert markdown to HTML
+        const rawHtml = marked.parse(markdownContent);
+        const cleanHtml = DOMPurify.sanitize(rawHtml);
+        
+        // Update the content
+        contentDiv.innerHTML = cleanHtml;
+        
+      } catch (error) {
+        console.error('Error rendering markdown:', error);
+      }
+    });
   }
 
   /**
