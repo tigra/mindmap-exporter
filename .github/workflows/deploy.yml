@@ -43,33 +43,38 @@ jobs:
           mkdir -p public
           cp -f *.png public/ 2>/dev/null || true
           cp -f style.css public/ 2>/dev/null || true
+          
+          # Copy index.html to public to ensure we have a valid index file
+          if [ -f "index-vite.html" ]; then
+            cp -f index-vite.html public/index.html
+          else
+            cp -f index.html public/index.html
+          fi
       
       - name: Build
         run: npm run build
       
-      - name: Copy index file
+      - name: Verify build output
         run: |
-          # Copy index-vite.html as index.html
-          cp -f index-vite.html dist/index.html
-      
-      - name: Ensure assets are properly deployed
-        run: |
-          # Double-check if CSS exists in dist
-          if [ ! -f dist/style.css ]; then
+          echo "Contents of dist directory after build:"
+          ls -la dist/
+          
+          # Make sure CSS and images are properly copied
+          echo "Ensuring assets are properly deployed..."
+          
+          # Copy CSS if needed
+          if [ ! -f dist/style.css ] && [ -f style.css ]; then
             echo "Style.css not found in dist, copying directly..."
             cp -f style.css dist/
           fi
 
-          # Copy any PNG files not already in dist
+          # Copy any PNG files if needed
           for img in *.png; do
             if [ -f "$img" ] && [ ! -f "dist/$img" ]; then
               echo "Copying $img to dist..."
               cp -f "$img" dist/
             fi
           done
-
-          echo "Contents of dist directory after build and fixes:"
-          ls -la dist/
       
       - name: Setup Pages
         uses: actions/configure-pages@v4

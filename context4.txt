@@ -1,0 +1,256 @@
+> This session is being continued from a previous conversation that ran out of context. The conversation is summarized below:
+  <analysis>
+  Let me analyze the conversation chronologically, focusing on the main request, technical details, and implementation steps:
+
+  1. The user requested implementing text wrapping functionality for mindmap nodes with specific requirements: add "wrap" style property with "none" and "word" options, "maxWidth" for target width, and
+  "maxWordLength" for handling long words.
+
+  2. I started by examining the codebase to understand where text rendering happens:
+     - Found the text rendering in MindmapRenderer._drawNodeText method (lines 564-593 in mindmap-renderer.js)
+     - Located TextMetricsService in utils/text-metrics.js for text measurement
+     - Identified StyleConfiguration in style/style-configuration.js for storing style properties
+
+  3. Implementation plan developed:
+     - Enhance TextMetricsService to calculate wrapped text dimensions
+     - Add wrapping style properties to StyleConfiguration
+     - Modify the renderer to support wrapped text rendering
+     - Update layout calculations to account for wrapping
+     - Create tests for the new functionality
+
+  4. Enhanced TextMetricsService:
+     - Added wrapText() method to handle text wrapping
+     - Implemented word-based wrapping with long word splitting
+     - Added support for different wrapping modes
+
+  5. Updated StyleConfiguration:
+     - Added textWrap, maxWidth, and maxWordLength properties
+     - Created a getTextWrapConfig() method to access wrapping settings
+
+  6. Modified MindmapRenderer._drawNodeText:
+     - Updated to use the wrapping configuration
+     - Added tspan-based rendering for multi-line text
+     - Fixed issue with vertical spacing between lines
+
+  7. Updated Layout.getNodeSize():
+     - Modified to use new text wrapping measurements
+     - Adjusted width calculations for wrapped text
+
+  8. Created tests for text wrapping:
+     - Added Jest tests in tests/integration/text-wrapping.test.js
+     - Added snapshot tests in tests/snapshot/text-wrapping.snapshot.test.js
+     - Updated test utilities to support testing with custom style managers
+
+  9. Troubleshooting issues:
+     - Fixed vertical spacing between wrapped lines
+     - Improved width calculation for wrapped text
+     - Fixed issues with Jest test mocks
+     - Fixed issues with StyleManager implementation in tests
+     - Added wider maxWidth for level 1 (root) nodes
+
+  10. Current status:
+      - Basic text wrapping implementation is complete
+      - Tests are passing
+      - Most recent work involved increasing the maxWidth for root level nodes
+  </analysis>
+
+  <summary>
+  1. Primary Request and Intent:
+     The user requested the implementation of text wrapping functionality for mindmap nodes with specific requirements:
+     - Add a "wrap" style property with options "none" (no wrapping) and "word" (wrap at word boundaries)
+     - Add "maxWidth" property to define the target width when wrapping
+     - Add "maxWordLength" property to define when a long word should be split regardless of word boundaries
+     - Use text metrics to determine how to wrap the text
+     - Have reasonable defaults for wrapping properties
+     - Add Jest tests for the wrapping functionality
+
+  2. Key Technical Concepts:
+     - Text wrapping and line breaking algorithms
+     - SVG text rendering with tspan elements for multi-line text
+     - DOM-based text measurement techniques
+     - Style inheritance and configuration management
+     - Node size calculation for layout algorithms
+     - Jest testing and snapshot testing for visual components
+     - Text sanitization and special character handling
+
+  3. Files and Code Sections:
+     - `/home/tigra/PycharmProjects/mindmap-exporter/utils/text-metrics.js`
+        - Enhanced to support text wrapping with the `wrapText()` method
+        - Implemented word-based wrapping with support for long word splitting
+        - Added accurate line width measurement
+        ```javascript
+        wrapText(text, maxWidth, fontFamily, fontSize, fontWeight, wrapType = 'word', maxWordLength = 15) {
+          // If no wrapping, just return the text
+          if (wrapType === 'none' || !maxWidth) {
+            const metrics = this.measureText(text, fontFamily, fontSize, fontWeight);
+            return {
+              lines: [text],
+              width: metrics.width,
+              height: metrics.height,
+              lineHeight: metrics.height
+            };
+          }
+
+          // [... wrapping implementation with word breaking and long word handling ...]
+
+          // Measure each line accurately and calculate max width
+          const lineWidths = [];
+          let maxLineWidth = 0;
+
+          for (let i = 0; i < lines.length; i++) {
+            temp.textContent = lines[i];
+            const actualWidth = temp.offsetWidth;
+            lineWidths.push(actualWidth);
+            maxLineWidth = Math.max(maxLineWidth, actualWidth);
+          }
+
+          // For wrapped text, ensure appropriate width calculations
+          if (lines.length > 1) {
+            maxLineWidth = Math.min(Math.max(maxLineWidth, maxWidth * 0.8), maxWidth);
+          }
+
+          return {
+            lines: lines,
+            lineWidths: lineWidths,
+            width: maxLineWidth,
+            height: lines.length * lineHeight,
+            lineHeight: lineHeight
+          };
+        }
+        ```
+
+     - `/home/tigra/PycharmProjects/mindmap-exporter/style/style-configuration.js`
+        - Added text wrapping style properties
+        - Implemented with intelligent defaults
+        - Added higher maxWidth for level 1 (root) nodes
+        ```javascript
+        // Text wrapping options
+        this.textWrap = options.textWrap || 'word'; // 'none' or 'word'
+        // For level 1 (root node), provide a wider default width
+        this.maxWidth = options.maxWidth || (this.level === 1 ? 400 : 200); // Target width for text wrapping in pixels
+        this.maxWordLength = options.maxWordLength || 20; // Maximum length of a word before it's split
+
+        // Added accessor method for wrapping configuration
+        getTextWrapConfig() {
+          return {
+            textWrap: this.textWrap,
+            maxWidth: this.maxWidth,
+            maxWordLength: this.maxWordLength
+          };
+        }
+        ```
+
+     - `/home/tigra/PycharmProjects/mindmap-exporter/renderer/mindmap-renderer.js`
+        - Updated `_drawNodeText()` method to support multi-line text
+        - Used SVG tspan elements for each line of wrapped text
+        - Fixed vertical spacing between wrapped lines
+        ```javascript
+        _drawNodeText(node, insideBox) {
+          // [... existing code for text style setup ...]
+
+          // Get text wrapping calculation from textMetrics
+          const textMetrics = typeof window !== 'undefined' ? window.textMetrics : require('../utils/text-metrics').default;
+
+          const wrappedText = textMetrics.wrapText(
+            node.text,
+            maxWidth,
+            fontFamily,
+            fontSize,
+            fontWeight,
+            textWrap,
+            maxWordLength
+          );
+
+          // Multi-line text uses tspans with proper positioning
+          if (wrappedText.lines.length > 1 && textWrap !== 'none') {
+            const lineHeight = wrappedText.lineHeight;
+            const totalHeight = wrappedText.height;
+
+            // Center the text block vertically
+            let startY = y - (totalHeight / 2) + (lineHeight / 2);
+
+            // Create text with tspans for each line
+            textSVG = `<text id="${node.id}_text" ...>`;
+
+            // First line with absolute positioning
+            if (i === 0) {
+              textSVG += `<tspan x="${x}" y="${startY}">...</tspan>`;
+            } else {
+              // Subsequent lines with relative dy positioning to avoid gaps
+              textSVG += `<tspan x="${x}" dy="${lineHeight}">...</tspan>`;
+            }
+
+            textSVG += `</text>`;
+          } else {
+            // Simple single-line text
+            textSVG = `<text ...>${this._escapeXml(node.text)}</text>`;
+          }
+        }
+        ```
+
+     - `/home/tigra/PycharmProjects/mindmap-exporter/layout/layout.js`
+        - Updated `getNodeSize()` method to use text wrapping metrics
+        - Simplified width calculation to use the calculated width from TextMetricsService
+        ```javascript
+        getNodeSize(text, levelStyle) {
+          // Get text wrapping configuration
+          const wrapConfig = levelStyle.getTextWrapConfig();
+          const textWrap = wrapConfig.textWrap;
+          const maxWidth = wrapConfig.maxWidth;
+          const maxWordLength = wrapConfig.maxWordLength;
+
+          let textDimensions;
+
+          if (textWrap === 'none') {
+            // Simple case - just measure without wrapping
+            textDimensions = textMetrics.measureText(...);
+          } else {
+            // Use text wrapping measurement
+            textDimensions = textMetrics.wrapText(...);
+          }
+
+          return {
+            width: textDimensions.width + (levelStyle.horizontalPadding * 2),
+            height: textDimensions.height + (levelStyle.verticalPadding * 2)
+          };
+        }
+        ```
+
+     - `/home/tigra/PycharmProjects/mindmap-exporter/tests/integration/text-wrapping.test.js`
+        - Created integration tests for text wrapping functionality
+        - Tests for text wrapping with different configurations
+        - Tests for node dimensions with wrapped text
+
+     - `/home/tigra/PycharmProjects/mindmap-exporter/tests/snapshot/text-wrapping.snapshot.test.js`
+        - Created snapshot tests for different wrapping scenarios
+        - Tests for 'none' wrapping mode, custom maxWidth, and custom maxWordLength
+
+     - `/home/tigra/PycharmProjects/mindmap-exporter/tests/setup.js`
+        - Updated Jest mocks to support text wrapping
+        - Added mock implementation of wrapText for testing
+
+     - `/home/tigra/PycharmProjects/mindmap-exporter/tests/utils/test-utils.js`
+        - Enhanced to support testing with custom style managers
+        - Modified generateMindmapSnapshot to accept custom style manager
+
+  4. Problem Solving:
+     - Fixed text line spacing issues by using absolute positioning for the first tspan and relative positioning for subsequent lines
+     - Improved width calculation for wrapped text to prevent narrow nodes with short last lines
+     - Fixed issues with test mocks by creating proper implementations of wrapText in the test environment
+     - Fixed issues with StyleManager implementation in tests by adding a custom getLevelStyle method
+     - Addressed issues with Jest snapshot tests by modifying the test utilities
+     - Increased the maxWidth for level 1 (root) nodes to prevent excessive wrapping of root node text
+
+  5. Pending Tasks:
+     - No explicit pending tasks
+
+  6. Current Work:
+     The most recent work was updating the StyleConfiguration to provide a wider default maxWidth for level 1 (root) nodes:
+     ```javascript
+     // For level 1 (root node), provide a wider default width
+     this.maxWidth = options.maxWidth || (this.level === 1 ? 400 : 200); // Target width for text wrapping in pixels
+     ```
+     This change ensures that root nodes, which often contain more important or longer text, have more space before wrapping occurs.
+
+  7. Optional Next Step:
+     The implementation of text wrapping functionality appears to be complete. All required features have been implemented and tested. The last task of providing a wider maxWidth for root nodes has been completed.
+  There are no explicit next steps required related to the text wrapping implementation.

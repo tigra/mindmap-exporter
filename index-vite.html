@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()">
+    <title>Markdown MindMap Exporter</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>Markdown MindMap Exporter</h1>
+            <a href="https://github.com/tigra/mindmap-exporter">https://github.com/tigra/mindmap-exporter</a>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="editor">Markdown Editor</div>
+            <div class="tab" data-tab="appearance">Appearance</div>
+            <div class="tab" data-tab="yaml">Custom YAML</div>
+        </div>
+        
+        <div class="tab-content active" id="editor-tab">
+            <div class="editor-container">
+                <label for="markdown-input">Paste Your MindMap Markdown:</label>
+                <textarea id="markdown-input" placeholder="# Root Topic&#10;## Subtopic 1&#10;### Detail 1.1&#10;## Subtopic 2"></textarea>
+                <div id="status-message"></div>
+                <button id="generate-btn">Generate MindMap</button>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="appearance-tab">
+            <div class="settings-section">
+                <h3>Style Settings</h3>
+                <div class="form-group">
+                    <label for="style-preset">Style Preset:</label>
+                    <select id="style-preset">
+                        <option value="default">Default Purple</option>
+                        <option value="corporate">Corporate Blue</option>
+                        <option value="vibrant" selected>Vibrant Colors</option>
+                        <option value="pastel">Soft Pastel</option>
+                        <option value="monochrome">Monochrome</option>
+                        <option value="nature">Nature Green</option>
+                        <option value="tech">Tech Dark</option>
+                        <option value="retro">Retro Pixel</option>
+                        <option value="minimal">Minimal Clean</option>
+                        <option value="creative">Creative Round</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Layout Settings</h3>
+                <div class="form-group">
+                    <label for="layout-type">Layout Style:</label>
+                    <select id="layout-type">
+                        <option value="horizontal-right">Horizontal (Right)</option>
+                        <option value="horizontal-left">Horizontal (Left)</option>
+                        <option value="vertical">Vertical (Down)</option>
+                        <option value="vertical-up">Vertical (Up)</option>
+                        <option value="taproot" selected>Taproot</option>
+                        <option value="classic">Classic Mindmap</option>
+                        <option value="vertical-over-taproot">Vertical over Taproot</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="apply-settings-btn">Apply Settings</button>
+        </div>
+        
+        <div class="tab-content" id="yaml-tab">
+            <div class="yaml-editors-container">
+                <!-- Style Preset Editor -->
+                <div class="yaml-editor-section" id="style-yaml-section">
+                    <h3>Style Preset YAML</h3>
+                    <p class="yaml-description">Define custom styling for your mindmap with YAML.</p>
+                    <textarea id="style-yaml-editor" class="yaml-editor" placeholder="Enter style YAML..."></textarea>
+                    <!-- Controls will be added dynamically by YamlEditor -->
+                </div>
+                
+                <!-- Layout Preset Editor -->
+                <div class="yaml-editor-section" id="layout-yaml-section">
+                    <h3>Layout Preset YAML</h3>
+                    <p class="yaml-description">Define custom layout configuration with YAML.</p>
+                    <textarea id="layout-yaml-editor" class="yaml-editor" placeholder="Enter layout YAML..."></textarea>
+                    <!-- Controls will be added dynamically by YamlEditor -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="splitter" id="splitter"></div>
+
+    <div class="preview">
+        <div class="preview-content">
+            <div id="mindmap-container"></div>
+            <div class="loading" id="loading-indicator">Generate a mindmap to preview</div>
+            <div id="help-button" class="help-button">?</div>
+            <div id="help-tooltip" class="help-tooltip">
+                <div class="help-tooltip-content">
+                    <h3>Navigation Controls</h3>
+                    <ul>
+                       <li><strong>Scroll:</strong> Mouse wheel to scroll vertically or Arrow keys</li>
+                       <li><strong>Horizontal Scroll:</strong> Shift + Mouse wheel or Shift + Arrow keys</li>
+                       <li><strong>Pan:</strong> Middle-click drag or Ctrl + left-click drag</li>
+                       <li><strong>Zoom in/out:</strong> Ctrl + Mouse wheel up/down</li>
+                       <li><strong>Faster Scroll:</strong> Page Up/Down keys</li>
+                       <li><strong>Jump to Edges:</strong> Home/End keys</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-controls">
+            <div class="export-format">
+                <label for="export-format">Export Format:</label>
+                <select id="export-format">
+                    <option value="svg" selected>SVG Vector</option>
+                    <option value="png">PNG Image</option>
+                </select>
+                <button id="export-btn">Export</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Use Vite's development server in development and the bundled output in production -->
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
