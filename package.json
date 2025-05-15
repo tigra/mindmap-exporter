@@ -27,21 +27,6 @@
     "jest-serializer-html-string": "^1.0.1",
     "vite": "^6.3.5"
   },
-  "jest": {
-    "transform": {
-      "^.+\\.js$": "babel-jest"
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!(@babel)/)"
-    ],
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "<rootDir>/tests/setup.js"
-    ],
-    "snapshotSerializers": [
-      "jest-serializer-html-string"
-    ]
-  },
   "dependencies": {
     "dom-to-svg": "^0.12.2",
     "dompurify": "^3.2.5",

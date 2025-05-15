@@ -137,11 +137,75 @@ jest.mock('../utils/text-metrics.js', () => ({
   }
 }));
 
-// Make the mock available on the global window object
-const mockTextMetrics = require('../utils/text-metrics').default;
-if (typeof global.window !== 'undefined') {
-  global.window.textMetrics = mockTextMetrics;
-} else {
-  global.window = global.window || {};
-  global.window.textMetrics = mockTextMetrics;
-}
+// For ES modules compatibility
+global.window = global.window || {};
+global.window.textMetrics = {
+  measureText: (text, fontFamily, fontSize, fontWeight) => {
+    // Simple mock that returns size based on text length
+    return {
+      width: text.length * (fontSize / 2),
+      height: fontSize * 1.2
+    };
+  },
+  wrapText: (text, maxWidth, fontFamily, fontSize, fontWeight, wrapType = 'word', maxWordLength = 15) => {
+    if (wrapType === 'none' || !maxWidth) {
+      return {
+        lines: [text],
+        lineWidths: [text.length * (fontSize / 2)],
+        width: text.length * (fontSize / 2),
+        height: fontSize * 1.2,
+        lineHeight: fontSize * 1.2
+      };
+    }
+    
+    // For testing, create a simple wrapping algorithm that breaks at maxWidth
+    const charWidthEstimate = fontSize / 2;
+    const charsPerLine = Math.max(Math.floor(maxWidth / charWidthEstimate), 10);
+    
+    // Split text into words
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+    
+    for (const word of words) {
+      // If adding this word exceeds our line length and it's not the first word in line
+      if ((currentLine.length + word.length + 1) > charsPerLine && currentLine.length > 0) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        // Add word to current line with a space if needed
+        if (currentLine.length > 0) {
+          currentLine += ' ' + word;
+        } else {
+          currentLine = word;
+        }
+      }
+    }
+    
+    // Add the last line if not empty
+    if (currentLine.length > 0) {
+      lines.push(currentLine);
+    }
+    
+    // Calculate width of each line
+    const lineWidths = lines.map(line => line.length * charWidthEstimate);
+    let maxLineWidth = Math.max(...lineWidths);
+    
+    // Apply the same logic as in the real implementation
+    if (lines.length > 1) {
+      maxLineWidth = Math.min(
+        Math.max(maxLineWidth, maxWidth * 0.8), 
+        maxWidth
+      );
+    }
+    
+    const lineHeight = fontSize * 1.2;
+    return {
+      lines: lines,
+      lineWidths: lineWidths,
+      width: maxLineWidth,
+      height: lines.length * lineHeight,
+      lineHeight: lineHeight
+    };
+  }
+};

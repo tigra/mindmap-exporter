@@ -1,6 +1,7 @@
 // src/model/mindmap-model.js
 
 import Node from './node.js';
+// We'll use dynamic import for marked to avoid issues with SSR or initial load
 
 /**
  * MindmapModel class for managing mindmap data structure
@@ -17,9 +18,340 @@ class MindmapModel {
   /**
    * Parse markdown text into a mindmap structure
    * @param {string} markdown - The markdown text to parse
-   * @return {Node|null} The root node of the mindmap, or null if no valid nodes were found
+   * @param {boolean} useMarked - Whether to use the marked library (default: true)
+   * @param {boolean} debug - Whether to output debug information (default: false)
+   * @return {Promise<Node|null>} The root node of the mindmap, or null if no valid nodes were found
    */
-  parseFromMarkdown(markdown) {
+  async parseFromMarkdown(markdown, useMarked = true, debug = false) {
+    try {
+      if (useMarked) {
+        return await this.parseWithMarked(markdown, debug);
+      }
+    } catch (error) {
+      console.warn('Error parsing with marked, falling back to traditional parser:', error);
+    }
+    
+    // Fall back to traditional parser if marked fails or is disabled
+    return this.parseTraditional(markdown);
+  }
+  
+  /**
+   * Parse markdown using the marked library
+   * @param {string} markdown - The markdown text to parse
+   * @param {boolean} debug - Whether to output debug information
+   * @return {Node|null} The root node of the mindmap
+   */
+  async parseWithMarked(markdown, debug = false) {
+    try {
+      if (!markdown || typeof markdown !== 'string') {
+        console.warn('Invalid markdown input:', markdown);
+        throw new Error('Invalid markdown input');
+      }
+      
+      // Load marked library dynamically
+      const { marked } = await import('marked');
+      
+      // Configure marked options for better list parsing
+      marked.setOptions({
+        gfm: true,       // GitHub Flavored Markdown
+        breaks: true,    // Convert line breaks to <br>
+        smartLists: true // Use smarter list behavior
+      });
+      
+      // Create a lexer to tokenize the markdown
+      const tokens = marked.lexer(markdown);
+      
+      if (!tokens || !Array.isArray(tokens)) {
+        console.warn('Marked lexer returned invalid tokens:', tokens);
+        throw new Error('Invalid tokens from marked lexer');
+      }
+      
+      // Output debug information if requested
+      if (debug) {
+        this._debugTokens(tokens);
+      }
+      
+      // Process the tokens into a node structure
+      const root = new Node('', 0);
+      this._processTokens(tokens, root);
+      
+      // Set the root node
+      this.rootNode = root.hasChildren() ? root.children[0] : null;
+      
+      // Check if we actually created a valid tree
+      if (!this.rootNode && root.text) {
+        // Use the root text as a fallback if no children were created but text was found
+        this.rootNode = root;
+      } else if (!this.rootNode) {
+        console.warn('Failed to create a valid node tree from markdown');
+        throw new Error('Failed to create a valid node tree');
+      }
+      
+      // Regenerate all IDs to ensure they're deterministic
+      this.regenerateAllIds();
+      
+      // Print the tree structure if in debug mode
+      if (debug) {
+        this._debugTree(this.rootNode);
+      }
+      
+      return this.rootNode;
+    } catch (error) {
+      console.error('Error parsing markdown with marked:', error);
+      throw error; // Re-throw to trigger fallback
+    }
+  }
+  
+  /**
+   * Helper method to debug token structure
+   * @private
+   * @param {Array} tokens - The tokens to debug
+   * @param {string} indent - The indentation to use
+   */
+  _debugTokens(tokens, indent = '') {
+    if (!tokens || !Array.isArray(tokens)) return;
+    
+    console.group('Tokens:');
+    tokens.forEach((token, index) => {
+      console.log(`${indent}[${index}] Type: ${token.type || 'unknown'}`);
+      if (token.text) console.log(`${indent}  Text: "${token.text}"`);
+      if (token.depth) console.log(`${indent}  Depth: ${token.depth}`);
+      
+      if (token.tokens && Array.isArray(token.tokens)) {
+        console.group(`${indent}  Nested tokens:`);
+        this._debugTokens(token.tokens, indent + '  ');
+        console.groupEnd();
+      }
+      
+      if (token.items && Array.isArray(token.items)) {
+        console.group(`${indent}  List items:`);
+        token.items.forEach((item, itemIndex) => {
+          console.log(`${indent}    [${itemIndex}] ${item.text || '(no direct text)'}`);
+          if (item.tokens && Array.isArray(item.tokens)) {
+            console.group(`${indent}      Item tokens:`);
+            this._debugTokens(item.tokens, indent + '      ');
+            console.groupEnd();
+          }
+          if (item.items && Array.isArray(item.items)) {
+            console.group(`${indent}      Nested items:`);
+            this._debugItemsRecursive(item.items, indent + '      ');
+            console.groupEnd();
+          }
+        });
+        console.groupEnd();
+      }
+    });
+    console.groupEnd();
+  }
+  
+  /**
+   * Helper method to debug nested list items
+   * @private
+   * @param {Array} items - The items to debug
+   * @param {string} indent - The indentation to use
+   */
+  _debugItemsRecursive(items, indent = '') {
+    if (!items || !Array.isArray(items)) return;
+    
+    items.forEach((item, index) => {
+      console.log(`${indent}[${index}] ${item.text || '(no direct text)'}`);
+      if (item.tokens && Array.isArray(item.tokens)) {
+        console.group(`${indent}  Item tokens:`);
+        this._debugTokens(item.tokens, indent + '  ');
+        console.groupEnd();
+      }
+      if (item.items && Array.isArray(item.items)) {
+        console.group(`${indent}  Nested items:`);
+        this._debugItemsRecursive(item.items, indent + '  ');
+        console.groupEnd();
+      }
+    });
+  }
+  
+  /**
+   * Helper method to debug the node tree
+   * @private
+   * @param {Node} node - The node to debug
+   * @param {string} indent - The indentation to use
+   */
+  _debugTree(node, indent = '') {
+    if (!node) return;
+    
+    console.log(`${indent}[Level ${node.level}] ${node.text}`);
+    if (node.children && node.children.length > 0) {
+      console.group(`${indent}  Children:`);
+      node.children.forEach(child => {
+        this._debugTree(child, indent + '  ');
+      });
+      console.groupEnd();
+    }
+  }
+  
+  /**
+   * Process marked tokens and build the node tree
+   * @private
+   * @param {Array} tokens - The tokens from marked lexer
+   * @param {Node} parentNode - The parent node to attach to
+   * @param {number} baseLevel - The base level for hierarchy
+   */
+  _processTokens(tokens, parentNode, baseLevel = 0) {
+    let currentNode = parentNode;
+    let currentLevel = baseLevel;
+    
+    if (!tokens || !Array.isArray(tokens)) {
+      console.warn('Invalid tokens received in _processTokens:', tokens);
+      return;
+    }
+    
+    for (const token of tokens) {
+      if (!token) continue;
+      
+      if (token.type === 'heading') {
+        // Process headings
+        const level = token.depth;
+        const text = token.text;
+        
+        // Find the appropriate parent node based on the heading level
+        while (currentNode !== parentNode && currentNode.level >= level) {
+          currentNode = currentNode.parent;
+        }
+        
+        // Create a new node for this heading
+        const node = new Node(text, level, level >= 4);
+        currentNode.addChild(node);
+        
+        // Add to node map
+        this.nodeMap.set(node.id, node);
+        
+        // Update current node
+        currentNode = node;
+        currentLevel = level;
+      } else if (token.type === 'list') {
+        // Process list items
+        if (token.items && Array.isArray(token.items)) {
+          this._processListItems(token.items, currentNode, currentLevel + 1);
+        } else {
+          console.warn('List token without valid items:', token);
+        }
+      } else if (token.type === 'paragraph' && parentNode === currentNode) {
+        // If we have a paragraph at the top level, treat it as the root node text
+        if (parentNode === currentNode && parentNode.text === '') {
+          parentNode.text = token.text || '';
+        }
+      } else if (token.type === 'text' && parentNode === currentNode && parentNode.text === '') {
+        // Handle top-level text tokens too
+        parentNode.text = token.text || token.raw || '';
+      } else if (token.tokens && Array.isArray(token.tokens)) {
+        // If the token has nested tokens, process them recursively
+        this._processTokens(token.tokens, currentNode, currentLevel);
+      }
+      
+      // Process any raw tokens if available (some marked versions provide these)
+      if (token.items && !token.type && Array.isArray(token.items)) {
+        // This might be an unmarked list in some marked versions
+        this._processListItems(token.items, currentNode, currentLevel + 1);
+      }
+    }
+  }
+  
+  /**
+   * Process list items into nodes
+   * @private
+   * @param {Array} items - The list items from marked
+   * @param {Node} parentNode - The parent node to attach to
+   * @param {number} level - The level for the list items
+   */
+  _processListItems(items, parentNode, level) {
+    for (const item of items) {
+      // Extract text from the item, being careful to not include sublist content
+      let text = '';
+      let hasFoundText = false;
+      
+      // First, check if the item has direct text (but be careful as this might include nested content)
+      if (item.text) {
+        // Check if this is plain text or might contain nested content
+        if (!item.tokens || !item.tokens.some(t => t.type === 'list')) {
+          text = item.text;
+          hasFoundText = true;
+        }
+      }
+      
+      // If we didn't find text directly or it might contain nested content,
+      // check the tokens more carefully
+      if (!hasFoundText && item.tokens && item.tokens.length > 0) {
+        // We will collect text only from direct text or paragraph tokens
+        const textFragments = [];
+        
+        for (const token of item.tokens) {
+          // Skip list tokens - we'll handle them separately
+          if (token.type === 'list') continue;
+          
+          if (token.type === 'text') {
+            textFragments.push(token.text || token.raw || '');
+            hasFoundText = true;
+          } else if (token.type === 'paragraph') {
+            // For paragraphs, we need to be careful as they might contain other tokens
+            // If it has tokens, check those instead of using the paragraph text directly
+            if (token.tokens) {
+              const paragraphTextTokens = token.tokens.filter(t => t.type === 'text');
+              if (paragraphTextTokens.length > 0) {
+                paragraphTextTokens.forEach(t => {
+                  textFragments.push(t.text || t.raw || '');
+                });
+                hasFoundText = true;
+              } else {
+                textFragments.push(token.text || token.raw || '');
+                hasFoundText = true;
+              }
+            } else {
+              textFragments.push(token.text || token.raw || '');
+              hasFoundText = true;
+            }
+          }
+        }
+        
+        // Join all text fragments we found
+        if (textFragments.length > 0) {
+          text = textFragments.join(' ').trim();
+        }
+      }
+      
+      // If no text was found, use a default
+      if (!hasFoundText || text.trim() === '') {
+        text = '(empty)';
+      }
+      
+      // Create a new node for this list item
+      const node = new Node(text, level, level >= 4);
+      parentNode.addChild(node);
+      
+      // Add to node map
+      this.nodeMap.set(node.id, node);
+      
+      // Process nested lists from two possible sources:
+      
+      // 1. Direct nested items (common in marked)
+      if (item.items && item.items.length > 0) {
+        this._processListItems(item.items, node, level + 1);
+      }
+      
+      // 2. Lists nested in tokens
+      if (item.tokens) {
+        for (const token of item.tokens) {
+          if (token.type === 'list') {
+            this._processListItems(token.items, node, level + 1);
+          }
+        }
+      }
+    }
+  }
+  
+  /**
+   * Parse markdown using the traditional parser (for backward compatibility)
+   * @param {string} markdown - The markdown text to parse
+   * @return {Node|null} The root node of the mindmap
+   */
+  parseTraditional(markdown) {
     const lines = markdown.split('\n');
     const root = new Node('', 0);
     const stack = [root];
@@ -238,8 +570,8 @@ if (typeof window !== 'undefined') {
   window.mindmapModel = new MindmapModel();
 
   // Add backward-compatible parsing function
-  window.parseMindmap = function(markdown) {
-    return window.mindmapModel.parseFromMarkdown(markdown);
+  window.parseMindmap = async function(markdown) {
+    return await window.mindmapModel.parseFromMarkdown(markdown);
   };
   
   // Export the class to window

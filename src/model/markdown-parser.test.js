@@ -20,12 +20,12 @@ describe('Markdown Parsing', () => {
     model = null;
   });
 
-  test('parses basic headings correctly', () => {
+  test('parses basic headings correctly', async () => {
     const markdown = `# Root
 ## Level 2
 ### Level 3`;
     
-    const root = model.parseFromMarkdown(markdown);
+    const root = await model.parseFromMarkdown(markdown);
     
     expect(root.text).toBe('Root');
     expect(root.level).toBe(1);
@@ -41,14 +41,14 @@ describe('Markdown Parsing', () => {
     expect(level3.level).toBe(3);
   });
 
-  test('parses bullet points with consistent levels', () => {
+  test('parses bullet points with consistent levels', async () => {
     const markdown = `# Root
 - Level 2 (bullet)
   - Level 3 (2 spaces)
     - Level 4 (4 spaces)
       - Level 5 (6 spaces)`;
     
-    const root = model.parseFromMarkdown(markdown);
+    const root = await model.parseFromMarkdown(markdown);
     
     expect(root.text).toBe('Root');
     expect(root.level).toBe(1);
@@ -72,7 +72,7 @@ describe('Markdown Parsing', () => {
     expect(level5.level).toBe(5);
   });
   
-  test('handles mixed heading and bullet point levels', () => {
+  test('handles mixed heading and bullet point levels', async () => {
     const markdown = `# Project
 ## Planning
 - Tasks
@@ -80,7 +80,7 @@ describe('Markdown Parsing', () => {
 ### Design
 - Components`;
     
-    const root = model.parseFromMarkdown(markdown);
+    const root = await model.parseFromMarkdown(markdown);
     
     expect(root.text).toBe('Project');
     
@@ -111,14 +111,14 @@ describe('Markdown Parsing', () => {
     expect(components.level).toBe(4);
   });
   
-  test('correctly handles the problematic 4-space indentation pattern', () => {
+  test('correctly handles the problematic 4-space indentation pattern', async () => {
     const markdown = `# Project Planning
 ## Research
 - competitive landscape
     - existing mindmap apps on the market
         - proprietary`;
     
-    const root = model.parseFromMarkdown(markdown);
+    const root = await model.parseFromMarkdown(markdown);
     
     expect(root.text).toBe('Project Planning');
     expect(root.level).toBe(1);
@@ -140,14 +140,14 @@ describe('Markdown Parsing', () => {
     expect(proprietary.level).toBe(5);
   });
   
-  test('handles inconsistent indentation gracefully', () => {
+  test('handles inconsistent indentation gracefully', async () => {
     const markdown = `# Root
 - Level 2
    - Oddly indented (3 spaces)
      - Another odd indent (5 spaces)
   - Back to 2 spaces`;
     
-    const root = model.parseFromMarkdown(markdown);
+    const root = await model.parseFromMarkdown(markdown);
     
     // Verify the structure maintains proper parent-child relationships
     expect(root.text).toBe('Root');
@@ -174,7 +174,7 @@ describe('Markdown Parsing', () => {
     expect(level4.level).toBe(4);
   });
   
-  test('handles complex nested indentation with deep levels', () => {
+  test('handles complex nested indentation with deep levels', async () => {
     const markdown = `# Project Planning
 ## Research
 - competitive landscape
@@ -184,7 +184,7 @@ describe('Markdown Parsing', () => {
                - 333333
                  - 3`;
     
-    const root = model.parseFromMarkdown(markdown);
+    const root = await model.parseFromMarkdown(markdown);
     
     // Helper function to print the complete tree hierarchy for debugging
     const printTree = (node, indent = '') => {
@@ -242,7 +242,7 @@ describe('Markdown Parsing', () => {
     expect(level8.level).toBe(8);
   });
   
-  test('handles returning to root level bullets after deep nesting', () => {
+  test('handles returning to root level bullets after deep nesting', async () => {
     const markdown = `# Root
 ## Section 1
 - Level 3 Bullet
@@ -254,7 +254,7 @@ describe('Markdown Parsing', () => {
 - Another Level 3 bullet
   - Level 4 under Section 2`;
     
-    const root = model.parseFromMarkdown(markdown);
+    const root = await model.parseFromMarkdown(markdown);
     
     // Helper function to print the complete tree hierarchy for debugging
     const printTree = (node, indent = '') => {
@@ -317,5 +317,26 @@ describe('Markdown Parsing', () => {
     const section2L4 = section2L3.children[0];
     expect(section2L4.text).toBe('Level 4 under Section 2');
     expect(section2L4.level).toBe(4);
+  });
+  
+  test('falls back to traditional parser if marked fails', async () => {
+    // Mock the marked import to throw an error
+    jest.mock('marked', () => {
+      throw new Error('Mocked marked error');
+    });
+    
+    const markdown = `# Root
+## Level 2`;
+    
+    // Should still parse correctly using the traditional parser
+    const root = await model.parseFromMarkdown(markdown);
+    
+    expect(root.text).toBe('Root');
+    expect(root.level).toBe(1);
+    expect(root.children.length).toBe(1);
+    
+    const level2 = root.children[0];
+    expect(level2.text).toBe('Level 2');
+    expect(level2.level).toBe(2);
   });
 });

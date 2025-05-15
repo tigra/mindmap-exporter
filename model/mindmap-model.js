@@ -17,9 +17,145 @@ class MindmapModel {
   /**
    * Parse markdown text into a mindmap structure
    * @param {string} markdown - The markdown text to parse
+   * @param {boolean} useMarked - Whether to use the marked library (default: true)
    * @return {Node|null} The root node of the mindmap, or null if no valid nodes were found
    */
-  parseFromMarkdown(markdown) {
+  async parseFromMarkdown(markdown, useMarked = true) {
+    try {
+      if (useMarked) {
+        return await this.parseWithMarked(markdown);
+      }
+    } catch (error) {
+      console.warn('Error parsing with marked, falling back to traditional parser:', error);
+    }
+    
+    // Fall back to traditional parser if marked fails or is disabled
+    return this.parseTraditional(markdown);
+  }
+  
+  /**
+   * Parse markdown using the marked library
+   * @param {string} markdown - The markdown text to parse
+   * @return {Node|null} The root node of the mindmap
+   */
+  async parseWithMarked(markdown) {
+    try {
+      // Load marked library dynamically
+      const { marked } = await import('marked');
+      
+      // Create a lexer to tokenize the markdown
+      const tokens = marked.lexer(markdown);
+      
+      // Process the tokens into a node structure
+      const root = new Node('', 0);
+      this._processTokens(tokens, root);
+      
+      // Set the root node
+      this.rootNode = root.hasChildren() ? root.children[0] : null;
+      
+      // Regenerate all IDs to ensure they're deterministic
+      if (this.rootNode) {
+        this.regenerateAllIds();
+      }
+      
+      return this.rootNode;
+    } catch (error) {
+      console.error('Error parsing markdown with marked:', error);
+      throw error; // Re-throw to trigger fallback
+    }
+  }
+  
+  /**
+   * Process marked tokens and build the node tree
+   * @private
+   * @param {Array} tokens - The tokens from marked lexer
+   * @param {Node} parentNode - The parent node to attach to
+   * @param {number} baseLevel - The base level for hierarchy
+   */
+  _processTokens(tokens, parentNode, baseLevel = 0) {
+    let currentNode = parentNode;
+    let currentLevel = baseLevel;
+    
+    for (const token of tokens) {
+      if (token.type === 'heading') {
+        // Process headings
+        const level = token.depth;
+        const text = token.text;
+        
+        // Find the appropriate parent node based on the heading level
+        while (currentNode !== parentNode && currentNode.level >= level) {
+          currentNode = currentNode.parent;
+        }
+        
+        // Create a new node for this heading
+        const node = new Node(text, level, level >= 4);
+        currentNode.addChild(node);
+        
+        // Add to node map
+        this.nodeMap.set(node.id, node);
+        
+        // Update current node
+        currentNode = node;
+        currentLevel = level;
+      } else if (token.type === 'list') {
+        // Process list items
+        this._processListItems(token.items, currentNode, currentLevel + 1);
+      } else if (token.type === 'paragraph' && parentNode === currentNode) {
+        // If we have a paragraph at the top level, treat it as the root node text
+        if (parentNode === currentNode && parentNode.text === '') {
+          parentNode.text = token.text;
+        }
+      } else if (token.tokens) {
+        // If the token has nested tokens, process them recursively
+        this._processTokens(token.tokens, currentNode, currentLevel);
+      }
+    }
+  }
+  
+  /**
+   * Process list items into nodes
+   * @private
+   * @param {Array} items - The list items from marked
+   * @param {Node} parentNode - The parent node to attach to
+   * @param {number} level - The level for the list items
+   */
+  _processListItems(items, parentNode, level) {
+    let currentNode = parentNode;
+    
+    for (const item of items) {
+      // Extract text from the item
+      let text = '';
+      if (item.tokens && item.tokens.length > 0) {
+        for (const token of item.tokens) {
+          if (token.type === 'text' || token.type === 'paragraph') {
+            text = token.text || token.raw || '';
+            break;
+          }
+        }
+      } else {
+        text = item.text || '';
+      }
+      
+      // Create a new node for this list item
+      const node = new Node(text, level, level >= 4);
+      currentNode.addChild(node);
+      
+      // Add to node map
+      this.nodeMap.set(node.id, node);
+      
+      // If this item has nested lists, process them recursively
+      if (item.items && item.items.length > 0) {
+        this._processListItems(item.items, node, level + 1);
+      }
+    }
+  }
+  
+  /**
+   * Parse markdown using the traditional parser (for backward compatibility)
+   * @param {string} markdown - The markdown text to parse
+   * @return {Node|null} The root node of the mindmap
+   */
+  parseTraditional(markdown) {
     const lines = markdown.split('\n');
     const root = new Node('', 0);
     const stack = [root];
@@ -238,8 +374,8 @@ if (typeof window !== 'undefined') {
   window.mindmapModel = new MindmapModel();
 
   // Add backward-compatible parsing function
-  window.parseMindmap = function(markdown) {
-    return window.mindmapModel.parseFromMarkdown(markdown);
+  window.parseMindmap = async function(markdown) {
+    return await window.mindmapModel.parseFromMarkdown(markdown);
   };
   
   // Export the class to window

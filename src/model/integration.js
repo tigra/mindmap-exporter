@@ -12,9 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('app initialized', app);
 
   // Define global compatibility functions
-  window.parseMindmap = function(markdown) {
+  window.parseMindmap = async function(markdown) {
     if (window.mindmapModel) {
-      return window.mindmapModel.parseFromMarkdown(markdown);
+      return await window.mindmapModel.parseFromMarkdown(markdown);
     }
     return null;
   };
@@ -28,9 +28,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // If the old generateMindMap function exists, preserve it but have it use our new system
   if (typeof window.generateMindMap === 'function') {
     const originalGenerateMindMap = window.generateMindMap;
-    window.generateMindMap = function() {
+    window.generateMindMap = async function() {
       if (window.mindmapApp) {
-        window.mindmapApp.handleGenerate();
+        await window.mindmapApp.handleGenerate();
       } else {
         originalGenerateMindMap();
       }

@@ -213,7 +213,7 @@ class MindmapApp {
   /**
    * Helper to reapply layout and re-render after YAML changes
    */
-  reapplyAndRender() {
+  async reapplyAndRender() {
     // Get the root node
     const root = this.model.getRoot();
     if (!root) return;
@@ -232,7 +232,7 @@ class MindmapApp {
   /**
    * Handle generate button click
    */
-  handleGenerate() {
+  async handleGenerate() {
     console.log("generate");
     if (!this.markdownInput || !this.container) {
         this.loadingIndicator.style.display = 'none';
@@ -246,8 +246,8 @@ class MindmapApp {
       return;
     }
 
-    // Parse markdown
-    this.model.parseFromMarkdown(markdown);
+    // Parse markdown (now async)
+    await this.model.parseFromMarkdown(markdown);
     if (!this.model.getRoot()) {
         this.loadingIndicator.style.display = 'none';
         return;
