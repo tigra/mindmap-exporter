@@ -939,7 +939,7 @@ class MindmapRenderer {
    * @private
    * @param {Object} node - The node to draw text for
    * @param {boolean} insideBox - Whether the text is inside a box
-   * @return {string} SVG text element or SVG foreignObject with markdown
+   * @return {string} SVG text element or SVG group with markdown content
    */
   _drawNodeText(node, insideBox) {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
@@ -950,54 +950,48 @@ class MindmapRenderer {
       return this._drawPlainNodeText(node, insideBox);
     }
     
-    // For markdown rendering, we'll use a foreignObject that will be populated
-    // with markdown content when the SVG is fully rendered
+    // For markdown rendering, we'll use the markdown-to-svg utility
     
-    // Calculate position based on node type
-    let x, y, width, height;
+    // Calculate position 
+    let x, y, width;
     if (insideBox) {
-      // Inside a box - use the node's dimensions
-      x = node.x;
-      y = node.y;
-      width = node.width;
-      height = node.height;
+      // Inside a box - center position
+      x = node.x + (node.width / 2);
+      y = node.y + (node.height / 2);
+      width = node.width * 0.9; // Leave some margin
     } else {
-      // Standalone text - use the node's position but adjust for text
+      // Standalone text - left aligned
       x = node.x;
-      y = node.y;
+      y = node.y + (node.height / 2);
       width = node.width;
-      height = node.height;
     }
-    
-    // Create a unique identifier for this node's markdown content
-    const markdownId = `markdown-${node.id}`;
     
     // Extract the text color to ensure visibility
     const textColor = insideBox 
       ? (levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_BOXED)
       : (levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_PLAIN);
     
-    // Create a foreignObject that will be populated with markdown content
-    return `<foreignObject id="${markdownId}" 
-                         x="${x}" 
-                         y="${y}" 
-                         width="${width}" 
-                         height="${height}" 
-                         data-markdown="${this._escapeXml(node.text)}"
-                         data-node-id="${node.id}">
-              <div xmlns="http://www.w3.org/1999/xhtml"
-                   style="width:100%;height:100%;display:flex;align-items:center;
-                         justify-content:${insideBox ? 'center' : 'flex-start'};
-                         text-align:${insideBox ? 'center' : 'left'};
-                         color:${textColor};
-                         font-family:${levelStyle.fontFamily || MindmapRenderer.DEFAULT_FONT_FAMILY};
-                         font-size:${levelStyle.fontSize || MindmapRenderer.DEFAULT_FONT_SIZE}px;
-                         font-weight:${levelStyle.fontWeight || MindmapRenderer.DEFAULT_FONT_WEIGHT};">
-                <div style="max-width:100%;">
-                  ${this._escapeXml(node.text)}
-                </div>
-              </div>
-            </foreignObject>`;
+    // Use a placeholder with the node id so we can replace it with the actual
+    // SVG content after all rendering is complete
+    const placeholder = `<g id="markdown-placeholder-${node.id}" 
+                           transform="translate(${x}, ${y})"
+                           data-markdown="${this._escapeXml(node.text)}"
+                           data-node-id="${node.id}"
+                           data-insidebox="${insideBox}"
+                           data-textcolor="${textColor}"
+                           data-width="${width}"
+                           data-fontfamily="${levelStyle.fontFamily || MindmapRenderer.DEFAULT_FONT_FAMILY}"
+                           data-fontsize="${levelStyle.fontSize || MindmapRenderer.DEFAULT_FONT_SIZE}"
+                           data-fontweight="${levelStyle.fontWeight || MindmapRenderer.DEFAULT_FONT_WEIGHT}"
+                           data-textalign="${insideBox ? 'center' : 'left'}"
+                           class="markdown-placeholder">
+                           <text x="0" y="0" text-anchor="${insideBox ? 'middle' : 'start'}" 
+                                 fill="${textColor}" class="placeholder-text">
+                             ${this._escapeXml(node.text)}
+                           </text>
+                       </g>`;
+    
+    return placeholder;
   }
   
   /**
@@ -1272,7 +1266,7 @@ class MindmapRenderer {
    * Render the mindmap to a container element
    * @param {HTMLElement} container - The container to render into
    */
-  render(container) {
+  async render(container) {
     const svg = this.generateSVG();
     container.innerHTML = svg;
 
@@ -1283,7 +1277,11 @@ class MindmapRenderer {
     this.attachEventHandlers();
     
     // Process any markdown elements in the SVG
-    this._processMarkdownElements(container);
+    await this._processMarkdownElements(container);
+    
+    // Update the stored SVG content with the processed markdown
+    // This ensures exported SVGs include the rendered markdown
+    container.dataset.svgContent = container.innerHTML;
   }
   
   /**
@@ -1292,41 +1290,102 @@ class MindmapRenderer {
    * @param {HTMLElement} container - The container with the rendered SVG
    */
   async _processMarkdownElements(container) {
-    // Find all foreignObject elements with data-markdown attribute
-    const markdownElements = container.querySelectorAll('foreignObject[data-markdown]');
-    if (markdownElements.length === 0) return;
+    // Find all placeholder elements for markdown content
+    const placeholders = container.querySelectorAll('.markdown-placeholder');
+    if (placeholders.length === 0) return;
     
-    // Dynamically import the dependencies needed for markdown rendering
-    let marked, DOMPurify;
+    console.log(`Processing ${placeholders.length} markdown placeholders`);
+    
+    // Import the markdown-to-svg utility
     try {
-      marked = (await import('marked')).marked;
-      DOMPurify = (await import('dompurify')).default;
-    } catch (error) {
-      console.error('Error loading markdown libraries:', error);
-      return;
-    }
-    
-    // Process each markdown element
-    markdownElements.forEach(element => {
-      try {
-        // Get the markdown content from the data attribute
-        const markdownContent = element.getAttribute('data-markdown');
-        
-        // Get the inner div that will hold the rendered content
-        const contentDiv = element.querySelector('div > div');
-        if (!contentDiv) return;
-        
-        // Convert markdown to HTML
-        const rawHtml = marked.parse(markdownContent);
-        const cleanHtml = DOMPurify.sanitize(rawHtml);
-        
-        // Update the content
-        contentDiv.innerHTML = cleanHtml;
-        
-      } catch (error) {
-        console.error('Error rendering markdown:', error);
+      const { markdownToSvg } = await import('../utils/markdown-to-svg.js');
+      
+      // Process each placeholder
+      for (const placeholder of placeholders) {
+        try {
+          // Get attributes from the placeholder
+          const markdownContent = placeholder.getAttribute('data-markdown');
+          const nodeId = placeholder.getAttribute('data-node-id');
+          const insideBox = placeholder.getAttribute('data-insidebox') === 'true';
+          const textColor = placeholder.getAttribute('data-textcolor');
+          const maxWidth = parseInt(placeholder.getAttribute('data-width'), 10);
+          const fontFamily = placeholder.getAttribute('data-fontfamily');
+          const fontSize = parseInt(placeholder.getAttribute('data-fontsize'), 10);
+          const fontWeight = placeholder.getAttribute('data-fontweight');
+          const textAlign = placeholder.getAttribute('data-textalign') || (insideBox ? 'center' : 'left');
+          
+          console.log(`Processing markdown for node ${nodeId}`, {
+            fontFamily, fontSize, fontWeight, textColor, textAlign, maxWidth
+          });
+          
+          // Convert markdown to SVG
+          const options = {
+            fontFamily,
+            fontSize,
+            fontWeight,
+            color: textColor,
+            textAlign,
+            lineHeight: 1.5,
+            padding: 2 // Use minimal padding for better integration
+          };
+          
+          const result = await markdownToSvg(markdownContent, maxWidth, options);
+          
+          if (result && result.svg) {
+            console.log(`Successfully generated SVG for node ${nodeId} with dimensions:`, result.dimensions);
+            
+            // Create a temporary div to hold the SVG content
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = result.svg;
+            
+            // Get the SVG element
+            const svgElement = tempDiv.querySelector('svg');
+            if (!svgElement) {
+              console.warn(`No SVG element found in conversion result for node ${nodeId}`);
+              continue;
+            }
+            
+            // Extract the SVG content (everything inside the root <svg> tag)
+            const svgContent = svgElement.innerHTML;
+            
+            // Adjust the positioning
+            let xOffset = 0;
+            let yOffset = 0;
+            
+            if (insideBox) {
+              // Center the content
+              xOffset = -result.dimensions.width / 2;
+              yOffset = -result.dimensions.height / 2;
+            } else {
+              // Left align the content
+              yOffset = -result.dimensions.height / 2;
+            }
+            
+            // Create a wrapper group for the content with proper positioning
+            const contentGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            contentGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`);
+            contentGroup.setAttribute('class', 'markdown-content');
+            contentGroup.innerHTML = svgContent;
+            
+            // Replace the placeholder text with the markdown content
+            placeholder.innerHTML = '';
+            placeholder.appendChild(contentGroup);
+            
+            // Add node ID and dimensions as data attributes for debugging and reference
+            placeholder.setAttribute('data-processed', 'true');
+            placeholder.setAttribute('data-content-width', result.dimensions.width);
+            placeholder.setAttribute('data-content-height', result.dimensions.height);
+          } else {
+            console.warn(`No SVG content generated for node ${nodeId}`);
+          }
+        } catch (error) {
+          console.error(`Error processing markdown for node ${placeholder.getAttribute('data-node-id')}:`, error);
+          // Keep the placeholder text as fallback
+        }
       }
-    });
+    } catch (error) {
+      console.error('Error loading markdown-to-svg utility:', error);
+    }
   }
 
   /**

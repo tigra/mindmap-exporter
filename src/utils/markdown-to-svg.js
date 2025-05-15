@@ -4,9 +4,10 @@
  * Converts Markdown to SVG using dom-to-svg library
  * @param {string} markdownContent - The markdown content to convert
  * @param {number} maxWidth - Maximum width allowed for the SVG (default: 400)
+ * @param {Object} options - Additional options for styling
  * @returns {Object} - Object containing the SVG markup string and its dimensions
  */
-export async function markdownToSvg(markdownContent, maxWidth = 400) {
+export async function markdownToSvg(markdownContent, maxWidth = 400, options = {}) {
   // --- Step 1: Setup dependencies ---
   const { marked } = await import('marked');
   const DOMPurify = await import('dompurify');
@@ -20,7 +21,7 @@ export async function markdownToSvg(markdownContent, maxWidth = 400) {
   const width = calculateNaturalWidth(cleanHtml, maxWidth);
   
   // --- Step 4: Create a styled container for conversion ---
-  const container = createStyledContainer(cleanHtml, width);
+  const container = createStyledContainer(cleanHtml, width, options);
   
   // --- Step 5: Convert to SVG ---
   try {
@@ -34,7 +35,7 @@ export async function markdownToSvg(markdownContent, maxWidth = 400) {
     const svgDocument = elementToSVG(container);
     
     // Set fixed attributes on the SVG
-    configureSvgDocument(svgDocument, width);
+    configureSvgDocument(svgDocument, width, height, options);
     
     // Convert to string
     const serializer = new XMLSerializer();
@@ -61,7 +62,7 @@ export async function markdownToSvg(markdownContent, maxWidth = 400) {
     const errorSvg = createErrorSvg(maxWidth, error.message);
     return {
       svg: errorSvg,
-      dimensions: { width: maxWidth, height: 200 }
+      dimensions: { width: maxWidth, height: 80 }
     };
   }
 }
@@ -132,19 +133,33 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
  * Creates and styles a container for SVG conversion
  * @param {string} htmlContent - HTML content to put in the container
  * @param {number} width - Container width
+ * @param {Object} options - Additional styling options
  * @returns {HTMLElement} - Styled container element
  */
-function createStyledContainer(htmlContent, width) {
+function createStyledContainer(htmlContent, width, options = {}) {
   const container = document.createElement('div');
   container.innerHTML = htmlContent;
   
+  // Get styling options with defaults
+  const {
+    fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+    fontSize = 14,
+    fontWeight = 'normal',
+    color = '#333',
+    textAlign = 'left',
+    lineHeight = 1.5,
+    padding = 10
+  } = options;
+  
   // Apply styling to the container
   Object.assign(container.style, {
-    fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
-    fontSize: '14px',
-    lineHeight: '1.5',
-    color: '#333',
-    padding: '10px',
+    fontFamily: fontFamily,
+    fontSize: `${fontSize}px`,
+    fontWeight: fontWeight,
+    lineHeight: String(lineHeight),
+    color: color,
+    textAlign: textAlign,
+    padding: `${padding}px`,
     width: `${width}px`,
     maxWidth: '100%',
     background: 'transparent',
@@ -160,14 +175,30 @@ function createStyledContainer(htmlContent, width) {
  * Configures SVG document attributes
  * @param {SVGDocument} svgDocument - The SVG document to configure
  * @param {number} width - The width to set
+ * @param {number} height - The height to set
+ * @param {Object} options - Additional options
  */
-function configureSvgDocument(svgDocument, width) {
+function configureSvgDocument(svgDocument, width, height, options = {}) {
   if (svgDocument && svgDocument.documentElement) {
-    // Set width to our calculated width
+    // Set dimensions
     svgDocument.documentElement.setAttribute('width', width);
+    svgDocument.documentElement.setAttribute('height', height);
+    
+    // Set viewBox for proper scaling
+    svgDocument.documentElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
     
     // Remove any overflow restrictions
     svgDocument.documentElement.style.overflow = 'visible';
+    
+    // Add classes for styling
+    const existingClass = svgDocument.documentElement.getAttribute('class') || '';
+    svgDocument.documentElement.setAttribute('class', 
+      `${existingClass} markdown-svg`.trim());
+    
+    // Add additional attributes from options
+    if (options.id) {
+      svgDocument.documentElement.setAttribute('id', options.id);
+    }
   }
 }
 
@@ -175,14 +206,21 @@ function configureSvgDocument(svgDocument, width) {
  * Creates an error SVG when conversion fails
  * @param {number} width - The SVG width
  * @param {string} errorMessage - The error message to display
+ * @param {Object} options - Additional styling options
  * @returns {string} - SVG markup as a string
  */
-function createErrorSvg(width, errorMessage) {
-  const height = 100; // Fixed height for error message
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+function createErrorSvg(width, errorMessage, options = {}) {
+  const height = 60; // Fixed height for error message
+  const {
+    fontFamily = 'sans-serif',
+    fontSize = 12,
+    color = 'red'
+  } = options;
+  
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="markdown-svg-error">
     <rect width="${width}" height="${height}" fill="transparent" />
-    <text x="5" y="20" fill="red" font-family="sans-serif" font-size="14">Error: Failed to render markdown</text>
-    <text x="5" y="40" fill="red" font-family="sans-serif" font-size="12">${errorMessage}</text>
+    <text x="5" y="15" fill="${color}" font-family="${fontFamily}" font-size="${fontSize + 2}">(Markdown error)</text>
+    <text x="5" y="35" fill="${color}" font-family="${fontFamily}" font-size="${fontSize}">${errorMessage}</text>
   </svg>`;
 }
 
