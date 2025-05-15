@@ -2,6 +2,7 @@
 
 import ConnectionPoint from './connection-point.js';
 import textMetrics from '../utils/text-metrics.js';
+import { markdownToSvg } from '../utils/markdown-to-svg.js';
 
 /**
  * Base Layout class that handles common functionality
@@ -19,36 +20,92 @@ class Layout {
     const textWrap = wrapConfig.textWrap;
     const maxWidth = wrapConfig.maxWidth;
     const maxWordLength = wrapConfig.maxWordLength;
-
+    
+    // Check if markdown is enabled for this level
+    const useMarkdown = levelStyle.enableMarkdown || false;
     let textDimensions;
 
-    if (textWrap === 'none') {
-      // Simple case - just measure without wrapping
-      textDimensions = textMetrics.measureText(
-        text,
-        levelStyle.fontFamily,
-        levelStyle.fontSize,
-        levelStyle.fontWeight
-      );
+    if (useMarkdown) {
+      // Use the exact same markdown-to-svg method as the renderer for consistency
+      try {
+        // Convert markdown to SVG to get precise dimensions
+        const options = {
+          fontFamily: levelStyle.fontFamily,
+          fontSize: levelStyle.fontSize,
+          fontWeight: levelStyle.fontWeight,
+          color: levelStyle.textColor || '#333',
+          textAlign: 'left',
+          lineHeight: 1.5,
+          padding: 2 // Minimal padding to match renderer
+        };
+        
+        const calculatedWidth = maxWidth - (levelStyle.horizontalPadding * 2);
+        const result = markdownToSvg(text, calculatedWidth, options);
+        
+        if (result && result.dimensions) {
+          // Use the exact dimensions from markdown-to-svg
+          textDimensions = {
+            width: result.dimensions.width,
+            height: result.dimensions.height
+          };
+          
+          // Add a small buffer for rendering accuracy (10%)
+          textDimensions.height *= 1.1;
+        } else {
+          // Fallback if markdown-to-svg fails
+          textDimensions = textMetrics.wrapText(
+            text,
+            maxWidth,
+            levelStyle.fontFamily,
+            levelStyle.fontSize,
+            levelStyle.fontWeight,
+            textWrap,
+            maxWordLength
+          );
+        }
+      } catch (error) {
+        console.warn('Error calculating markdown size in layout:', error);
+        // Fallback to regular text wrapping
+        textDimensions = textMetrics.wrapText(
+          text,
+          maxWidth,
+          levelStyle.fontFamily,
+          levelStyle.fontSize,
+          levelStyle.fontWeight,
+          textWrap,
+          maxWordLength
+        );
+      }
     } else {
-      // Use text wrapping measurement
-      textDimensions = textMetrics.wrapText(
-        text,
-        maxWidth,
-        levelStyle.fontFamily,
-        levelStyle.fontSize,
-        levelStyle.fontWeight,
-        textWrap,
-        maxWordLength
-      );
+      // Regular text handling
+      if (textWrap === 'none') {
+        // Simple case - just measure without wrapping
+        textDimensions = textMetrics.measureText(
+          text,
+          levelStyle.fontFamily,
+          levelStyle.fontSize,
+          levelStyle.fontWeight
+        );
+      } else {
+        // Use text wrapping measurement
+        textDimensions = textMetrics.wrapText(
+          text,
+          maxWidth,
+          levelStyle.fontFamily,
+          levelStyle.fontSize,
+          levelStyle.fontWeight,
+          textWrap,
+          maxWordLength
+        );
+      }
     }
 
-    // The textDimensions.width now already accounts for the appropriate width calculation
-    // from our improved TextMetricsService
-
+    // Ensure minimum dimensions for very short content
+    const minHeight = Math.max(levelStyle.fontSize * 2, 30);
+    
     return {
       width: textDimensions.width + (levelStyle.horizontalPadding * 2),
-      height: textDimensions.height + (levelStyle.verticalPadding * 2)
+      height: Math.max(textDimensions.height + (levelStyle.verticalPadding * 2), minHeight)
     };
   }
 
