@@ -1,7 +1,7 @@
 // src/renderer/mindmap-renderer.js
 
 import eventBridge from '../utils/event-bridge.js';
-import { markdownToText } from '../utils/markdown-to-svg.js';
+import { markdownToText, markdownToSvg } from '../utils/markdown-to-svg.js';
 
 /**
  * MindmapRenderer class for SVG generation with interactive expand/collapse
@@ -1266,7 +1266,7 @@ class MindmapRenderer {
    * Render the mindmap to a container element
    * @param {HTMLElement} container - The container to render into
    */
-  async render(container) {
+  render(container) {
     const svg = this.generateSVG();
     container.innerHTML = svg;
 
@@ -1277,7 +1277,7 @@ class MindmapRenderer {
     this.attachEventHandlers();
     
     // Process any markdown elements in the SVG
-    await this._processMarkdownElements(container);
+    this._processMarkdownElements(container);
     
     // Update the stored SVG content with the processed markdown
     // This ensures exported SVGs include the rendered markdown
@@ -1289,102 +1289,95 @@ class MindmapRenderer {
    * @private
    * @param {HTMLElement} container - The container with the rendered SVG
    */
-  async _processMarkdownElements(container) {
+  _processMarkdownElements(container) {
     // Find all placeholder elements for markdown content
     const placeholders = container.querySelectorAll('.markdown-placeholder');
     if (placeholders.length === 0) return;
     
     console.log(`Processing ${placeholders.length} markdown placeholders`);
     
-    // Import the markdown-to-svg utility
-    try {
-      const { markdownToSvg } = await import('../utils/markdown-to-svg.js');
-      
-      // Process each placeholder
-      for (const placeholder of placeholders) {
-        try {
-          // Get attributes from the placeholder
-          const markdownContent = placeholder.getAttribute('data-markdown');
-          const nodeId = placeholder.getAttribute('data-node-id');
-          const insideBox = placeholder.getAttribute('data-insidebox') === 'true';
-          const textColor = placeholder.getAttribute('data-textcolor');
-          const maxWidth = parseInt(placeholder.getAttribute('data-width'), 10);
-          const fontFamily = placeholder.getAttribute('data-fontfamily');
-          const fontSize = parseInt(placeholder.getAttribute('data-fontsize'), 10);
-          const fontWeight = placeholder.getAttribute('data-fontweight');
-          const textAlign = placeholder.getAttribute('data-textalign') || (insideBox ? 'center' : 'left');
+    // Process each placeholder
+    for (const placeholder of placeholders) {
+      try {
+        // Get attributes from the placeholder
+        const markdownContent = placeholder.getAttribute('data-markdown');
+        const nodeId = placeholder.getAttribute('data-node-id');
+        const insideBox = placeholder.getAttribute('data-insidebox') === 'true';
+        const textColor = placeholder.getAttribute('data-textcolor');
+        const maxWidth = parseInt(placeholder.getAttribute('data-width'), 10);
+        const fontFamily = placeholder.getAttribute('data-fontfamily');
+        const fontSize = parseInt(placeholder.getAttribute('data-fontsize'), 10);
+        const fontWeight = placeholder.getAttribute('data-fontweight');
+        const textAlign = placeholder.getAttribute('data-textalign') || (insideBox ? 'center' : 'left');
+        
+        console.log(`Processing markdown for node ${nodeId}`, {
+          fontFamily, fontSize, fontWeight, textColor, textAlign, maxWidth
+        });
+        
+        // Convert markdown to SVG
+        const options = {
+          fontFamily,
+          fontSize,
+          fontWeight,
+          color: textColor,
+          textAlign,
+          lineHeight: 1.5,
+          padding: 2 // Use minimal padding for better integration
+        };
+        
+        const result = markdownToSvg(markdownContent, maxWidth, options);
+        
+        if (result && result.svg) {
+          console.log(`Successfully generated SVG for node ${nodeId} with dimensions:`, result.dimensions);
           
-          console.log(`Processing markdown for node ${nodeId}`, {
-            fontFamily, fontSize, fontWeight, textColor, textAlign, maxWidth
-          });
+          // Create a temporary div to hold the SVG content
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = result.svg;
           
-          // Convert markdown to SVG
-          const options = {
-            fontFamily,
-            fontSize,
-            fontWeight,
-            color: textColor,
-            textAlign,
-            lineHeight: 1.5,
-            padding: 2 // Use minimal padding for better integration
-          };
-          
-          const result = await markdownToSvg(markdownContent, maxWidth, options);
-          
-          if (result && result.svg) {
-            console.log(`Successfully generated SVG for node ${nodeId} with dimensions:`, result.dimensions);
-            
-            // Create a temporary div to hold the SVG content
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = result.svg;
-            
-            // Get the SVG element
-            const svgElement = tempDiv.querySelector('svg');
-            if (!svgElement) {
-              console.warn(`No SVG element found in conversion result for node ${nodeId}`);
-              continue;
-            }
-            
-            // Extract the SVG content (everything inside the root <svg> tag)
-            const svgContent = svgElement.innerHTML;
-            
-            // Adjust the positioning
-            let xOffset = 0;
-            let yOffset = 0;
-            
-            if (insideBox) {
-              // Center the content
-              xOffset = -result.dimensions.width / 2;
-              yOffset = -result.dimensions.height / 2;
-            } else {
-              // Left align the content
-              yOffset = -result.dimensions.height / 2;
-            }
-            
-            // Create a wrapper group for the content with proper positioning
-            const contentGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            contentGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`);
-            contentGroup.setAttribute('class', 'markdown-content');
-            contentGroup.innerHTML = svgContent;
-            
-            // Replace the placeholder text with the markdown content
-            placeholder.innerHTML = '';
-            placeholder.appendChild(contentGroup);
-            
-            // Add node ID and dimensions as data attributes for debugging and reference
-            placeholder.setAttribute('data-processed', 'true');
-            placeholder.setAttribute('data-content-width', result.dimensions.width);
-            placeholder.setAttribute('data-content-height', result.dimensions.height);
-          } else {
-            console.warn(`No SVG content generated for node ${nodeId}`);
+          // Get the SVG element
+          const svgElement = tempDiv.querySelector('svg');
+          if (!svgElement) {
+            console.warn(`No SVG element found in conversion result for node ${nodeId}`);
+            continue;
           }
-        } catch (error) {
-          console.error(`Error processing markdown for node ${placeholder.getAttribute('data-node-id')}:`, error);
-          // Keep the placeholder text as fallback
+          
+          // Extract the SVG content (everything inside the root <svg> tag)
+          const svgContent = svgElement.innerHTML;
+          
+          // Adjust the positioning
+          let xOffset = 0;
+          let yOffset = 0;
+          
+          if (insideBox) {
+            // Center the content
+            xOffset = -result.dimensions.width / 2;
+            yOffset = -result.dimensions.height / 2;
+          } else {
+            // Left align the content
+            yOffset = -result.dimensions.height / 2;
+          }
+          
+          // Create a wrapper group for the content with proper positioning
+          const contentGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          contentGroup.setAttribute('transform', `translate(${xOffset}, ${yOffset})`);
+          contentGroup.setAttribute('class', 'markdown-content');
+          contentGroup.innerHTML = svgContent;
+          
+          // Replace the placeholder text with the markdown content
+          placeholder.innerHTML = '';
+          placeholder.appendChild(contentGroup);
+          
+          // Add node ID and dimensions as data attributes for debugging and reference
+          placeholder.setAttribute('data-processed', 'true');
+          placeholder.setAttribute('data-content-width', result.dimensions.width);
+          placeholder.setAttribute('data-content-height', result.dimensions.height);
+        } else {
+          console.warn(`No SVG content generated for node ${nodeId}`);
         }
+      } catch (error) {
+        console.error(`Error processing markdown for node ${placeholder.getAttribute('data-node-id')}:`, error);
+        // Keep the placeholder text as fallback
       }
-    } catch (error) {
-      console.error('Error loading markdown-to-svg utility:', error);
     }
   }
 

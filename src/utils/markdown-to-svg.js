@@ -1,4 +1,7 @@
 // src/utils/markdown-to-svg.js
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import { elementToSVG } from 'dom-to-svg';
 
 /**
  * Converts Markdown to SVG using dom-to-svg library
@@ -7,23 +10,18 @@
  * @param {Object} options - Additional options for styling
  * @returns {Object} - Object containing the SVG markup string and its dimensions
  */
-export async function markdownToSvg(markdownContent, maxWidth = 400, options = {}) {
-  // --- Step 1: Setup dependencies ---
-  const { marked } = await import('marked');
-  const DOMPurify = await import('dompurify');
-  const { elementToSVG } = await import('dom-to-svg');
-
-  // --- Step 2: Convert Markdown to sanitized HTML ---
+export function markdownToSvg(markdownContent, maxWidth = 400, options = {}) {
+  // --- Step 1: Convert Markdown to sanitized HTML ---
   const rawHtml = marked.parse(markdownContent);
   const cleanHtml = DOMPurify.sanitize(rawHtml);
 
-  // --- Step 3: Calculate optimal width ---
+  // --- Step 2: Calculate optimal width ---
   const width = calculateNaturalWidth(cleanHtml, maxWidth);
   
-  // --- Step 4: Create a styled container for conversion ---
+  // --- Step 3: Create a styled container for conversion ---
   const container = createStyledContainer(cleanHtml, width, options);
   
-  // --- Step 5: Convert to SVG ---
+  // --- Step 4: Convert to SVG ---
   try {
     // Add container to DOM (required for dom-to-svg to work)
     document.body.appendChild(container);

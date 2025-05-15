@@ -28,12 +28,12 @@ class MindmapController {
   /**
    * Initialize the controller
    */
-  async initialize() {
+  initialize() {
     // Apply layout to the model
     this.applyLayout();
 
-    // Initial render (now async)
-    await this.renderer.render(this.container);
+    // Initial render
+    this.renderer.render(this.container);
     this.initMindmapContainer();
   }
 
@@ -171,9 +171,8 @@ class MindmapController {
    * Handle node events
    * @param {string} nodeId - The ID of the node that triggered the event
    * @param {string} eventType - The type of event
-   * @returns {Promise<void>} - Promise that resolves when the event handling is complete
    */
-  async handleNodeEvent(nodeId, eventType) {
+  handleNodeEvent(nodeId, eventType) {
     if (eventType === 'toggle') {
       try {
         // Toggle node collapse state
@@ -182,8 +181,8 @@ class MindmapController {
         // Reapply layout
         this.applyLayout();
 
-        // Re-render the mindmap (now async)
-        await this.renderer.render(this.container);
+        // Re-render the mindmap
+        this.renderer.render(this.container);
         
         console.log(`Successfully toggled node ${nodeId} and re-rendered`);
       } catch (error) {
@@ -284,7 +283,7 @@ logPropertyInheritanceChain(node, property) {
    * Handle layout type change
    * @param {string} layoutType - The new layout type
    */
-  async handleLayoutChange(layoutType) {
+  handleLayoutChange(layoutType) {
     console.log('handleLayoutChange(', layoutType, ')');
     console.log(`LAYOUT CHANGE: Switching to ${layoutType} layout`);
     
@@ -448,15 +447,15 @@ logPropertyInheritanceChain(node, property) {
     // Apply the new layout
     this.applyLayout();
 
-    // Re-render the mindmap (now async)
-    await this.renderer.render(this.container);
+    // Re-render the mindmap
+    this.renderer.render(this.container);
   }
 
   /**
    * Handle style preset change
    * @param {string} presetName - The name of the preset
    */
-  async handleStyleChange(presetName) {
+  handleStyleChange(presetName) {
     console.log('handleStyleChange(', presetName, ')');
 
     // Reset the styleManager to its initial state before applying new style
@@ -472,8 +471,8 @@ logPropertyInheritanceChain(node, property) {
       const currentLayout = layoutSelectElement.value;
       console.log(`Reapplying layout type: ${currentLayout} after style change`);
 
-      // Let handleLayoutChange take care of everything (it's now async)
-      await this.handleLayoutChange(currentLayout);
+      // Let handleLayoutChange take care of everything
+      this.handleLayoutChange(currentLayout);
       return; // handleLayoutChange already handles applyLayout and render
     }
 
@@ -482,8 +481,8 @@ logPropertyInheritanceChain(node, property) {
     // Reapply layout since style properties might affect positioning
     this.applyLayout();
 
-    // Re-render the mindmap (now async)
-    await this.renderer.render(this.container);
+    // Re-render the mindmap
+    this.renderer.render(this.container);
   }
 
   /**

@@ -24,9 +24,8 @@ class EventBridge {
    * Handle a node event
    * @param {string} nodeId - The ID of the node that triggered the event
    * @param {string} eventType - The type of event ('toggle', 'select', etc.)
-   * @returns {Promise<void>} - Promise that resolves when event handling is complete
    */
-  async handleNodeEvent(nodeId, eventType) {
+  handleNodeEvent(nodeId, eventType) {
     if (!this.controller) {
       console.warn('EventBridge: No controller registered to handle events');
       return;
@@ -35,8 +34,7 @@ class EventBridge {
     // Forward the event to the controller
     if (typeof this.controller.handleNodeEvent === 'function') {
       try {
-        // Handle async controller methods
-        await this.controller.handleNodeEvent(nodeId, eventType);
+        this.controller.handleNodeEvent(nodeId, eventType);
       } catch (error) {
         console.error('EventBridge: Error handling node event:', error);
       }
