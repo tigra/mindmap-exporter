@@ -2,6 +2,7 @@
 
 import ConnectionPoint from './connection-point.js';
 import textMetrics from '../utils/text-metrics.js';
+import { markdownToSvg } from '../utils/markdown-to-svg.js';
 
 /**
  * Base Layout class that handles common functionality
@@ -14,42 +15,80 @@ class Layout {
    * @return {Object} The calculated width and height
    */
   getNodeSize(text, levelStyle) {
-    // Get text wrapping configuration
-    const wrapConfig = levelStyle.getTextWrapConfig();
-    const textWrap = wrapConfig.textWrap;
-    const maxWidth = wrapConfig.maxWidth;
-    const maxWordLength = wrapConfig.maxWordLength;
-
-    let textDimensions;
-
-    if (textWrap === 'none') {
-      // Simple case - just measure without wrapping
-      textDimensions = textMetrics.measureText(
-        text,
-        levelStyle.fontFamily,
-        levelStyle.fontSize,
-        levelStyle.fontWeight
-      );
-    } else {
-      // Use text wrapping measurement
-      textDimensions = textMetrics.wrapText(
-        text,
-        maxWidth,
-        levelStyle.fontFamily,
-        levelStyle.fontSize,
-        levelStyle.fontWeight,
-        textWrap,
-        maxWordLength
-      );
+    try {
+      // Simple estimation for immediate sizing
+      const baseWidth = Math.min(text.length * 10, levelStyle.maxWidth || 200);
+      const lines = text.split('\n').length;
+      const baseHeight = Math.max(lines * 20, 30);
+      
+      // Use the synchronous method for now, but then trigger async rendering later
+      // This is a workaround since we can't make this method async without changing the codebase significantly
+      
+      // Schedule async rendering for more accurate sizing later
+      setTimeout(() => {
+        this._calculateMarkdownSize(text, levelStyle).then(size => {
+          // Store the calculated size for later use
+          if (window._nodeSizeCache) {
+            window._nodeSizeCache[text] = size;
+          } else {
+            window._nodeSizeCache = { [text]: size };
+          }
+        }).catch(error => {
+          console.error('Error in async markdown size calculation:', error);
+        });
+      }, 0);
+      
+      // Check if we already have a cached size for this text
+      if (window._nodeSizeCache && window._nodeSizeCache[text]) {
+        return window._nodeSizeCache[text];
+      }
+      
+      return {
+        width: baseWidth + (levelStyle.horizontalPadding * 2),
+        height: baseHeight + (levelStyle.verticalPadding * 2)
+      };
+    } catch (error) {
+      console.error('Error calculating node size:', error);
+      
+      // Create a minimal fallback size as last resort
+      return {
+        width: 100 + (levelStyle.horizontalPadding * 2),
+        height: 30 + (levelStyle.verticalPadding * 2)
+      };
     }
-
-    // The textDimensions.width now already accounts for the appropriate width calculation
-    // from our improved TextMetricsService
-
-    return {
-      width: textDimensions.width + (levelStyle.horizontalPadding * 2),
-      height: textDimensions.height + (levelStyle.verticalPadding * 2)
-    };
+  }
+  
+  /**
+   * Calculate markdown size using the markdown-to-svg utility (async)
+   * @private
+   * @param {string} text - The text content of the node
+   * @param {Object} levelStyle - The style for this node's level
+   * @return {Promise<Object>} Promise resolving to the calculated width and height
+   */
+  async _calculateMarkdownSize(text, levelStyle) {
+    try {
+      // Get style properties for markdown rendering
+      const maxWidth = levelStyle.maxWidth || 200;
+      
+      // Use markdownToSvg for size calculation
+      const options = {
+        fontFamily: levelStyle.fontFamily,
+        fontSize: levelStyle.fontSize,
+        fontWeight: levelStyle.fontWeight,
+        calculateSizeOnly: true
+      };
+      
+      const result = await markdownToSvg(text, maxWidth, options);
+      
+      // Return dimensions with padding
+      return {
+        width: result.dimensions.width + (levelStyle.horizontalPadding * 2),
+        height: result.dimensions.height + (levelStyle.verticalPadding * 2)
+      };
+    } catch (error) {
+      console.error('Error calculating markdown size:', error);
+      throw error;
+    }
   }
 
   /**

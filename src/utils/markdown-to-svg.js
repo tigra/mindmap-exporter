@@ -1,5 +1,13 @@
 // src/utils/markdown-to-svg.js
 
+// Import required libraries - these are properly installed in package.json
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import { elementToSVG } from 'dom-to-svg';
+
+// A simple cache for rendered markdown
+const markdownCache = new Map();
+
 /**
  * Converts Markdown to SVG using dom-to-svg library
  * @param {string} markdownContent - The markdown content to convert
@@ -8,30 +16,47 @@
  * @returns {Object} - Object containing the SVG markup string and its dimensions
  */
 export async function markdownToSvg(markdownContent, maxWidth = 400, options = {}) {
-  // --- Step 1: Setup dependencies ---
-  const { marked } = await import('marked');
-  const DOMPurify = await import('dompurify');
-  const { elementToSVG } = await import('dom-to-svg');
+  // Check cache first
+  const cacheKey = `${markdownContent}:${maxWidth}:${JSON.stringify(options)}`;
+  if (markdownCache.has(cacheKey)) {
+    return markdownCache.get(cacheKey);
+  }
 
-  // --- Step 2: Convert Markdown to sanitized HTML ---
-  const rawHtml = marked.parse(markdownContent);
-  const cleanHtml = DOMPurify.sanitize(rawHtml);
-
-  // --- Step 3: Calculate optimal width ---
-  const width = calculateNaturalWidth(cleanHtml, maxWidth);
-  
-  // --- Step 4: Create a styled container for conversion ---
-  const container = createStyledContainer(cleanHtml, width, options);
-  
-  // --- Step 5: Convert to SVG ---
   try {
+    // --- Step 1: Convert Markdown to sanitized HTML ---
+    const rawHtml = marked.parse(markdownContent);
+    const cleanHtml = rawHtml; // DOMPurify.sanitize(rawHtml);
+
+    // --- Step 2: Calculate optimal width ---
+    const width = calculateNaturalWidth(cleanHtml, maxWidth);
+    
+    // Check if we only need to calculate dimensions
+    if (options.calculateSizeOnly) {
+      const container = createStyledContainer(cleanHtml, width, options);
+      document.body.appendChild(container);
+      const height = container.offsetHeight;
+      document.body.removeChild(container);
+      
+      const result = {
+        dimensions: { width, height }
+      };
+      
+      // Cache the result
+      markdownCache.set(cacheKey, result);
+      return result;
+    }
+    
+    // --- Step 3: Create a styled container for conversion ---
+    const container = createStyledContainer(cleanHtml, width, options);
+    
+    // --- Step 4: Convert to SVG ---
     // Add container to DOM (required for dom-to-svg to work)
     document.body.appendChild(container);
     
     // Get the container height
     const height = container.offsetHeight;
     
-    // Convert DOM to SVG
+    // Convert DOM to SVG using dom-to-svg library
     const svgDocument = elementToSVG(container);
     
     // Set fixed attributes on the SVG
@@ -44,26 +69,21 @@ export async function markdownToSvg(markdownContent, maxWidth = 400, options = {
     // Remove the temporary container
     document.body.removeChild(container);
     
-    // Return both SVG and its dimensions
-    return {
+    // Create result
+    const result = {
       svg: svgString,
       dimensions: { width, height }
     };
     
+    // Cache the result
+    markdownCache.set(cacheKey, result);
+    
+    // Return both SVG and its dimensions
+    return result;
+    
   } catch (error) {
-    // Clean up if there's an error
-    if (document.body.contains(container)) {
-      document.body.removeChild(container);
-    }
-    
     console.error('Error in Markdown to SVG conversion:', error);
-    
-    // Create a fallback error SVG
-    const errorSvg = createErrorSvg(maxWidth, error.message);
-    return {
-      svg: errorSvg,
-      dimensions: { width: maxWidth, height: 80 }
-    };
+    throw error;
   }
 }
 
@@ -91,7 +111,7 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
   let maxLineWidth = 0;
   
   // Process all block-level elements to find their natural widths
-  const blockElements = measureDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, table');
+  const blockElements = measureDiv.querySelectorAll('p, br, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, table');
   
   if (blockElements.length > 0) {
     // Measure each block element separately with nowrap to find max line width
@@ -192,8 +212,8 @@ function configureSvgDocument(svgDocument, width, height, options = {}) {
     
     // Add classes for styling
     const existingClass = svgDocument.documentElement.getAttribute('class') || '';
-    svgDocument.documentElement.setAttribute('class', 
-      `${existingClass} markdown-svg`.trim());
+//    svgDocument.documentElement.setAttribute('class',
+//      `${existingClass} markdown-svg`.trim());
     
     // Add additional attributes from options
     if (options.id) {
@@ -202,41 +222,3 @@ function configureSvgDocument(svgDocument, width, height, options = {}) {
   }
 }
 
-/**
- * Creates an error SVG when conversion fails
- * @param {number} width - The SVG width
- * @param {string} errorMessage - The error message to display
- * @param {Object} options - Additional styling options
- * @returns {string} - SVG markup as a string
- */
-function createErrorSvg(width, errorMessage, options = {}) {
-  const height = 60; // Fixed height for error message
-  const {
-    fontFamily = 'sans-serif',
-    fontSize = 12,
-    color = 'red'
-  } = options;
-  
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="markdown-svg-error">
-    <rect width="${width}" height="${height}" fill="transparent" />
-    <text x="5" y="15" fill="${color}" font-family="${fontFamily}" font-size="${fontSize + 2}">(Markdown error)</text>
-    <text x="5" y="35" fill="${color}" font-family="${fontFamily}" font-size="${fontSize}">${errorMessage}</text>
-  </svg>`;
-}
-
-/**
- * Synchronous version that returns text for fallback
- * @param {string} markdownContent - The markdown content to convert
- * @returns {string} - Plain text from markdown
- */
-export function markdownToText(markdownContent) {
-  // Simple fallback function to extract plain text
-  return markdownContent
-    .replace(/#+\s+/g, '') // Remove heading markers
-    .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold markers
-    .replace(/\*([^*]+)\*/g, '$1') // Remove italic markers
-    .replace(/~~([^~]+)~~/g, '$1') // Remove strikethrough
-    .replace(/`([^`]+)`/g, '$1') // Remove inline code
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Replace links with their text
-    .trim(); // Trim whitespace
-}

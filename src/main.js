@@ -12,6 +12,8 @@ import MindmapStylePresets from './style/style-presets.js';
 import splitterService from './utils/splitter.js';
 import tabManager from './utils/tab-manager.js';
 
+// Required libraries are already available via package.json
+
 // Import styles
 import '../style.css';
 

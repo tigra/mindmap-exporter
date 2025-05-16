@@ -970,7 +970,7 @@ class MindmapStylePresets {
     }
     
     /**
-     * Markdown style preset - with markdown support enabled
+     * Markdown style preset
      * @param {Style} style - The style object to configure
      * @return {Style} The configured style object
      */
@@ -991,7 +991,6 @@ class MindmapStylePresets {
                     connectionStartWidth: 16,
                     connectionEndWidth: 6,
                     connectionGradient: true,
-                    enableMarkdown: true,
                     maxWidth: 400
                 },
                 2: {
@@ -1008,7 +1007,6 @@ class MindmapStylePresets {
                     connectionStartWidth: 10,
                     connectionEndWidth: 4,
                     connectionGradient: true,
-                    enableMarkdown: true,
                     maxWidth: 300
                 },
                 3: {
@@ -1023,7 +1021,6 @@ class MindmapStylePresets {
                     connectionStartWidth: 8,
                     connectionEndWidth: 3,
                     connectionGradient: true,
-                    enableMarkdown: true,
                     maxWidth: 250
                 },
                 4: {
@@ -1035,7 +1032,6 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#aed6f1',
                     connectionTapered: false,
-                    enableMarkdown: true,
                     maxWidth: 200
                 },
                 5: {
@@ -1047,7 +1043,6 @@ class MindmapStylePresets {
                     nodeType: 'box',
                     connectionColor: '#d6eaf8',
                     connectionTapered: false,
-                    enableMarkdown: true,
                     maxWidth: 180
                 },
                 6: {
@@ -1056,7 +1051,6 @@ class MindmapStylePresets {
                     nodeType: 'text-only',
                     connectionColor: '#aed6f1',
                     connectionTapered: false,
-                    enableMarkdown: true,
                     maxWidth: 160
                 }
             },
@@ -1067,7 +1061,6 @@ class MindmapStylePresets {
                 textColor: '#2980b9',
                 connectionColor: '#aed6f1',
                 connectionTapered: false,
-                enableMarkdown: true,
                 maxWidth: 150
             }
         });

@@ -1,0 +1,40 @@
+
+sequenceDiagram    participant User
+    participant App as MindmapApp
+    participant Model as MindmapModel
+    participant Renderer as MindmapRenderer
+    participant Style as StyleManager
+    participant Converter as markdown-to-svg
+    participant DOM
+
+    User->>App: Generate mindmap
+    App->>Model: parseFromMarkdown(markdown)
+    Note over Model: Creates node structure
+    App->>Renderer: render(container)
+    Renderer->>Style: getLevelStyle(node.level)
+    Style-->>Renderer: Returns style with enableMarkdown property
+    
+    alt enableMarkdown is true
+        Renderer->>Renderer: _drawNodeText(node, insideBox)
+        Renderer->>DOM: Create placeholder for markdown content
+        
+        Note over Renderer: After SVG generation completes
+        Renderer->>Renderer: _processMarkdownElements(container)
+        
+        loop For each placeholder
+            Renderer->>Converter: markdownToSvg(markdownContent, maxWidth, options)
+            Converter->>Converter: Convert markdown to HTML
+            Converter->>Converter: Create styled container
+            Converter->>DOM: Add container to DOM temporarily
+            Converter->>Converter: Convert DOM to SVG
+            Converter->>DOM: Remove temporary container
+            Converter-->>Renderer: Return SVG string & dimensions
+            
+            Renderer->>DOM: Replace placeholder with SVG content
+        end
+    else enableMarkdown is false
+        Renderer->>Renderer: _drawPlainNodeText(node, insideBox)
+    end
+    
+    Renderer-->>App: Return complete SVG
+    App-->>User: Display rendered mindmap
