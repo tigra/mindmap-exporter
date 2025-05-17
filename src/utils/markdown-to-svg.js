@@ -209,7 +209,68 @@ function createErrorSvg(width, errorMessage) {
 }
 
 /**
- * Synchronous version that returns text for fallback
+ * Extracts SVG inner content from an SVG string and prepares it for embedding in a larger SVG
+ * @param {string} svgString - The SVG string to extract content from
+ * @param {number} targetX - The target X position for the content
+ * @param {number} targetY - The target Y position for the content
+ * @returns {string} - SVG group element containing the extracted content with appropriate transforms
+ */
+export function extractSvgContent(svgString, targetX, targetY) {
+  // Parse the SVG
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svgElement = svgDoc.documentElement;
+  
+  // Get inner content (all child nodes)
+  let innerContent = '';
+  for (const child of svgElement.childNodes) {
+    if (child.nodeType === 1) { // Element nodes only
+      const serializer = new XMLSerializer();
+      innerContent += serializer.serializeToString(child);
+    }
+  }
+  
+  // Extract original SVG dimensions and viewBox
+  const width = parseFloat(svgElement.getAttribute('width') || 0);
+  const height = parseFloat(svgElement.getAttribute('height') || 0);
+  
+  // Extract viewBox to understand the coordinate system
+  const viewBox = svgElement.getAttribute('viewBox');
+  let minX = 0, minY = 0, vbWidth = width, vbHeight = height;
+  
+  if (viewBox) {
+    const viewBoxValues = viewBox.split(' ').map(parseFloat);
+    if (viewBoxValues.length === 4) {
+      [minX, minY, vbWidth, vbHeight] = viewBoxValues;
+    }
+  }
+  
+  // Create group with appropriate transforms to compensate for coordinate system
+  return `
+    <!-- Extracted SVG content with coordinate transformations -->
+    <g transform="translate(${targetX - minX}, ${targetY - minY})">
+      <!-- Apply original SVG's viewBox scale if needed -->
+      <g transform="scale(${width / vbWidth}, ${height / vbHeight})">
+        ${innerContent}
+      </g>
+    </g>
+  `;
+}
+
+/**
+ * Embeds an SVG string into a larger SVG by adding positioning attributes
+ * @param {string} svgString - The SVG string to embed
+ * @param {number} x - The target X position
+ * @param {number} y - The target Y position
+ * @returns {string} - The modified SVG with positioning attributes
+ */
+export function embedSvg(svgString, x, y) {
+  // Simply add x/y positioning to the root SVG element
+  return svgString.replace(/<svg/, `<svg x="${x}" y="${y}"`);
+}
+
+/**
+ * Synchronous version that returns text for fallback TODO don't use
  * @param {string} markdownContent - The markdown content to convert
  * @returns {string} - Plain text from markdown
  */

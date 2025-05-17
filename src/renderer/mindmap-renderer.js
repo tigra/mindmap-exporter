@@ -22,6 +22,7 @@ class MindmapRenderer {
   static LIGHTEN_PERCENT = 30;
   static DARKEN_PERCENT = 10;
   static INDICATOR_RADIUS = 6;
+  static SVG_EMBEDDING_METHOD = 'embed'; // Options: 'embed' or 'extract'
   
   /**
    * Create a new MindmapRenderer
@@ -1000,14 +1001,19 @@ class MindmapRenderer {
       // Simply parse the SVG to verify it's valid (no need to extract anything)
       console.log('SVG parsed successfully');
 
-      // Since dom-to-svg uses a complex SVG structure with no direct text elements,
-      // let's embed the entire SVG as-is but with proper positioning
-      
-      // Embed entire SVG with minimal modification
-      const embeddedSvg = markdownResult.svg
-        .replace(/<svg/, `<svg x="${svgX}" y="${svgY}"`);
-      
-      return embeddedSvg;
+      // Choose between embedding methods based on configuration
+      if (MindmapRenderer.SVG_EMBEDDING_METHOD === 'extract') {
+        // Use extraction method with coordinate transformations
+        const extractedContent = extractSvgContent(markdownResult.svg, svgX, svgY);
+        
+        // Return the extracted content (which will be a g element with transformed coordinates)
+        return extractedContent;
+      } else {
+        // Default: use the embedding method (entire SVG with x/y positioning)
+        const embeddedSvg = embedSvg(markdownResult.svg, svgX, svgY);
+        
+        return embeddedSvg;
+      }
     } catch (error) {
       console.error(`Error rendering markdown for node ${node.id}:`, error);
       

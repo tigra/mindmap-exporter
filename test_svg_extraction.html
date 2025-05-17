@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Extraction and Embedding Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-section {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .input-column {
+            flex: 1;
+            padding-right: 20px;
+        }
+        .output-column {
+            flex: 1;
+            border-left: 1px solid #ddd;
+            padding-left: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 8px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .svg-container {
+            width: 100%;
+            min-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: auto;
+            background-color: #f9f9f9;
+            padding: 10px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #3b78e7;
+        }
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            font-weight: bold;
+            color: #666;
+        }
+        .method-option {
+            display: inline-block;
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SVG Extraction and Embedding Test</h1>
+        <p>This page demonstrates the two methods for incorporating SVG content in the mindmap renderer:</p>
+        <ul>
+            <li><strong>Extract Method</strong>: Extracts SVG content and applies coordinate transformations</li>
+            <li><strong>Embed Method</strong>: Embeds the entire SVG with positioning attributes</li>
+            <li><strong>Direct SVG</strong>: Shows the original SVG without modification for comparison</li>
+        </ul>
+        
+        <div class="controls">
+            <label for="max-width">Max Width:</label>
+            <input type="number" id="max-width" value="500" min="100" max="1000">
+            <button id="render-btn">Render SVG</button>
+            <button id="toggle-bg-btn">Toggle Background</button>
+            <button id="clear-debug-btn">Clear Debug Info</button>
+            <div style="margin-top: 10px;">
+                <div class="method-option">
+                    <input type="radio" id="method-extract" name="svg-method" value="extract" checked>
+                    <label for="method-extract">Use extractSvgContent</label>
+                </div>
+                <div class="method-option">
+                    <input type="radio" id="method-embed" name="svg-method" value="embed">
+                    <label for="method-embed">Use embedSvg</label>
+                </div>
+                <div class="method-option">
+                    <input type="radio" id="method-direct" name="svg-method" value="direct">
+                    <label for="method-direct">Show Original SVG</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-section">
+            <div class="input-column">
+                <h2>Markdown Input</h2>
+                <textarea id="markdown-input">## Markdown Test
+This is a **bold text** with _italic_ formatting.
+
+### Lists
+- Bullet point 1
+- Bullet point 2
+  - Nested bullet
+  - Another nested item
+
+1. Numbered item
+2. Another numbered item
+
+### Code
+```javascript
+function test() {
+  console.log("Hello World!");
+}
+```
+
+[Link Example](https://example.com)
+                </textarea>
+            </div>
+            
+            <div class="output-column">
+                <h2>SVG Output</h2>
+                <div class="svg-container" id="svg-output"></div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div style="width: 100%;">
+                <h2>SVG Code Output</h2>
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
+                    <button id="copy-svg-btn" style="font-size: 12px; padding: 4px 8px;">Copy to Clipboard</button>
+                </div>
+                <textarea id="svg-code-output" style="width: 100%; height: 200px; font-family: monospace; font-size: 12px;" readonly></textarea>
+            </div>
+        </div>
+        
+        <h3>Debug Information</h3>
+        <div class="debug-info" id="debug-info"></div>
+    </div>
+
+    <script type="module">
+        import { markdownToSvg, extractSvgContent, embedSvg } from './src/utils/markdown-to-svg.js';
+        
+        // DOM elements
+        const markdownInput = document.getElementById('markdown-input');
+        const svgOutput = document.getElementById('svg-output');
+        const svgCodeOutput = document.getElementById('svg-code-output');
+        const renderBtn = document.getElementById('render-btn');
+        const maxWidthInput = document.getElementById('max-width');
+        const debugInfo = document.getElementById('debug-info');
+        const clearDebugBtn = document.getElementById('clear-debug-btn');
+        const toggleBgBtn = document.getElementById('toggle-bg-btn');
+        const methodExtract = document.getElementById('method-extract');
+        const methodEmbed = document.getElementById('method-embed');
+        const methodDirect = document.getElementById('method-direct');
+        const copySvgBtn = document.getElementById('copy-svg-btn');
+        
+        // State variables
+        let showBackground = true;
+        
+        // Log to debug area
+        function log(message, data = null) {
+            const timestamp = new Date().toISOString().slice(11, 23);
+            const entry = document.createElement('div');
+            
+            if (data) {
+                let dataStr;
+                try {
+                    dataStr = typeof data === 'object' ? JSON.stringify(data, null, 2) : data.toString();
+                } catch (e) {
+                    dataStr = '[Object cannot be stringified]';
+                }
+                entry.textContent = `${timestamp} ${message}: ${dataStr}`;
+            } else {
+                entry.textContent = `${timestamp} ${message}`;
+            }
+            
+            debugInfo.appendChild(entry);
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+        
+        // Clear debug info
+        clearDebugBtn.addEventListener('click', () => {
+            debugInfo.innerHTML = '';
+        });
+        
+        // Get the selected method
+        function getSelectedMethod() {
+            if (methodExtract.checked) return 'extract';
+            if (methodEmbed.checked) return 'embed';
+            return 'direct';
+        }
+        
+        // Render SVG
+        async function renderSvg() {
+            const markdown = markdownInput.value;
+            const maxWidth = parseInt(maxWidthInput.value, 10);
+            const method = getSelectedMethod();
+            
+            if (!markdown) {
+                svgOutput.innerHTML = '<div style="padding:20px;color:#666;">Please enter some markdown content.</div>';
+                return;
+            }
+            
+            svgOutput.innerHTML = '<div class="loading">Converting markdown to SVG...</div>';
+            
+            try {
+                log('Starting markdown to SVG conversion');
+                log('Input markdown', markdown);
+                log('Max width', maxWidth);
+                log('Selected method', method);
+                
+                const startTime = performance.now();
+                const result = await markdownToSvg(markdown, maxWidth);
+                const endTime = performance.now();
+                
+                log('Conversion completed in', `${(endTime - startTime).toFixed(2)}ms`);
+                log('SVG dimensions', result.dimensions);
+                
+                // Create a colored container div that matches SVG dimensions exactly
+                const { width, height } = result.dimensions;
+                
+                let finalSvg;
+                let titleText;
+                
+                // Create a container SVG for embedding or extraction
+                switch (method) {
+                    case 'extract':
+                        // Use the extraction method
+                        const extractedContent = extractSvgContent(result.svg, 10, 10);
+                        
+                        finalSvg = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="${width + 20}" height="${height + 20}" viewBox="0 0 ${width + 20} ${height + 20}">
+                            <!-- Transparent dashed rectangle to demonstrate embedding -->
+                            <rect x="5" y="5" width="${width + 10}" height="${height + 10}" fill="transparent" 
+                                stroke="#673ab7" stroke-width="2" stroke-dasharray="5,5" />
+                            
+                            ${extractedContent}
+                            
+                            <!-- Label to show this is embedding -->
+                            <text x="${width - 100}" y="${height + 18}" font-family="Arial" font-size="10" fill="#673ab7">
+                                Content Extraction
+                            </text>
+                        </svg>`;
+                        
+                        titleText = "Using extractSvgContent Method";
+                        break;
+                        
+                    case 'embed':
+                        // Use the embedding method
+                        const embeddedSvg = embedSvg(result.svg, 10, 10);
+                        
+                        finalSvg = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="${width + 20}" height="${height + 20}" viewBox="0 0 ${width + 20} ${height + 20}">
+                            <!-- Transparent dashed rectangle to demonstrate embedding -->
+                            <rect x="5" y="5" width="${width + 10}" height="${height + 10}" fill="transparent" 
+                                stroke="#673ab7" stroke-width="2" stroke-dasharray="5,5" />
+                            
+                            ${embeddedSvg}
+                            
+                            <!-- Label to show this is embedding -->
+                            <text x="${width - 100}" y="${height + 18}" font-family="Arial" font-size="10" fill="#673ab7">
+                                Full SVG Embedding
+                            </text>
+                        </svg>`;
+                        
+                        titleText = "Using embedSvg Method";
+                        break;
+                        
+                    default:
+                        // Direct SVG
+                        finalSvg = result.svg;
+                        titleText = "Original SVG from markdownToSvg";
+                        break;
+                }
+                
+                // Set the SVG visual output
+                svgOutput.innerHTML = `
+                    <h4>${titleText}</h4>
+                    <div style="
+                        display: inline-block;
+                        background-color: ${showBackground ? '#ffeeee' : 'transparent'};
+                        border: ${showBackground ? '2px solid #ff9999' : '2px dashed #cccccc'};
+                        border-radius: 4px;
+                        margin: 10px;
+                        position: relative;
+                        overflow: visible;
+                    ">
+                        ${finalSvg}
+                    </div>
+                    <div style="color: #666; margin-top: 10px; font-size: 12px;">
+                        ${method === 'direct' ? 'Original' : 'Modified'} dimensions: ${width + (method === 'direct' ? 0 : 20)}px × ${height + (method === 'direct' ? 0 : 20)}px
+                    </div>
+                `;
+                
+                // Set the SVG code output in the textarea
+                svgCodeOutput.value = finalSvg;
+                
+            } catch (error) {
+                log('Error converting markdown to SVG', error.message);
+                svgOutput.innerHTML = `<div style="padding:20px;color:red;">
+                    Error: ${error.message}
+                </div>`;
+                svgCodeOutput.value = `Error: ${error.message}`;
+            }
+        }
+        
+        // Function to update SVG container background
+        function toggleBackground() {
+            showBackground = !showBackground;
+            const container = document.querySelector('#svg-output > div[style]');
+            if (container) {
+                container.style.backgroundColor = showBackground ? '#ffeeee' : 'transparent';
+                container.style.border = showBackground ? '2px solid #ff9999' : '2px dashed #cccccc';
+            }
+        }
+        
+        // Function to copy SVG code to clipboard
+        async function copySvgToClipboard() {
+            try {
+                await navigator.clipboard.writeText(svgCodeOutput.value);
+                log('SVG code copied to clipboard');
+                
+                // Show feedback
+                const originalText = copySvgBtn.textContent;
+                copySvgBtn.textContent = 'Copied!';
+                copySvgBtn.style.backgroundColor = '#4CAF50';
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    copySvgBtn.textContent = originalText;
+                    copySvgBtn.style.backgroundColor = '#4285F4';
+                }, 2000);
+            } catch (error) {
+                log('Error copying to clipboard', error.message);
+            }
+        }
+
+        // Event listeners
+        renderBtn.addEventListener('click', renderSvg);
+        toggleBgBtn.addEventListener('click', toggleBackground);
+        methodExtract.addEventListener('change', renderSvg);
+        methodEmbed.addEventListener('change', renderSvg);
+        methodDirect.addEventListener('change', renderSvg);
+        copySvgBtn.addEventListener('click', copySvgToClipboard);
+        
+        // Initial render
+        document.addEventListener('DOMContentLoaded', renderSvg);
+    </script>
+</body>
+</html>
