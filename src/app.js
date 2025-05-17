@@ -82,50 +82,8 @@ class MindmapApp {
     this.initYamlEditors();
 
    // Sample data
-    this.markdownInput.value = `# Project Planning
-## Research
-- competitive landscape
-    - existing mindmap apps on the market
-        - open source
-           - Xmind
-              - pros
-                - open source
-                - more feature rich then FreeMind
-              - cons
-                - doesn't have a really future-proof file format
-                - 5555555555
-        - proprietary
-    - subbullet 2
-        - subsub, again
-            - 1111111
-            - 2222222222222 2222222222
-               - 333333
-                 - 3
-### Market Analysis
-### Technical Feasibility
-## Design
-### UI/UX Design
-### System Architecture
-#### Class Diagram
-#### Deployment Diagram
-- browser
-- browser
-- and only browser
-## Development
-### Frontend
-- markdown parsing
-  - support for
-    - headings
-    - bullet-point lists
-- layout algorithms
-- styling
-- interactivity
-### Backend
-* not needed
-## Testing
-- Regression
-- Functional
-- Performance
+    this.markdownInput.value = `# Project <br>Planning
+## *Research*
 `;
     
     // For testing purposes, log when layout is changed

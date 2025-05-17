@@ -14,6 +14,14 @@ class Layout {
    * @return {Object} The calculated width and height
    */
   getNodeSize(text, levelStyle) {
+    // Check if markdown is enabled
+    const useMarkdown = levelStyle.enableMarkdown || false;
+    
+    // If markdown is enabled and we're in a browser environment,
+    // we could attempt to pre-calculate sizes based on markdown-to-svg.js
+    // But for simplicity and to avoid slowing down layout calculations,
+    // we'll use an enhanced text measurement approach for markdown
+    
     // Get text wrapping configuration
     const wrapConfig = levelStyle.getTextWrapConfig();
     const textWrap = wrapConfig.textWrap;
@@ -22,30 +30,56 @@ class Layout {
 
     let textDimensions;
 
-    if (textWrap === 'none') {
-      // Simple case - just measure without wrapping
-      textDimensions = textMetrics.measureText(
-        text,
-        levelStyle.fontFamily,
-        levelStyle.fontSize,
-        levelStyle.fontWeight
-      );
+    if (useMarkdown) {
+      // For markdown content, add some extra space to accommodate formatting
+      // This is an estimation - exact sizing would require async rendering
+      // We add 10% extra width and 15% extra height as an approximation
+      const plainTextDimensions = textWrap === 'none'
+        ? textMetrics.measureText(
+            text,
+            levelStyle.fontFamily,
+            levelStyle.fontSize,
+            levelStyle.fontWeight
+          )
+        : textMetrics.wrapText(
+            text,
+            maxWidth,
+            levelStyle.fontFamily,
+            levelStyle.fontSize,
+            levelStyle.fontWeight,
+            textWrap,
+            maxWordLength
+          );
+          
+      textDimensions = {
+        width: plainTextDimensions.width * 1.1,  // Add 10% for markdown formatting
+        height: plainTextDimensions.height * 1.15 // Add 15% for markdown formatting
+      };
     } else {
-      // Use text wrapping measurement
-      textDimensions = textMetrics.wrapText(
-        text,
-        maxWidth,
-        levelStyle.fontFamily,
-        levelStyle.fontSize,
-        levelStyle.fontWeight,
-        textWrap,
-        maxWordLength
-      );
+      // Regular text measurement for non-markdown content
+      if (textWrap === 'none') {
+        // Simple case - just measure without wrapping
+        textDimensions = textMetrics.measureText(
+          text,
+          levelStyle.fontFamily,
+          levelStyle.fontSize,
+          levelStyle.fontWeight
+        );
+      } else {
+        // Use text wrapping measurement
+        textDimensions = textMetrics.wrapText(
+          text,
+          maxWidth,
+          levelStyle.fontFamily,
+          levelStyle.fontSize,
+          levelStyle.fontWeight,
+          textWrap,
+          maxWordLength
+        );
+      }
     }
 
-    // The textDimensions.width now already accounts for the appropriate width calculation
-    // from our improved TextMetricsService
-
+    // Apply padding to the calculated dimensions
     return {
       width: textDimensions.width + (levelStyle.horizontalPadding * 2),
       height: textDimensions.height + (levelStyle.verticalPadding * 2)

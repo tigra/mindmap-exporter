@@ -1,7 +1,7 @@
 // src/renderer/mindmap-renderer.js
 
 import eventBridge from '../utils/event-bridge.js';
-import { markdownToText } from '../utils/markdown-to-svg.js';
+import { markdownToSvg, markdownToText } from '../utils/markdown-to-svg.js';
 
 /**
  * MindmapRenderer class for SVG generation with interactive expand/collapse
@@ -317,10 +317,10 @@ class MindmapRenderer {
 
   /**
    * Draw all nodes starting from root
-   * @return {string} SVG elements for all nodes
+   * @return {Promise<string>} Promise that resolves to SVG elements for all nodes
    */
-  drawNodes() {
-    return this._drawNodeRecursive(this.model.getRoot());
+  async drawNodes() {
+    return await this._drawNodeRecursive(this.model.getRoot());
   }
 
   /**
@@ -385,9 +385,9 @@ class MindmapRenderer {
    * Recursively draw a node and its children
    * @private
    * @param {Object} node - The node to draw
-   * @return {string} SVG elements for the node and its children
+   * @return {Promise<string>} Promise that resolves to SVG elements for the node and its children
    */
-  _drawNodeRecursive(node) {
+  async _drawNodeRecursive(node) {
     let svg = '';
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     const parentChildPadding = node.level > 1 ? this.styleManager.getLevelStyle(node.level - 1).childPadding : 0;
@@ -405,18 +405,18 @@ class MindmapRenderer {
         const child = node.children[i];
         svg += this._drawConnection(node, child);
         // Recursively draw child nodes
-        svg += this._drawNodeRecursive(child);
+        svg += await this._drawNodeRecursive(child);
       }
     }
 
     // Draw the node based on its nodeType
     if (levelStyle.nodeType === 'text-only') {
       // For text-only nodes, draw just the text
-      svg += this._drawNodeText(node, false);
+      svg += await this._drawNodeText(node, false);
     } else {
       // For box nodes, draw both shape and text
       svg += this._drawNodeShape(node);
-      svg += this._drawNodeText(node, true);
+      svg += await this._drawNodeText(node, true);
     }
 
     // Add collapsible indicator if node has children
@@ -939,19 +939,18 @@ class MindmapRenderer {
    * @private
    * @param {Object} node - The node to draw text for
    * @param {boolean} insideBox - Whether the text is inside a box
-   * @return {string} SVG text element or SVG foreignObject with markdown
+   * @return {Promise<string>} Promise that resolves to SVG text element or SVG with markdown content
    */
-  _drawNodeText(node, insideBox) {
+  async _drawNodeText(node, insideBox) {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     const useMarkdown = levelStyle.enableMarkdown || false;
     
     // If markdown is not enabled, use the traditional text rendering
-    if (!useMarkdown) {
-      return this._drawPlainNodeText(node, insideBox);
-    }
+//    if (!useMarkdown) {
+//      return this._drawPlainNodeText(node, insideBox);
+//    }
     
-    // For markdown rendering, we'll use a foreignObject that will be populated
-    // with markdown content when the SVG is fully rendered
+    // For markdown rendering, we'll use the markdownToSvg utility directly
     
     // Calculate position based on node type
     let x, y, width, height;
@@ -977,27 +976,44 @@ class MindmapRenderer {
       ? (levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_BOXED)
       : (levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_PLAIN);
     
-    // Create a foreignObject that will be populated with markdown content
-    return `<foreignObject id="${markdownId}" 
-                         x="${x}" 
-                         y="${y}" 
-                         width="${width}" 
-                         height="${height}" 
-                         data-markdown="${this._escapeXml(node.text)}"
-                         data-node-id="${node.id}">
-              <div xmlns="http://www.w3.org/1999/xhtml"
-                   style="width:100%;height:100%;display:flex;align-items:center;
-                         justify-content:${insideBox ? 'center' : 'flex-start'};
-                         text-align:${insideBox ? 'center' : 'left'};
-                         color:${textColor};
-                         font-family:${levelStyle.fontFamily || MindmapRenderer.DEFAULT_FONT_FAMILY};
-                         font-size:${levelStyle.fontSize || MindmapRenderer.DEFAULT_FONT_SIZE}px;
-                         font-weight:${levelStyle.fontWeight || MindmapRenderer.DEFAULT_FONT_WEIGHT};">
-                <div style="max-width:100%;">
-                  ${this._escapeXml(node.text)}
-                </div>
-              </div>
-            </foreignObject>`;
+    // Determine the maximum width for markdown rendering
+    const maxWidth = width - (levelStyle.horizontalPadding || 10) * 2;
+    
+    try {
+      // Minimal debugging info
+      console.log(`Rendering markdown for node: ${node.id}`);
+      
+      // Convert markdown to SVG directly
+      const markdownResult = await markdownToSvg(node.text, maxWidth);
+      // Position the SVG within the node (centered)
+      const svgX = x + (width - markdownResult.dimensions.width) / 2;
+      const svgY = y + (height - markdownResult.dimensions.height) / 2;
+      
+      // Extract the inner SVG content using DOM parsing for proper handling
+      let svgContent;
+      
+      // Create a DOM parser to properly handle the SVG
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(markdownResult.svg, 'image/svg+xml');
+      const svgElement = svgDoc.documentElement;
+      
+      // Simply parse the SVG to verify it's valid (no need to extract anything)
+      console.log('SVG parsed successfully');
+
+      // Since dom-to-svg uses a complex SVG structure with no direct text elements,
+      // let's embed the entire SVG as-is but with proper positioning
+      
+      // Embed entire SVG with minimal modification
+      const embeddedSvg = markdownResult.svg
+        .replace(/<svg/, `<svg x="${svgX}" y="${svgY}"`);
+      
+      return embeddedSvg;
+    } catch (error) {
+      console.error(`Error rendering markdown for node ${node.id}:`, error);
+      
+      // Fallback to plain text if markdown conversion fails
+      return this._drawPlainNodeText(node, insideBox);
+    }
   }
   
   /**
@@ -1048,7 +1064,7 @@ class MindmapRenderer {
     const textMetrics = typeof window !== 'undefined' ? window.textMetrics : require('../utils/text-metrics').default;
     
     const wrappedText = textMetrics.wrapText(
-      node.text,
+      '[' + node.text + ']',
       maxWidth,
       textProps.fontFamily,
       textProps.fontSize,
@@ -1254,15 +1270,19 @@ class MindmapRenderer {
 
   /**
    * Generate the complete SVG
-   * @return {string} Complete SVG document
+   * @return {Promise<string>} Promise that resolves to the complete SVG document
    */
-  generateSVG() {
+  async generateSVG() {
     this.findBounds();
 
     let svg = this.createSvgContainer();
 //    svg += `<circle r="5" cx="0" cy="0" fill="blue" />`
     svg += this.createDefs();
-    svg += this.drawNodes();
+    
+    // Draw nodes
+    const nodesContent = await this.drawNodes();
+    svg += nodesContent;
+    
     svg += '</svg>';
 
     return svg;
@@ -1272,62 +1292,32 @@ class MindmapRenderer {
    * Render the mindmap to a container element
    * @param {HTMLElement} container - The container to render into
    */
-  render(container) {
-    const svg = this.generateSVG();
-    container.innerHTML = svg;
+  async render(container) {
+    try {
+      // Show loading indicator in the container
+      container.innerHTML = '<div style="padding: 20px; text-align: center;">Rendering mindmap...</div>';
+      
+      // Generate SVG asynchronously
+      const svg = await this.generateSVG();
+      container.innerHTML = svg;
 
-    // Store SVG content for export functionality
-    container.dataset.svgContent = svg;
+      // Store SVG content for export functionality
+      container.dataset.svgContent = svg;
 
-    // Attach event handlers
-    this.attachEventHandlers();
-    
-    // Process any markdown elements in the SVG
-    this._processMarkdownElements(container);
+      // Attach event handlers
+      this.attachEventHandlers();
+      
+      // No need to process markdown elements separately since we're directly using markdownToSvg
+    } catch (error) {
+      console.error('Error rendering mindmap:', error);
+      container.innerHTML = `<div style="padding: 20px; color: red;">
+        Error rendering mindmap: ${error.message}
+      </div>`;
+    }
   }
   
-  /**
-   * Process markdown elements in the rendered SVG
-   * @private
-   * @param {HTMLElement} container - The container with the rendered SVG
-   */
-  async _processMarkdownElements(container) {
-    // Find all foreignObject elements with data-markdown attribute
-    const markdownElements = container.querySelectorAll('foreignObject[data-markdown]');
-    if (markdownElements.length === 0) return;
-    
-    // Dynamically import the dependencies needed for markdown rendering
-    let marked, DOMPurify;
-    try {
-      marked = (await import('marked')).marked;
-      DOMPurify = (await import('dompurify')).default;
-    } catch (error) {
-      console.error('Error loading markdown libraries:', error);
-      return;
-    }
-    
-    // Process each markdown element
-    markdownElements.forEach(element => {
-      try {
-        // Get the markdown content from the data attribute
-        const markdownContent = element.getAttribute('data-markdown');
-        
-        // Get the inner div that will hold the rendered content
-        const contentDiv = element.querySelector('div > div');
-        if (!contentDiv) return;
-        
-        // Convert markdown to HTML
-        const rawHtml = marked.parse(markdownContent);
-        const cleanHtml = DOMPurify.sanitize(rawHtml);
-        
-        // Update the content
-        contentDiv.innerHTML = cleanHtml;
-        
-      } catch (error) {
-        console.error('Error rendering markdown:', error);
-      }
-    });
-  }
+  // The _processMarkdownElements method is no longer needed since we're directly 
+  // rendering markdown to SVG using the markdownToSvg utility
 
   /**
    * Attach a click event handler to an element

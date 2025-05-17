@@ -1,37 +1,53 @@
 // src/utils/markdown-to-svg.js
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import { elementToSVG } from 'dom-to-svg';
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 /**
  * Converts Markdown to SVG using dom-to-svg library
  * @param {string} markdownContent - The markdown content to convert
  * @param {number} maxWidth - Maximum width allowed for the SVG (default: 400)
- * @returns {Object} - Object containing the SVG markup string and its dimensions
+ * @returns {Promise<Object>} - Promise that resolves to object containing the SVG markup string and its dimensions
  */
 export async function markdownToSvg(markdownContent, maxWidth = 400) {
-  // --- Step 1: Setup dependencies ---
-  const { marked } = await import('marked');
-  const DOMPurify = await import('dompurify');
-  const { elementToSVG } = await import('dom-to-svg');
+  // --- Step 1: Using static imports instead of dynamic imports ---
 
   // --- Step 2: Convert Markdown to sanitized HTML ---
   const rawHtml = marked.parse(markdownContent);
+  console.log('rawHtml', rawHtml);
   const cleanHtml = DOMPurify.sanitize(rawHtml);
+//const cleanHtml = rawHtml;
+  console.log('cleanHtml', cleanHtml);
 
   // --- Step 3: Calculate optimal width ---
   const width = calculateNaturalWidth(cleanHtml, maxWidth);
   
   // --- Step 4: Create a styled container for conversion ---
   const container = createStyledContainer(cleanHtml, width);
+  console.log('container', container);
   
   // --- Step 5: Convert to SVG ---
   try {
     // Add container to DOM (required for dom-to-svg to work)
     document.body.appendChild(container);
+
+    // Adding a small delay to ensure the DOM is fully updated before measuring
+    await sleep(100);
     
     // Get the container height
     const height = container.offsetHeight;
     
     // Convert DOM to SVG
+    console.log('Converting HTML to SVG with dom-to-svg');
+    
     const svgDocument = elementToSVG(container);
+    
+    // For debugging only
+    console.log('SVG document created successfully');
     
     // Set fixed attributes on the SVG
     configureSvgDocument(svgDocument, width);
@@ -139,19 +155,20 @@ function createStyledContainer(htmlContent, width) {
   container.innerHTML = htmlContent;
   
   // Apply styling to the container
-  Object.assign(container.style, {
+  const styles = {
+    width: `${width}px`,
     fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
     fontSize: '14px',
     lineHeight: '1.5',
     color: '#333',
     padding: '10px',
-    width: `${width}px`,
-    maxWidth: '100%',
+    boxSizing: 'border-box',
     background: 'transparent',
-    position: 'absolute',
-    left: '-9999px',
-    top: '-9999px'
-  });
+    position: 'absolute', // Needed for measurement
+    left: '-9999px',      // Position offscreen
+    top: '-9999px'        // Position offscreen
+  };
+  Object.assign(container.style, styles);
   
   return container;
 }
@@ -165,6 +182,11 @@ function configureSvgDocument(svgDocument, width) {
   if (svgDocument && svgDocument.documentElement) {
     // Set width to our calculated width
     svgDocument.documentElement.setAttribute('width', width);
+    
+    // Make sure height is defined
+    if (!svgDocument.documentElement.hasAttribute('height')) {
+      svgDocument.documentElement.setAttribute('height', 'auto');
+    }
     
     // Remove any overflow restrictions
     svgDocument.documentElement.style.overflow = 'visible';
