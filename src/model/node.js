@@ -1,9 +1,9 @@
 // src/model/node.js - Enhancement for configuration overrides
 
 /**
- * Node class for the mindmap
+ * MindmapNode class for the mindmap
  */
-class Node {
+class MindmapNode {
   /**
    * Create a new Node
    * @param {string} text - The text content of the node
@@ -167,10 +167,10 @@ class Node {
    * @deprecated Use _generateDeterministicId() instead
    */
   static generateUniqueId() {
-    if (!Node.lastId) {
-      Node.lastId = 0;
+    if (!MindmapNode.lastId) {
+      MindmapNode.lastId = 0;
     }
-    return ++Node.lastId;
+    return ++MindmapNode.lastId;
   }
 
   addChild(childNode) {
@@ -261,8 +261,8 @@ class Node {
 
 // For backward compatibility, export to window object if in browser
 if (typeof window !== 'undefined') {
-  window.Node = Node;
+  window.MindmapNode = MindmapNode;
 }
 
 // Also export as module for modern usage
-export default Node;
+export default MindmapNode;

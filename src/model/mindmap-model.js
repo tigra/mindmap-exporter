@@ -1,6 +1,6 @@
 // src/model/mindmap-model.js
 
-import Node from './node.js';
+import MindmapNode from './node.js';
 // We'll use dynamic import for marked to avoid issues with SSR or initial load
 
 /**
@@ -11,7 +11,7 @@ class MindmapModel {
    * Create a new MindmapModel
    */
   constructor() {
-    this.rootNode = new Node();
+    this.rootNode = new MindmapNode();
     this.nodeMap = new Map(); // Map of node ID to node instance
   }
 
@@ -20,7 +20,7 @@ class MindmapModel {
    * @param {string} markdown - The markdown text to parse
    * @param {boolean} useMarked - Whether to use the marked library (default: true)
    * @param {boolean} debug - Whether to output debug information (default: false)
-   * @return {Promise<Node|null>} The root node of the mindmap, or null if no valid nodes were found
+   * @return {Promise<MindmapNode|null>} The root node of the mindmap, or null if no valid nodes were found
    */
   async parseFromMarkdown(markdown, useMarked = true, debug = false) {
     try {
@@ -39,7 +39,7 @@ class MindmapModel {
    * Parse markdown using the marked library
    * @param {string} markdown - The markdown text to parse
    * @param {boolean} debug - Whether to output debug information
-   * @return {Node|null} The root node of the mindmap
+   * @return {MindmapNode|null} The root node of the mindmap
    */
   async parseWithMarked(markdown, debug = false) {
     try {
@@ -72,7 +72,7 @@ class MindmapModel {
       }
       
       // Process the tokens into a node structure
-      const root = new Node('', 0);
+      const root = new MindmapNode('', 0);
       this._processTokens(tokens, root);
       
       // Set the root node
@@ -171,7 +171,7 @@ class MindmapModel {
   /**
    * Helper method to debug the node tree
    * @private
-   * @param {Node} node - The node to debug
+   * @param {MindmapNode} node - The node to debug
    * @param {string} indent - The indentation to use
    */
   _debugTree(node, indent = '') {
@@ -191,7 +191,7 @@ class MindmapModel {
    * Process marked tokens and build the node tree
    * @private
    * @param {Array} tokens - The tokens from marked lexer
-   * @param {Node} parentNode - The parent node to attach to
+   * @param {MindmapNode} parentNode - The parent node to attach to
    * @param {number} baseLevel - The base level for hierarchy
    */
   _processTokens(tokens, parentNode, baseLevel = 0) {
@@ -217,7 +217,7 @@ class MindmapModel {
         }
         
         // Create a new node for this heading
-        const node = new Node(text, level, level >= 4);
+        const node = new MindmapNode(text, level, level >= 4);
         currentNode.addChild(node);
         
         // Add to node map
@@ -258,7 +258,7 @@ class MindmapModel {
    * Process list items into nodes
    * @private
    * @param {Array} items - The list items from marked
-   * @param {Node} parentNode - The parent node to attach to
+   * @param {MindmapNode} parentNode - The parent node to attach to
    * @param {number} level - The level for the list items
    */
   _processListItems(items, parentNode, level) {
@@ -322,7 +322,7 @@ class MindmapModel {
       }
       
       // Create a new node for this list item
-      const node = new Node(text, level, level >= 4);
+      const node = new MindmapNode(text, level, level >= 4);
       parentNode.addChild(node);
       
       // Add to node map
@@ -349,11 +349,11 @@ class MindmapModel {
   /**
    * Parse markdown using the traditional parser (for backward compatibility)
    * @param {string} markdown - The markdown text to parse
-   * @return {Node|null} The root node of the mindmap
+   * @return {MindmapNode|null} The root node of the mindmap
    */
   parseTraditional(markdown) {
     const lines = markdown.split('\n');
-    const root = new Node('', 0);
+    const root = new MindmapNode('', 0);
     const stack = [root];
     let currentHeadingLevel = 0;
     
@@ -436,7 +436,7 @@ class MindmapModel {
 
       // Create node and auto-collapse if level >= 4
       const collapsed = level >= 4;
-      const node = new Node(text, level, collapsed);
+      const node = new MindmapNode(text, level, collapsed);
 
       // Find the parent node
       while (stack.length > 1 && stack[stack.length - 1].level >= level) {
@@ -484,7 +484,7 @@ class MindmapModel {
   /**
    * Recursively rebuild the node map with the current node IDs
    * @private
-   * @param {Node} node - The node to start from
+   * @param {MindmapNode} node - The node to start from
    */
   _rebuildNodeMap(node) {
     if (!node) return;
@@ -500,7 +500,7 @@ class MindmapModel {
 
   /**
    * Get the root node of the mindmap
-   * @return {Node|null} The root node
+   * @return {MindmapNode|null} The root node
    */
   getRoot() {
     return this.rootNode;
@@ -509,7 +509,7 @@ class MindmapModel {
   /**
    * Find a node by its ID
    * @param {string} id - The ID of the node to find
-   * @return {Node|null} The node, or null if not found
+   * @return {MindmapNode|null} The node, or null if not found
    */
   findNodeById(id) {
     return this.nodeMap.get(id) || null;
@@ -518,7 +518,7 @@ class MindmapModel {
   /**
    * Find a node by its text content (first match)
    * @param {string} text - The text content to search for
-   * @return {Node|null} The node, or null if not found
+   * @return {MindmapNode|null} The node, or null if not found
    */
   findNodeByText(text) {
     for (const node of this.nodeMap.values()) {

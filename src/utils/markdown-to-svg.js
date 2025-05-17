@@ -2,62 +2,110 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { elementToSVG } from 'dom-to-svg';
+import { traceDomToSvgProcess, diagnoseSvgOutput } from './dom-svg-diagnostics.js';
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+
 /**
  * Converts Markdown to SVG using dom-to-svg library
  * @param {string} markdownContent - The markdown content to convert
  * @param {number} maxWidth - Maximum width allowed for the SVG (default: 400)
+ * @param {Object} options - Additional options for conversion
+ * @param {boolean} options.debug - Whether to enable debug mode, showing containers
+ * @param {boolean} options.verbose - Whether to enable verbose logging
+ * @param {number} options.renderDelay - Delay in ms before conversion (for DOM updates)
  * @returns {Promise<Object>} - Promise that resolves to object containing the SVG markup string and its dimensions
  */
-export async function markdownToSvg(markdownContent, maxWidth = 400) {
-  // --- Step 1: Using static imports instead of dynamic imports ---
-
-  // --- Step 2: Convert Markdown to sanitized HTML ---
+export async function markdownToSvg(
+  markdownContent, 
+  maxWidth = 400, 
+  options = { debug: true, verbose: true, renderDelay: 500 }
+) {
+  const { debug, verbose, renderDelay } = options;
+  
+  // Helper for conditional logging
+  const log = (...args) => {
+    if (verbose) console.log(...args);
+  };
+  
+  log('🔍 Starting markdown-to-svg conversion process');
+  log('Options:', { maxWidth, debug, verbose, renderDelay });
+  
+  // --- Step 1: Convert Markdown to sanitized HTML ---
+  log('1️⃣ Converting Markdown to HTML');
   const rawHtml = marked.parse(markdownContent);
-  console.log('rawHtml', rawHtml);
+  log('Raw HTML generated:', rawHtml.substring(0, 200) + (rawHtml.length > 200 ? '...' : ''));
+  
   const cleanHtml = DOMPurify.sanitize(rawHtml);
-//const cleanHtml = rawHtml;
-  console.log('cleanHtml', cleanHtml);
+  log('Sanitized HTML:', cleanHtml.substring(0, 200) + (cleanHtml.length > 200 ? '...' : ''));
 
-  // --- Step 3: Calculate optimal width ---
+  // --- Step 2: Calculate optimal width ---
+  log('2️⃣ Calculating optimal width');
   const width = calculateNaturalWidth(cleanHtml, maxWidth);
+  log(`Calculated width: ${width}px (max allowed: ${maxWidth}px)`);
   
-  // --- Step 4: Create a styled container for conversion ---
-  const container = createStyledContainer(cleanHtml, width);
-  console.log('container', container);
+  // --- Step 3: Create a styled container for conversion ---
+  log('3️⃣ Creating styled container');
+  const container = createStyledContainer(cleanHtml, width, debug);
+  log('Container created with ID:', container.id);
   
-  // --- Step 5: Convert to SVG ---
+  // --- Step 4: Convert to SVG ---
   try {
+    log('4️⃣ Adding container to DOM');
     // Add container to DOM (required for dom-to-svg to work)
     document.body.appendChild(container);
-
-    // Adding a small delay to ensure the DOM is fully updated before measuring
-    await sleep(100);
     
-    // Get the container height
+    // Force layout calculation to ensure proper dimensions
+    const forceLayoutHeight = container.offsetHeight;
+    log(`Container dimensions: ${container.offsetWidth}px × ${forceLayoutHeight}px`);
+
+    // Add a delay to ensure the DOM is fully updated before measuring
+    if (renderDelay > 0) {
+      log(`Waiting ${renderDelay}ms for DOM updates...`);
+      await sleep(renderDelay);
+    }
+
+    // Run diagnostic trace before conversion if verbose mode is enabled
+    if (verbose) {
+      log('5️⃣ Running DOM diagnostic');
+      traceDomToSvgProcess(container);
+    }
+    
+    // Get the final container height
     const height = container.offsetHeight;
+    log(`Final container height: ${height}px`);
     
     // Convert DOM to SVG
-    console.log('Converting HTML to SVG with dom-to-svg');
-    
+    log('6️⃣ Converting HTML to SVG with dom-to-svg');
     const svgDocument = elementToSVG(container);
     
-    // For debugging only
-    console.log('SVG document created successfully');
-    
     // Set fixed attributes on the SVG
+    log('7️⃣ Configuring SVG document');
     configureSvgDocument(svgDocument, width);
     
     // Convert to string
     const serializer = new XMLSerializer();
     const svgString = serializer.serializeToString(svgDocument);
+    log('SVG serialized, length:', svgString.length);
     
-    // Remove the temporary container
-    document.body.removeChild(container);
+    // Run SVG diagnostic if verbose mode is enabled
+    if (verbose) {
+      log('8️⃣ Analyzing SVG output');
+      diagnoseSvgOutput(svgDocument, container);
+    }
+    
+    // Remove the temporary container unless in debug mode
+    if (!debug) {
+      log('9️⃣ Removing temporary container');
+      document.body.removeChild(container);
+    } else {
+      log('9️⃣ Container left visible for debugging (debug mode enabled)');
+    }
+    
+    log('✅ Conversion complete');
     
     // Return both SVG and its dimensions
     return {
@@ -66,18 +114,37 @@ export async function markdownToSvg(markdownContent, maxWidth = 400) {
     };
     
   } catch (error) {
-    // Clean up if there's an error
-    if (document.body.contains(container)) {
-      document.body.removeChild(container);
-    }
+    // Log error details
+    console.error('❌ Error in Markdown to SVG conversion:', error);
+    console.error('Error stack:', error.stack);
     
-    console.error('Error in Markdown to SVG conversion:', error);
+    // Clean up if there's an error, but keep container visible in debug mode
+    if (document.body.contains(container) && !debug) {
+      document.body.removeChild(container);
+    } else if (debug) {
+      // Add visual indication that there was an error
+      container.style.border = '2px solid #ff0000';
+      container.style.background = 'rgba(255, 235, 235, 0.9)';
+      
+      // Add error message to container
+      const errorDiv = document.createElement('div');
+      errorDiv.style.color = '#ff0000';
+      errorDiv.style.padding = '10px';
+      errorDiv.style.marginTop = '10px';
+      errorDiv.style.border = '1px solid #ff0000';
+      errorDiv.style.background = 'rgba(255, 255, 255, 0.8)';
+      errorDiv.textContent = `Error: ${error.message}`;
+      container.appendChild(errorDiv);
+      
+      console.warn('Container left visible for debugging despite error');
+    }
     
     // Create a fallback error SVG
     const errorSvg = createErrorSvg(maxWidth, error.message);
     return {
       svg: errorSvg,
-      dimensions: { width: maxWidth, height: 200 }
+      dimensions: { width: maxWidth, height: 200 },
+      error: error
     };
   }
 }
@@ -148,10 +215,13 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
  * Creates and styles a container for SVG conversion
  * @param {string} htmlContent - HTML content to put in the container
  * @param {number} width - Container width
+ * @param {boolean} useDebugMode - Whether to show container for debugging
  * @returns {HTMLElement} - Styled container element
  */
-function createStyledContainer(htmlContent, width) {
+function createStyledContainer(htmlContent, width, useDebugMode = true) {
   const container = document.createElement('div');
+  container.id = 'markdown-container-' + Math.random().toString(36).substr(2, 9);
+  container.setAttribute('data-dom-to-svg-container', 'true');
   container.innerHTML = htmlContent;
   
   // Apply styling to the container
@@ -163,12 +233,35 @@ function createStyledContainer(htmlContent, width) {
     color: '#333',
     padding: '10px',
     boxSizing: 'border-box',
-    background: 'transparent',
     position: 'absolute', // Needed for measurement
-    left: '-9999px',      // Position offscreen
-    top: '-9999px'        // Position offscreen
   };
+  
+  // Debug mode shows the element on screen with visual indicators
+  if (useDebugMode) {
+    Object.assign(styles, {
+      background: 'rgba(240, 240, 250, 0.9)',
+      border: '2px solid #4285F4',
+      borderRadius: '4px',
+      left: '10px',
+      top: '10px',
+      zIndex: 10000,
+      visibility: 'visible',
+      display: 'block',
+      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+    });
+  } else {
+    // Standard offscreen positioning
+    Object.assign(styles, {
+      background: 'transparent',
+      left: '-9999px',
+      top: '-9999px' 
+    });
+  }
+  
   Object.assign(container.style, styles);
+
+  console.log('container.innerHTML', container.innerHTML);
+  console.log('offsetHeight', container.offsetHeight); // Reading this property forces layout
   
   return container;
 }

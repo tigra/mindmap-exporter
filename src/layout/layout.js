@@ -88,7 +88,7 @@ class Layout {
 
   /**
    * Adjust position of node and all its children recursively
-   * @param {Node} node - The node to adjust
+   * @param {MindmapNode} node - The node to adjust
    * @param {number} deltaX - Horizontal adjustment
    * @param {number} deltaY - Vertical adjustment
    */
@@ -108,7 +108,7 @@ class Layout {
    * Apply layout to a node and its children.
    * x and y are only the initial position. The position may change after laying out children recursively
    * and finding out their positions/bounding boxes.
-   * @param {Node} node - The node to layout
+   * @param {MindmapNode} node - The node to layout
    * @param {number} x - The x coordinate
    * @param {number} y - The y coordinate
    * @param {Object} style - The style to apply
@@ -120,9 +120,9 @@ class Layout {
 
   /**
    * Get the connection point for a parent node connecting to its children
-   * @param {Node} node - The parent node
+   * @param {MindmapNode} node - The parent node
    * @param {Object} levelStyle - The style for this node's level
-   * @param {Node} childNode - The specific child node being connected to (optional)
+   * @param {MindmapNode} childNode - The specific child node being connected to (optional)
    * @return {ConnectionPoint} The connection point
    */
   getParentConnectionPoint(node, levelStyle, childNode = null) {
@@ -131,8 +131,8 @@ class Layout {
   
   /**
    * Calculate horizontal position for parent connection points when distributed
-   * @param {Node} node - The parent node
-   * @param {Node} childNode - The child node
+   * @param {MindmapNode} node - The parent node
+   * @param {MindmapNode} childNode - The child node
    * @param {string} connectionPointsType - Type of distribution ('single', 'distributedRelativeToParentSize', 'distributeEvenly')
    * @param {number} widthPortion - Portion of parent width to use for connections (0.0-1.0), default 0.8
    * @returns {number} The x-coordinate for the connection point
@@ -193,7 +193,7 @@ class Layout {
 
   /**
    * Get the connection point for a child node connecting to its parent
-   * @param {Node} node - The child node
+   * @param {MindmapNode} node - The child node
    * @param {Object} levelStyle - The style for this node's level
    * @return {ConnectionPoint} The connection point
    */

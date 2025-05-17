@@ -1,7 +1,7 @@
 // src/renderer/mindmap-renderer.js
 
 import eventBridge from '../utils/event-bridge.js';
-import { markdownToSvg, markdownToText } from '../utils/markdown-to-svg.js';
+import { markdownToSvg, markdownToText, extractSvgContent, embedSvg } from '../utils/markdown-to-svg.js';
 
 /**
  * MindmapRenderer class for SVG generation with interactive expand/collapse
@@ -22,7 +22,7 @@ class MindmapRenderer {
   static LIGHTEN_PERCENT = 30;
   static DARKEN_PERCENT = 10;
   static INDICATOR_RADIUS = 6;
-  static SVG_EMBEDDING_METHOD = 'embed'; // Options: 'embed' or 'extract'
+  static SVG_EMBEDDING_METHOD = 'extract'; // Options: 'embed' or 'extract'
   
   /**
    * Create a new MindmapRenderer
@@ -970,7 +970,7 @@ class MindmapRenderer {
     }
     
     // Create a unique identifier for this node's markdown content
-    const markdownId = `markdown-${node.id}`;
+//    const markdownId = `markdown-${node.id}`;
     
     // Extract the text color to ensure visibility
     const textColor = insideBox 
@@ -986,6 +986,8 @@ class MindmapRenderer {
       
       // Convert markdown to SVG directly
       const markdownResult = await markdownToSvg(node.text, maxWidth);
+      console.log('markdownResult', markdownResult);
+      console.log('markdownResult.svg', markdownResult.svg);
       // Position the SVG within the node (centered)
       const svgX = x + (width - markdownResult.dimensions.width) / 2;
       const svgY = y + (height - markdownResult.dimensions.height) / 2;
@@ -993,18 +995,19 @@ class MindmapRenderer {
       // Extract the inner SVG content using DOM parsing for proper handling
       let svgContent;
       
-      // Create a DOM parser to properly handle the SVG
-      const parser = new DOMParser();
-      const svgDoc = parser.parseFromString(markdownResult.svg, 'image/svg+xml');
-      const svgElement = svgDoc.documentElement;
-      
-      // Simply parse the SVG to verify it's valid (no need to extract anything)
-      console.log('SVG parsed successfully');
+//      // Create a DOM parser to properly handle the SVG
+//      const parser = new DOMParser();
+//      const svgDoc = parser.parseFromString(markdownResult.svg, 'image/svg+xml');
+//      const svgElement = svgDoc.documentElement;
+//
+//      // Simply parse the SVG to verify it's valid (no need to extract anything)
+//      console.log('SVG parsed successfully');
 
       // Choose between embedding methods based on configuration
       if (MindmapRenderer.SVG_EMBEDDING_METHOD === 'extract') {
         // Use extraction method with coordinate transformations
         const extractedContent = extractSvgContent(markdownResult.svg, svgX, svgY);
+        console.log("extractedContent", extractedContent);
         
         // Return the extracted content (which will be a g element with transformed coordinates)
         return extractedContent;
