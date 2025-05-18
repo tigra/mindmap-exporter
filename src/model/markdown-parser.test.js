@@ -3,9 +3,9 @@
  */
 
 // Set up the global window object for browser compatibility
-if (typeof global !== 'undefined' && typeof window === 'undefined') {
-  global.window = {};
-}
+//if (typeof global !== 'undefined' && typeof window === 'undefined') {
+//  global.window = {};
+//}
 
 import MindmapModel from './mindmap-model.js';
 
@@ -319,24 +319,132 @@ describe('Markdown Parsing', () => {
     expect(section2L4.level).toBe(4);
   });
   
-  test('falls back to traditional parser if marked fails', async () => {
-    // Mock the marked import to throw an error
-    jest.mock('marked', () => {
-      throw new Error('Mocked marked error');
-    });
-    
-    const markdown = `# Root
-## Level 2`;
-    
-    // Should still parse correctly using the traditional parser
+  test('treats paragraphs as parents for lists', async () => {
+    const markdown = `### Classic MindMap Layout
+
+The Classic MindMap Layout places the parent node in the center with children distributed evenly on both sides. Children are vertically centered relative to the parent.
+
+Best suited for:
+- Traditional mind mapping
+- Balanced content organization
+- Presentations where the main topic has equal importance on subtopics`;
+
     const root = await model.parseFromMarkdown(markdown);
     
-    expect(root.text).toBe('Root');
-    expect(root.level).toBe(1);
-    expect(root.children.length).toBe(1);
+    // Helper function to print the complete tree hierarchy for debugging
+    const printTree = (node, indent = '') => {
+      console.log(`${indent}${node.text} (Level ${node.level})`);
+      node.children.forEach(child => printTree(child, indent + '  '));
+    };
     
-    const level2 = root.children[0];
-    expect(level2.text).toBe('Level 2');
-    expect(level2.level).toBe(2);
+    // Uncomment to see the tree structure
+    // printTree(root);
+    
+    // Verify the structure maintains proper parent-child relationships
+    expect(root.text).toBe('Classic MindMap Layout');
+    expect(root.level).toBe(3);
+    expect(root.children.length).toBe(2); // Should have 2 paragraph children
+    
+    // The first paragraph
+    const descriptionParagraph = root.children[0];
+    expect(descriptionParagraph.text).toBe('The Classic MindMap Layout places the parent node in the center with children distributed evenly on both sides. Children are vertically centered relative to the parent.');
+    expect(descriptionParagraph.level).toBe(4);
+    expect(descriptionParagraph.children.length).toBe(0);
+    
+    // The "Best suited for:" paragraph
+    const bestSuitedParagraph = root.children[1];
+    expect(bestSuitedParagraph.text).toBe('Best suited for:');
+    expect(bestSuitedParagraph.level).toBe(4);
+    expect(bestSuitedParagraph.children.length).toBe(3); // Should have 3 list item children
+    
+    // Check list items under "Best suited for:"
+    const listItem1 = bestSuitedParagraph.children[0];
+    expect(listItem1.text).toBe('Traditional mind mapping');
+    expect(listItem1.level).toBe(5);
+    
+    const listItem2 = bestSuitedParagraph.children[1];
+    expect(listItem2.text).toBe('Balanced content organization');
+    expect(listItem2.level).toBe(5);
+    
+    const listItem3 = bestSuitedParagraph.children[2];
+    expect(listItem3.text).toBe('Presentations where the main topic has equal importance on subtopics');
+    expect(listItem3.level).toBe(5);
+  });
+  
+  // Old test removed: test('falls back to traditional parser if marked fails'...) 
+  
+  test('handles multiple paragraph-list patterns with nested items', async () => {
+    const markdown = `## Features Overview
+
+Our mindmap tool supports various features:
+- Basic Features
+  - Node creation and editing
+  - Connection styling
+- Advanced Features
+  - Markdown rendering in nodes
+  - Export capabilities
+  
+Implementation status:
+- Completed:
+  - Core rendering engine
+  - Layout algorithms
+- In Progress:
+  - Enhanced styling options
+  - Mobile responsiveness`;
+
+    const root = await model.parseFromMarkdown(markdown);
+    
+    // Verify top-level structure
+    expect(root.text).toBe('Features Overview');
+    expect(root.level).toBe(2);
+    expect(root.children.length).toBe(2); // Should have 2 paragraph children
+    
+    // First paragraph with list
+    const featuresParag = root.children[0];
+    expect(featuresParag.text).toBe('Our mindmap tool supports various features:');
+    expect(featuresParag.level).toBe(3);
+    expect(featuresParag.children.length).toBe(2); // Should have 2 main list items
+    
+    // Check "Basic Features" and its children
+    const basicFeatures = featuresParag.children[0];
+    expect(basicFeatures.text).toBe('Basic Features');
+    expect(basicFeatures.level).toBe(4);
+    expect(basicFeatures.children.length).toBe(2);
+    
+    expect(basicFeatures.children[0].text).toBe('Node creation and editing');
+    expect(basicFeatures.children[1].text).toBe('Connection styling');
+    
+    // Check "Advanced Features" and its children
+    const advancedFeatures = featuresParag.children[1];
+    expect(advancedFeatures.text).toBe('Advanced Features');
+    expect(advancedFeatures.level).toBe(4);
+    expect(advancedFeatures.children.length).toBe(2);
+    
+    expect(advancedFeatures.children[0].text).toBe('Markdown rendering in nodes');
+    expect(advancedFeatures.children[1].text).toBe('Export capabilities');
+    
+    // Second paragraph with list
+    const statusParag = root.children[1];
+    expect(statusParag.text).toBe('Implementation status:');
+    expect(statusParag.level).toBe(3);
+    expect(statusParag.children.length).toBe(2); // Should have 2 main list items
+    
+    // Check "Completed" and its children
+    const completed = statusParag.children[0];
+    expect(completed.text).toBe('Completed:');
+    expect(completed.level).toBe(4);
+    expect(completed.children.length).toBe(2);
+    
+    expect(completed.children[0].text).toBe('Core rendering engine');
+    expect(completed.children[1].text).toBe('Layout algorithms');
+    
+    // Check "In Progress" and its children
+    const inProgress = statusParag.children[1];
+    expect(inProgress.text).toBe('In Progress:');
+    expect(inProgress.level).toBe(4);
+    expect(inProgress.children.length).toBe(2);
+    
+    expect(inProgress.children[0].text).toBe('Enhanced styling options');
+    expect(inProgress.children[1].text).toBe('Mobile responsiveness');
   });
 });

@@ -177,6 +177,21 @@ class MindmapNode {
     this.children.push(childNode);
     childNode.setParent(this);
   }
+  
+  /**
+   * Remove a child node from this node's children
+   * @param {MindmapNode} childNode - The child node to remove
+   * @returns {boolean} True if the child was found and removed, false otherwise
+   */
+  removeChild(childNode) {
+    const index = this.children.indexOf(childNode);
+    if (index !== -1) {
+      this.children.splice(index, 1);
+      childNode.parent = null; // Clear parent reference
+      return true;
+    }
+    return false;
+  }
 
   hasChildren() {
     return this.children.length > 0;

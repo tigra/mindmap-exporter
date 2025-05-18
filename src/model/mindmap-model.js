@@ -193,13 +193,50 @@ class MindmapModel {
   _processTokens(tokens, parentNode, baseLevel = 0) {
     let currentNode = parentNode;
     let currentLevel = baseLevel;
+    let lastParagraphNode = null; // Keep track of the last paragraph node
     
     if (!tokens || !Array.isArray(tokens)) {
       console.warn('Invalid tokens received in _processTokens:', tokens);
       return;
     }
     
-    for (const token of tokens) {
+    // Pre-process the tokens to identify paragraphs and their following lists
+    const paragraphListPairs = [];
+    
+    for (let i = 0; i < tokens.length; i++) {
+      if (tokens[i] && tokens[i].type === 'paragraph') {
+        // Look for a list token immediately following this paragraph
+        let listToken = null;
+        
+        // Look ahead for the next list token
+        for (let j = i + 1; j < tokens.length; j++) {
+          // Skip any space, html, or other tokens until we find a list or another paragraph
+          if (!tokens[j]) continue;
+          
+          if (tokens[j].type === 'list') {
+            listToken = tokens[j];
+            // Mark this list token to skip later
+            tokens[j]._processed = true;
+            break;
+          } else if (tokens[j].type === 'paragraph' || tokens[j].type === 'heading') {
+            // If we find another paragraph or heading, stop looking
+            break;
+          }
+        }
+        
+        if (listToken) {
+          // Remember this paragraph-list pair for later processing
+          paragraphListPairs.push({
+            paragraph: tokens[i],
+            list: listToken
+          });
+        }
+      }
+    }
+    
+    // Now process all tokens normally
+    for (let tokenIndex = 0; tokenIndex < tokens.length; tokenIndex++) {
+      const token = tokens[tokenIndex];
       if (!token) continue;
       
       if (token.type === 'heading') {
@@ -222,8 +259,11 @@ class MindmapModel {
         // Update current node
         currentNode = node;
         currentLevel = level;
-      } else if (token.type === 'list') {
-        // Process list items
+        
+        // Reset last paragraph reference when heading changes
+        lastParagraphNode = null;
+      } else if (token.type === 'list' && !token._processed) {
+        // Process list items only if not already processed as part of a paragraph
         if (token.items && Array.isArray(token.items)) {
           this._processListItems(token.items, currentNode, currentLevel + 1);
         } else {
@@ -238,19 +278,27 @@ class MindmapModel {
           const paragraphNode = new MindmapNode(token.text || '', currentLevel + 1, (currentLevel + 1) >= 4);
           currentNode.addChild(paragraphNode);
           
+          // Keep track of this paragraph node
+          lastParagraphNode = paragraphNode;
+          
           // Add to node map
           this.nodeMap.set(paragraphNode.id, paragraphNode);
           
-          // If the paragraph has any nested tokens that are lists, process them
+          // If the paragraph has any nested list tokens, process them
           if (token.tokens) {
             const listTokens = token.tokens.filter(t => t.type === 'list');
             for (const listToken of listTokens) {
               if (listToken.items && Array.isArray(listToken.items)) {
-                // Use the paragraph node as the parent for list items
-                // and make them one level deeper (paragraphNode.level + 1)
                 this._processListItems(listToken.items, paragraphNode, paragraphNode.level + 1);
               }
             }
+          }
+          
+          // Check if this paragraph has an associated list in our pre-processed pairs
+          const pair = paragraphListPairs.find(p => p.paragraph === token);
+          if (pair && pair.list && pair.list.items) {
+            // Process the list items as children of this paragraph
+            this._processListItems(pair.list.items, paragraphNode, paragraphNode.level + 1);
           }
         }
       } else if (token.type === 'text' && parentNode === currentNode && parentNode.text === '') {
@@ -262,7 +310,7 @@ class MindmapModel {
       }
       
       // Process any raw tokens if available (some marked versions provide these)
-      if (token.items && !token.type && Array.isArray(token.items)) {
+      if (token.items && !token.type && Array.isArray(token.items) && !token._processed) {
         // This might be an unmarked list in some marked versions
         this._processListItems(token.items, currentNode, currentLevel + 1);
       }
