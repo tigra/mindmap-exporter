@@ -18,30 +18,26 @@ class MindmapModel {
   /**
    * Parse markdown text into a mindmap structure
    * @param {string} markdown - The markdown text to parse
-   * @param {boolean} useMarked - Whether to use the marked library (default: true)
    * @param {boolean} debug - Whether to output debug information (default: false)
    * @return {Promise<MindmapNode|null>} The root node of the mindmap, or null if no valid nodes were found
    */
-  async parseFromMarkdown(markdown, useMarked = true, debug = false) {
+  async parseFromMarkdown(markdown, debug = false) {
     try {
-      if (useMarked) {
-        return await this.parseWithMarked(markdown, debug);
-      }
+      return await this._parseMarkdown(markdown, debug);
     } catch (error) {
-      console.warn('Error parsing with marked, falling back to traditional parser:', error);
+      console.error('Error parsing markdown:', error);
+      throw error;
     }
-    
-    // Fall back to traditional parser if marked fails or is disabled
-    return this.parseTraditional(markdown);
   }
   
   /**
    * Parse markdown using the marked library
+   * @private
    * @param {string} markdown - The markdown text to parse
    * @param {boolean} debug - Whether to output debug information
    * @return {MindmapNode|null} The root node of the mindmap
    */
-  async parseWithMarked(markdown, debug = false) {
+  async _parseMarkdown(markdown, debug = false) {
     try {
       if (!markdown || typeof markdown !== 'string') {
         console.warn('Invalid markdown input:', markdown);
@@ -250,7 +246,9 @@ class MindmapModel {
             const listTokens = token.tokens.filter(t => t.type === 'list');
             for (const listToken of listTokens) {
               if (listToken.items && Array.isArray(listToken.items)) {
-                this._processListItems(listToken.items, paragraphNode, currentLevel + 2);
+                // Use the paragraph node as the parent for list items
+                // and make them one level deeper (paragraphNode.level + 1)
+                this._processListItems(listToken.items, paragraphNode, paragraphNode.level + 1);
               }
             }
           }
@@ -363,225 +361,6 @@ class MindmapModel {
     }
   }
   
-  /**
-   * Parse markdown using the traditional parser (for backward compatibility)
-   * @param {string} markdown - The markdown text to parse
-   * @return {MindmapNode|null} The root node of the mindmap
-   */
-  parseTraditional(markdown) {
-    const lines = markdown.split('\n');
-    const root = new MindmapNode('', 0);
-    const stack = [root];
-    let currentHeadingLevel = 0;
-    
-    // Track bullet indentation levels - map from indent size to level
-    const indentToLevelMap = new Map();
-    // Store the previous line's indentation for bullet points
-    let prevIndent = 0;
-    
-    // For paragraph handling
-    let inParagraph = false;
-    let paragraphText = '';
-    let paragraphLevel = 0;
-    
-    for (let i = 0; i < lines.length; i++) {
-      const rawLine = lines[i];
-      const line = rawLine.trim();
-      if (!line) {
-        // Empty line terminates a paragraph
-        if (inParagraph) {
-          // Create a node for the accumulated paragraph
-          const node = new MindmapNode(paragraphText, paragraphLevel, paragraphLevel >= 4);
-          
-          // Find the parent node
-          while (stack.length > 1 && stack[stack.length - 1].level >= paragraphLevel) {
-            stack.pop();
-          }
-          
-          // Add to parent
-          stack[stack.length - 1].addChild(node);
-          
-          // Add to node map
-          this.nodeMap.set(node.id, node);
-          
-          // Reset paragraph tracking
-          inParagraph = false;
-          paragraphText = '';
-        }
-        continue;
-      }
-
-      let level = 0;
-      let text = '';
-
-      // Check if it's a heading
-      if (line.startsWith('#')) {
-        // Reset bullet indentation tracking when we hit a new heading
-        indentToLevelMap.clear();
-        prevIndent = 0;
-        
-        // Count # characters to determine level
-        for (let j = 0; j < line.length; j++) {
-          if (line[j] === '#') level++;
-          else break;
-        }
-
-        // Extract text
-        text = line.substring(level).trim();
-        currentHeadingLevel = level;
-      }
-      // Check if it's a bullet point
-      else if (line.startsWith('-') || line.startsWith('*')) {
-        // Calculate actual indentation
-        const indentLength = rawLine.length - rawLine.trimLeft().length;
-        
-        // First bullet after a heading starts at heading level + 1
-        if (indentToLevelMap.size === 0) {
-          // First bullet point after a heading
-          level = currentHeadingLevel + 1;
-          indentToLevelMap.set(indentLength, level);
-        } else if (indentLength > prevIndent) {
-          // This bullet is more indented than the previous one - it's a child
-          level = indentToLevelMap.get(prevIndent) + 1;
-          indentToLevelMap.set(indentLength, level);
-        } else if (indentLength === prevIndent) {
-          // Same indentation as previous - same level
-          level = indentToLevelMap.get(indentLength);
-        } else {
-          // Less indented - need to find the matching indent level
-          // or assign a new level if this is a new indentation amount
-          if (indentToLevelMap.has(indentLength)) {
-            level = indentToLevelMap.get(indentLength);
-          } else {
-            // If we don't have this exact indentation yet, find the closest smaller indent
-            const smallerIndents = Array.from(indentToLevelMap.keys())
-              .filter(indent => indent < indentLength)
-              .sort((a, b) => b - a); // Sort descending
-              
-            if (smallerIndents.length > 0) {
-              // Use one level deeper than the closest smaller indent
-              level = indentToLevelMap.get(smallerIndents[0]) + 1;
-            } else {
-              // Fallback if no smaller indent found
-              level = currentHeadingLevel + 1;
-            }
-            indentToLevelMap.set(indentLength, level);
-          }
-        }
-        
-        // Update prevIndent for next iteration
-        prevIndent = indentLength;
-
-        // Extract text
-        text = line.substring(1).trim(); // Remove the '-' character
-      } else {
-        // Treat regular text as paragraph child of the current heading (if any)
-        if (currentHeadingLevel > 0) {
-          // Determine level for paragraph
-          level = currentHeadingLevel + 1;
-          text = line.trim();
-          
-          // If we're already in a paragraph at this level, append to it
-          if (inParagraph && level === paragraphLevel) {
-            paragraphText += ' ' + text;
-            continue; // Skip node creation, we'll create it when the paragraph ends
-          } else {
-            // If we were in a different paragraph, finalize it first
-            if (inParagraph) {
-              // Create a node for the previously accumulated paragraph
-              const paragraphNode = new MindmapNode(paragraphText, paragraphLevel, paragraphLevel >= 4);
-              
-              // Find the parent node for this paragraph
-              while (stack.length > 1 && stack[stack.length - 1].level >= paragraphLevel) {
-                stack.pop();
-              }
-              
-              // Add to parent
-              stack[stack.length - 1].addChild(paragraphNode);
-              
-              // Add to node map
-              this.nodeMap.set(paragraphNode.id, paragraphNode);
-            }
-            
-            // Start a new paragraph
-            inParagraph = true;
-            paragraphText = text;
-            paragraphLevel = level;
-            continue; // Skip regular node creation
-          }
-        } else {
-          continue; // Skip lines that aren't headings or bullet points when no heading context exists
-        }
-      }
-
-      // If we reach this point, we're not in a paragraph context
-      // Terminate any active paragraph
-      if (inParagraph) {
-        // Create a node for the accumulated paragraph
-        const paragraphNode = new MindmapNode(paragraphText, paragraphLevel, paragraphLevel >= 4);
-        
-        // Find the parent node for this paragraph
-        while (stack.length > 1 && stack[stack.length - 1].level >= paragraphLevel) {
-          stack.pop();
-        }
-        
-        // Add to parent
-        stack[stack.length - 1].addChild(paragraphNode);
-        
-        // Add to node map
-        this.nodeMap.set(paragraphNode.id, paragraphNode);
-        
-        // Reset paragraph tracking
-        inParagraph = false;
-        paragraphText = '';
-      }
-
-      // Create node and auto-collapse if level >= 4
-      const collapsed = level >= 4;
-      const node = new MindmapNode(text, level, collapsed);
-
-      // Find the parent node
-      while (stack.length > 1 && stack[stack.length - 1].level >= level) {
-        stack.pop();
-      }
-
-      // Add to parent
-      stack[stack.length - 1].addChild(node);
-
-      // Add to node map
-      this.nodeMap.set(node.id, node);
-
-      // Add to stack
-      stack.push(node);
-    }
-    
-    // Handle any pending paragraph at the end of the file
-    if (inParagraph) {
-      // Create a node for the accumulated paragraph
-      const paragraphNode = new MindmapNode(paragraphText, paragraphLevel, paragraphLevel >= 4);
-      
-      // Find the parent node for this paragraph
-      while (stack.length > 1 && stack[stack.length - 1].level >= paragraphLevel) {
-        stack.pop();
-      }
-      
-      // Add to parent
-      stack[stack.length - 1].addChild(paragraphNode);
-      
-      // Add to node map
-      this.nodeMap.set(paragraphNode.id, paragraphNode);
-    }
-
-    this.rootNode = root.hasChildren() ? root.children[0] : null;
-    
-    // Once the tree is built, regenerate all IDs to ensure they're deterministic
-    // based on the final tree structure
-    if (this.rootNode) {
-      this.regenerateAllIds();
-    }
-    
-    return this.rootNode;
-  }
   
   /**
    * Regenerate deterministic IDs for all nodes in the tree
@@ -683,12 +462,12 @@ class MindmapModel {
   }
 }
 
-// For backward compatibility, keep the existing parsing function as a bridge
+// Make the mindmap model and parsing function available globally
 if (typeof window !== 'undefined') {
   // Create a singleton instance for global use
   window.mindmapModel = new MindmapModel();
 
-  // Add backward-compatible parsing function
+  // Add global parsing function
   window.parseMindmap = async function(markdown) {
     return await window.mindmapModel.parseFromMarkdown(markdown);
   };
