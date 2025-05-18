@@ -91,7 +91,7 @@ export async function markdownToSvg(
     // Set fixed attributes on the SVG
     log('7️⃣ Configuring SVG document');
     configureSvgDocument(svgDocument, width, { 
-      showDebugRect: typeof window !== 'undefined' ? window.showMarkdownDebugRect : true 
+      showDebugRect: typeof window !== 'undefined' ? window.showMarkdownDebugRect : false 
     });
     
     // Convert to string
@@ -383,7 +383,7 @@ function createStyledContainer(htmlContent, width, useDebugMode = false, styleOp
  * @param {SVGDocument} svgDocument - The SVG document to configure
  * @param {number} width - The width to set
  * @param {Object} options - Additional options
- * @param {boolean} options.showDebugRect - Whether to show debug rectangle (default: true)
+ * @param {boolean} options.showDebugRect - Whether to show debug rectangle (default: false)
  */
 function configureSvgDocument(svgDocument, width, options = {}) {
   if (svgDocument && svgDocument.documentElement) {
@@ -403,11 +403,11 @@ function configureSvgDocument(svgDocument, width, options = {}) {
     const height = svgDocument.documentElement.getBoundingClientRect().height;
     
     // Check if debug rectangles should be displayed
-    // First check options, then global setting, default to true if neither is set
+    // First check options, then global setting, default to false if neither is set
     const showDebugRect = options.showDebugRect !== undefined ? 
       options.showDebugRect : 
       (typeof window !== 'undefined' && window.showMarkdownDebugRect !== undefined ? 
-        window.showMarkdownDebugRect : true);
+        window.showMarkdownDebugRect : false);
     
     if (showDebugRect) {
       // Add debug rectangle as the first child that perfectly matches text bounds
@@ -486,7 +486,7 @@ export function extractSvgContent(svgString, targetX, targetY) {
   
   // Create group with appropriate transforms to compensate for coordinate system
   // Determine if debug rect should be shown
-  const showDebugRect = typeof window !== 'undefined' ? window.showMarkdownDebugRect : true;
+  const showDebugRect = typeof window !== 'undefined' ? window.showMarkdownDebugRect : false;
   
   // Add debug dashed rectangle around the content if enabled
   // Width reduced by 2px to ensure it doesn't cause extra space and stays within bounds
@@ -522,7 +522,7 @@ export function embedSvg(svgString, x, y) {
   const height = parseFloat(svgElement.getAttribute('height') || 0);
   
   // Determine if debug rect should be shown
-  const showDebugRect = typeof window !== 'undefined' ? window.showMarkdownDebugRect : true;
+  const showDebugRect = typeof window !== 'undefined' ? window.showMarkdownDebugRect : false;
   
   // Add debug rectangle if enabled (width reduced by 2px)
   const debugRect = showDebugRect ? 

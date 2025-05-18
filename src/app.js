@@ -180,8 +180,8 @@ class MindmapApp {
         console.log("Debug rectangle checkbox changed:", this.debugRectCheckbox.checked);
       });
       
-      // Initialize the global flag
-      window.showMarkdownDebugRect = this.debugRectCheckbox.checked;
+      // Initialize the global flag to false by default
+      window.showMarkdownDebugRect = false;
     }
     
     // Add event listener for apply settings button
