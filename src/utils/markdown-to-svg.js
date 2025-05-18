@@ -163,13 +163,42 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
   measureDiv.style.position = 'absolute';
   measureDiv.style.visibility = 'hidden';
   measureDiv.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif';
-  measureDiv.style.padding = '1px';
+  measureDiv.style.padding = '0'; // No padding to match rendering
   measureDiv.style.display = 'inline-block';
   measureDiv.style.boxSizing = 'border-box';
+  measureDiv.style.overflow = 'hidden'; // Prevent content overflow
+  measureDiv.style.textOverflow = 'ellipsis'; // Match rendering settings
+  measureDiv.style.maxWidth = `${maxWidth}px`; // Set max width constraint
   measureDiv.innerHTML = htmlContent;
 
-  // Add to DOM to get accurate measurementsProject Planning
+  // Add to DOM to get accurate measurements
   document.body.appendChild(measureDiv);
+
+  // Apply the same tight styling to child elements as in createStyledContainer
+  const childElements = measureDiv.querySelectorAll('*');
+  for (const el of childElements) {
+    el.style.margin = '0';
+    el.style.padding = '0';
+    el.style.width = 'fit-content'; // Make elements only as wide as their content
+    el.style.maxWidth = '100%'; // But don't exceed container width
+    
+    // Specific handling for different elements
+    if (el.tagName.toLowerCase() === 'p') {
+      el.style.marginTop = '0';
+      el.style.marginBottom = '0';
+      el.style.paddingTop = '0';
+      el.style.paddingBottom = '0';
+      el.style.textAlign = 'left'; // Align text left for consistent width
+    }
+    
+    if (el.tagName.toLowerCase() === 'span' || 
+        el.tagName.toLowerCase() === 'a' || 
+        el.tagName.toLowerCase() === 'strong' || 
+        el.tagName.toLowerCase() === 'em') {
+      el.style.display = 'inline';
+      el.style.lineHeight = '1';
+    }
+  }
   
   // Find the minimum width needed by measuring text without wrapping
   let maxLineWidth = 0;
@@ -187,6 +216,7 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
       wrapper.style.visibility = 'hidden';
       wrapper.style.display = 'inline-block';
       wrapper.style.whiteSpace = 'nowrap'; // No wrapping for accurate width
+      wrapper.style.overflow = 'hidden'; // Prevent content overflow
       
       wrapper.appendChild(clone);
       document.body.appendChild(wrapper);
@@ -203,14 +233,14 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
     maxLineWidth = measureDiv.getBoundingClientRect().width;
   }
   
-  // Add padding for better display
-  maxLineWidth += 20;
+  // Add minimal padding for better display
+  maxLineWidth += 5;
 
   // Remove measure element
   document.body.removeChild(measureDiv);
 
   // Set a minimum width and cap at maximum
-  return Math.max(Math.min(maxLineWidth, maxWidth), 100);
+  return Math.max(Math.min(maxLineWidth, maxWidth), 20);
 }
 
 /**
@@ -237,7 +267,9 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
     margin: '0', // Remove any margin
     boxSizing: 'border-box',
     position: 'absolute', // Needed for measurement
-    overflow: 'visible',
+    overflow: 'hidden', // Prevent content from extending beyond container width
+    textOverflow: 'ellipsis', // Show ellipsis for overflowing text
+    whiteSpace: 'normal', // Allow text wrapping
   };
   
   // Debug mode shows the element on screen with visual indicators
@@ -266,6 +298,8 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
   for (const el of childElements) {
     el.style.margin = '0';
     el.style.padding = '0';
+    el.style.width = 'fit-content'; // Make elements only as wide as their content
+    el.style.maxWidth = '100%'; // But don't exceed container width
     
     // Specific handling for different elements
     if (el.tagName.toLowerCase() === 'p') {
@@ -273,6 +307,7 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
       el.style.marginBottom = '0';
       el.style.paddingTop = '0';
       el.style.paddingBottom = '0';
+      el.style.textAlign = 'left'; // Align text left for consistent width
     }
     
     // Ensure inline elements don't have extra space
@@ -282,6 +317,7 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
         el.tagName.toLowerCase() === 'em') {
       el.style.display = 'inline';
       el.style.lineHeight = '1';
+      el.style.whiteSpace = 'normal'; // Allow text to wrap normally
     }
   }
 
@@ -298,8 +334,9 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
  */
 function configureSvgDocument(svgDocument, width) {
   if (svgDocument && svgDocument.documentElement) {
-    // Set width to our calculated width
-    svgDocument.documentElement.setAttribute('width', width);
+    // Set width to our calculated width plus a small buffer to prevent text cutoff
+    const contentWidth = width;
+    svgDocument.documentElement.setAttribute('width', contentWidth);
     
     // Make sure height is defined
     if (!svgDocument.documentElement.hasAttribute('height')) {
@@ -312,11 +349,11 @@ function configureSvgDocument(svgDocument, width) {
     // Get the current height
     const height = svgDocument.documentElement.getBoundingClientRect().height;
     
-    // Add debug rectangle as the first child
+    // Add debug rectangle as the first child that perfectly matches text bounds
     const rect = svgDocument.createElementNS('http://www.w3.org/2000/svg', 'rect');
     rect.setAttribute('x', '0');
     rect.setAttribute('y', '0');
-    rect.setAttribute('width', width);
+    rect.setAttribute('width', width - 1); // Reduce width by 1px to ensure it doesn't cause extra space
     rect.setAttribute('height', height);
     rect.setAttribute('fill', 'none');
     rect.setAttribute('stroke', 'red');
