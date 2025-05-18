@@ -33,11 +33,7 @@ class EventBridge {
 
     // Forward the event to the controller
     if (typeof this.controller.handleNodeEvent === 'function') {
-      try {
-        this.controller.handleNodeEvent(nodeId, eventType);
-      } catch (error) {
-        console.error('EventBridge: Error handling node event:', error);
-      }
+      this.controller.handleNodeEvent(nodeId, eventType);
     }
   }
 }

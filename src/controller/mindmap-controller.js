@@ -172,28 +172,22 @@ class MindmapController {
    * @param {string} nodeId - The ID of the node that triggered the event
    * @param {string} eventType - The type of event
    */
-  handleNodeEvent(nodeId, eventType) {
-    if (eventType === 'toggle') {
-      try {
-        // Toggle node collapse state
-        this.model.toggleNodeCollapse(nodeId);
+handleNodeEvent(nodeId, eventType) {
+  if (eventType === 'toggle') {
+    // Toggle node collapse state
+    this.model.toggleNodeCollapse(nodeId);
 
-        // Reapply layout
-        this.applyLayout();
+    // Reapply layout
+    this.applyLayout();
 
-        // Re-render the mindmap
-        this.renderer.render(this.container);
-        
-        console.log(`Successfully toggled node ${nodeId} and re-rendered`);
-      } catch (error) {
-        console.error(`Error handling toggle event for node ${nodeId}:`, error);
-      }
-    }
-    else if (eventType === 'debug') {
-      // Output node and its properties to console for debugging
-      this.debugNodeProperties(nodeId);
-    }
+    // Re-render the mindmap
+    this.renderer.render(this.container);
   }
+  else if (eventType === 'debug') {
+    // Output node and its properties to console for debugging
+    this.debugNodeProperties(nodeId);
+  }
+}
 
 /**
  * Debug node properties - outputs node and its effective properties to console
@@ -471,13 +465,19 @@ logPropertyInheritanceChain(node, property) {
       const currentLayout = layoutSelectElement.value;
       console.log(`Reapplying layout type: ${currentLayout} after style change`);
 
-      // Let handleLayoutChange take care of everything
       this.handleLayoutChange(currentLayout);
-      return; // handleLayoutChange already handles applyLayout and render
+//      // Apply appropriate layout configuration
+//      if (['vertical-over-taproot', 'taproot', 'classic', 'horizontal-left',
+//           'horizontal-right', 'vertical-up', 'vertical', 'vertical-down'].includes(currentLayout)) {
+//        // For specialized layouts, we need to reapply the configurations from handleLayoutChange
+//        this.handleLayoutChange(currentLayout);
+//        return; // handleLayoutChange already handles applyLayout and render
+//      } else {
+//        // For basic layouts, we can just set the global layout type
+//        this.styleManager.setGlobalLayoutType(currentLayout);
+//      }
     }
 
-    // If we couldn't reapply the layout, do the basic steps
-    
     // Reapply layout since style properties might affect positioning
     this.applyLayout();
 

@@ -436,21 +436,14 @@ function configureSvgDocument(svgDocument, width, options = {}) {
  * Creates an error SVG when conversion fails
  * @param {number} width - The SVG width
  * @param {string} errorMessage - The error message to display
- * @param {Object} options - Additional styling options
  * @returns {string} - SVG markup as a string
  */
-function createErrorSvg(width, errorMessage, options = {}) {
-  const height = 60; // Fixed height for error message
-  const {
-    fontFamily = 'sans-serif',
-    fontSize = 12,
-    color = 'red'
-  } = options;
-  
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="markdown-svg-error">
+function createErrorSvg(width, errorMessage) {
+  const height = 100; // Fixed height for error message
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <rect width="${width}" height="${height}" fill="transparent" />
-    <text x="5" y="15" fill="${color}" font-family="${fontFamily}" font-size="${fontSize + 2}">(Markdown error)</text>
-    <text x="5" y="35" fill="${color}" font-family="${fontFamily}" font-size="${fontSize}">${errorMessage}</text>
+    <text x="5" y="20" fill="red" font-family="sans-serif" font-size="14">Error: Failed to render markdown</text>
+    <text x="5" y="40" fill="red" font-family="sans-serif" font-size="12">${errorMessage}</text>
   </svg>`;
 }
 
