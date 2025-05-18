@@ -22,7 +22,7 @@ function sleep(ms) {
 export async function markdownToSvg(
   markdownContent, 
   maxWidth = 400, 
-  options = { debug: true, verbose: true, renderDelay: 500 }
+  options = { debug: false, verbose: true, renderDelay: 0 }
 ) {
   const { debug, verbose, renderDelay } = options;
   
@@ -218,7 +218,7 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
  * @param {boolean} useDebugMode - Whether to show container for debugging
  * @returns {HTMLElement} - Styled container element
  */
-function createStyledContainer(htmlContent, width, useDebugMode = true) {
+function createStyledContainer(htmlContent, width, useDebugMode = false) {
   const container = document.createElement('div');
   container.id = 'markdown-container-' + Math.random().toString(36).substr(2, 9);
   container.setAttribute('data-dom-to-svg-container', 'true');
@@ -239,9 +239,9 @@ function createStyledContainer(htmlContent, width, useDebugMode = true) {
   // Debug mode shows the element on screen with visual indicators
   if (useDebugMode) {
     Object.assign(styles, {
-      background: 'rgba(240, 240, 250, 0.9)',
-      border: '2px solid #4285F4',
-      borderRadius: '4px',
+//      background: 'rgba(240, 240, 250, 0.9)',
+//      border: '2px solid #4285F4',
+//      borderRadius: '4px',
       left: '10px',
       top: '10px',
       zIndex: 10000,
