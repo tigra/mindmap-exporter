@@ -90,7 +90,9 @@ export async function markdownToSvg(
     
     // Set fixed attributes on the SVG
     log('7️⃣ Configuring SVG document');
-    configureSvgDocument(svgDocument, width);
+    configureSvgDocument(svgDocument, width, { 
+      showDebugRect: typeof window !== 'undefined' ? window.showMarkdownDebugRect : true 
+    });
     
     // Convert to string
     const serializer = new XMLSerializer();
@@ -353,8 +355,10 @@ function createStyledContainer(htmlContent, width, useDebugMode = false, styleOp
  * Configures SVG document attributes
  * @param {SVGDocument} svgDocument - The SVG document to configure
  * @param {number} width - The width to set
+ * @param {Object} options - Additional options
+ * @param {boolean} options.showDebugRect - Whether to show debug rectangle (default: true)
  */
-function configureSvgDocument(svgDocument, width) {
+function configureSvgDocument(svgDocument, width, options = {}) {
   if (svgDocument && svgDocument.documentElement) {
     // Set width to our calculated width plus a small buffer to prevent text cutoff
     const contentWidth = width;
@@ -371,22 +375,32 @@ function configureSvgDocument(svgDocument, width) {
     // Get the current height
     const height = svgDocument.documentElement.getBoundingClientRect().height;
     
-    // Add debug rectangle as the first child that perfectly matches text bounds
-    const rect = svgDocument.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', '0');
-    rect.setAttribute('y', '0');
-    rect.setAttribute('width', width - 1); // Reduce width by 1px to ensure it doesn't cause extra space
-    rect.setAttribute('height', height);
-    rect.setAttribute('fill', 'none');
-    rect.setAttribute('stroke', 'red');
-    rect.setAttribute('stroke-width', '1');
-    rect.setAttribute('stroke-dasharray', '5,5');
+    // Check if debug rectangles should be displayed
+    // First check options, then global setting, default to true if neither is set
+    const showDebugRect = options.showDebugRect !== undefined ? 
+      options.showDebugRect : 
+      (typeof window !== 'undefined' && window.showMarkdownDebugRect !== undefined ? 
+        window.showMarkdownDebugRect : true);
     
-    // Add the rect as the first child
-    if (svgDocument.documentElement.firstChild) {
-      svgDocument.documentElement.insertBefore(rect, svgDocument.documentElement.firstChild);
-    } else {
-      svgDocument.documentElement.appendChild(rect);
+    if (showDebugRect) {
+      // Add debug rectangle as the first child that perfectly matches text bounds
+      const rect = svgDocument.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', '0');
+      rect.setAttribute('y', '0');
+      rect.setAttribute('width', width - 1); // Reduce width by 1px to ensure it doesn't cause extra space
+      rect.setAttribute('height', height);
+      rect.setAttribute('fill', 'none');
+      rect.setAttribute('stroke', 'red');
+      rect.setAttribute('stroke-width', '1');
+      rect.setAttribute('stroke-dasharray', '5,5');
+      rect.setAttribute('class', 'markdown-debug-rect');
+      
+      // Add the rect as the first child
+      if (svgDocument.documentElement.firstChild) {
+        svgDocument.documentElement.insertBefore(rect, svgDocument.documentElement.firstChild);
+      } else {
+        svgDocument.documentElement.appendChild(rect);
+      }
     }
   }
 }
@@ -444,9 +458,14 @@ export function extractSvgContent(svgString, targetX, targetY) {
   }
   
   // Create group with appropriate transforms to compensate for coordinate system
-  // Add debug dashed rectangle around the content
-  const debugRect = `<rect x="${minX}" y="${minY}" width="${vbWidth}" height="${vbHeight}" 
-                          fill="none" stroke="red" stroke-width="1" stroke-dasharray="5,5" />`;
+  // Determine if debug rect should be shown
+  const showDebugRect = typeof window !== 'undefined' ? window.showMarkdownDebugRect : true;
+  
+  // Add debug dashed rectangle around the content if enabled
+  const debugRect = showDebugRect ? 
+    `<rect x="${minX}" y="${minY}" width="${vbWidth}" height="${vbHeight}" 
+          fill="none" stroke="red" stroke-width="1" stroke-dasharray="5,5" class="markdown-debug-rect" />` : 
+    '';
   
   return `
 <g transform="translate(${targetX - minX}, ${targetY - minY})">
@@ -474,11 +493,16 @@ export function embedSvg(svgString, x, y) {
   const width = parseFloat(svgElement.getAttribute('width') || 0);
   const height = parseFloat(svgElement.getAttribute('height') || 0);
   
-  // Add debug rectangle
-  const debugRect = `<rect x="0" y="0" width="${width}" height="${height}" 
-                        fill="none" stroke="red" stroke-width="1" stroke-dasharray="5,5" />`;
+  // Determine if debug rect should be shown
+  const showDebugRect = typeof window !== 'undefined' ? window.showMarkdownDebugRect : true;
   
-  // Add the debug rectangle at the beginning of the SVG content
+  // Add debug rectangle if enabled
+  const debugRect = showDebugRect ? 
+    `<rect x="0" y="0" width="${width}" height="${height}" 
+          fill="none" stroke="red" stroke-width="1" stroke-dasharray="5,5" class="markdown-debug-rect" />` : 
+    '';
+  
+  // Add the debug rectangle at the beginning of the SVG content if enabled
   let modifiedSvg = svgString.replace(/<svg([^>]*)>/, 
                                       `<svg$1>${debugRect}`);
   

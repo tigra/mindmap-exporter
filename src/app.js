@@ -69,6 +69,7 @@ class MindmapApp {
     this.exportBtn = document.getElementById(this.options.exportBtnId);
     this.loadingIndicator = document.getElementById(this.options.loadingIndicator);
     this.boundingBoxCheckbox = document.getElementById('enable-bounding-box');
+    this.debugRectCheckbox = document.getElementById('enable-debug-rect');
     
     // YAML editor elements
     this.styleYamlEditor = document.getElementById('style-yaml-editor');
@@ -123,7 +124,7 @@ class MindmapApp {
 - interactivity
 ### Backend
 * not needed
-## **Testing**: This document analyzes potential issues with the [dom-to-svg](https://github.com/felixfbecker/dom-to-svg/) library that could cause text elements to be missing in SVG output. This analysis is relevant for understanding potential rendering issues in the markdown-to-svg integration in our mindmap application.
+## **Testing**: This document analyzes potential issues with the [dom-to-svg](https://github.com/felixfbecker/dom-to-svg/) library that could cause text elements to be missing in \`SVG\` output. This analysis is relevant for understanding potential rendering issues in the markdown-to-svg integration in our mindmap application.
 - Regression
 - Functional
 - Performance
@@ -174,10 +175,25 @@ class MindmapApp {
       });
     }
     
+    if (this.debugRectCheckbox) {
+      this.debugRectCheckbox.addEventListener('change', () => {
+        console.log("Debug rectangle checkbox changed:", this.debugRectCheckbox.checked);
+      });
+      
+      // Initialize the global flag
+      window.showMarkdownDebugRect = this.debugRectCheckbox.checked;
+    }
+    
     // Add event listener for apply settings button
     if (this.applySettingsBtn) {
       this.applySettingsBtn.addEventListener('click', () => {
         console.log('Apply Settings button clicked');
+        
+        // Apply debug rect setting
+        if (this.debugRectCheckbox) {
+          window.showMarkdownDebugRect = this.debugRectCheckbox.checked;
+          console.log('Applied debug rect setting:', window.showMarkdownDebugRect);
+        }
         
         // Note: Don't need to apply boundingBox here as handleGenerate() will take care of it
         // The checkbox state will be checked in handleGenerate before applying layout
