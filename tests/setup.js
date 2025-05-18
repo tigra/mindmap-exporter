@@ -63,7 +63,7 @@ function setupTestEnvironment() {
 setupTestEnvironment();
 
 // Mock text metrics utility to avoid DOM dependencies
-jest.mock('../utils/text-metrics.js', () => ({
+jest.mock('../src/utils/text-metrics.js', () => ({
   __esModule: true,
   default: {
     measureText: (text, fontFamily, fontSize, fontWeight) => {

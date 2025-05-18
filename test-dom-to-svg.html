@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dom-to-svg Text Issues Diagnostic</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-radius: 4px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #3b78e7;
+        }
+        .switch {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .switch input {
+            margin-right: 5px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        .result-container {
+            display: flex;
+            gap: 20px;
+        }
+        .result-panel {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .error {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>dom-to-svg Text Issues Diagnostic</h1>
+        <p>Test dom-to-svg's text rendering with various inputs to understand why text elements might be missing in SVG output.</p>
+        
+        <div class="controls">
+            <h3>Test Input</h3>
+            <textarea id="markdown-input" rows="10">## Test Heading
+
+This is a **bold text** with _italic formatting_.
+
+### Lists
+- Item 1
+- Item 2
+  - Nested item
+
+1. Numbered item
+2. Another numbered item
+
+```javascript
+function test() {
+  console.log("Hello World!");
+}
+```</textarea>
+            
+            <h3>Conversion Options</h3>
+            <div class="options">
+                <div class="switch">
+                    <input type="checkbox" id="debug-mode" checked>
+                    <label for="debug-mode">Debug Mode</label>
+                </div>
+                <div class="switch">
+                    <input type="checkbox" id="verbose-mode" checked>
+                    <label for="verbose-mode">Verbose Logging</label>
+                </div>
+                <div>
+                    <label for="render-delay">Render Delay (ms):</label>
+                    <input type="number" id="render-delay" value="500" min="0" max="5000" step="100">
+                </div>
+                <div>
+                    <label for="max-width">Max Width (px):</label>
+                    <input type="number" id="max-width" value="500" min="100" max="1000" step="50">
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <button id="convert-btn">Convert to SVG</button>
+                <button id="clear-console-btn">Clear Console</button>
+                <button id="run-preset-1">Test Basic Elements</button>
+                <button id="run-preset-2">Test Text Positioning</button>
+                <button id="run-preset-3">Test Nested Elements</button>
+            </div>
+        </div>
+        
+        <div class="result-container">
+            <div class="result-panel">
+                <h3>SVG Result</h3>
+                <div id="svg-container"></div>
+            </div>
+            <div class="result-panel">
+                <h3>SVG Code</h3>
+                <textarea id="svg-code" rows="15" readonly></textarea>
+            </div>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { marked } from './node_modules/marked/lib/marked.esm.js';
+        import DOMPurify from './node_modules/dompurify/dist/purify.es.js';
+        import { elementToSVG } from './node_modules/dom-to-svg/dist/dom-to-svg.esm.js';
+        import { markdownToSvg } from './src/utils/markdown-to-svg.js';
+        
+        // DOM Elements
+        const markdownInput = document.getElementById('markdown-input');
+        const debugMode = document.getElementById('debug-mode');
+        const verboseMode = document.getElementById('verbose-mode');
+        const renderDelay = document.getElementById('render-delay');
+        const maxWidth = document.getElementById('max-width');
+        const convertBtn = document.getElementById('convert-btn');
+        const clearConsoleBtn = document.getElementById('clear-console-btn');
+        const svgContainer = document.getElementById('svg-container');
+        const svgCode = document.getElementById('svg-code');
+        const resultDiv = document.getElementById('result');
+        const runPreset1 = document.getElementById('run-preset-1');
+        const runPreset2 = document.getElementById('run-preset-2');
+        const runPreset3 = document.getElementById('run-preset-3');
+        
+        // Test presets
+        const presets = {
+            basicElements: `# Basic Elements Test
+
+This is a paragraph with **bold text**, _italic text_, and ~~strikethrough~~.
+
+## Headings
+### Level 3
+#### Level 4
+
+- Bullet list item 1
+- Bullet list item 2
+
+1. Numbered list item 1
+2. Numbered list item 2
+
+> This is a blockquote with some text.
+
+This is a [link to example.com](https://example.com).
+
+\`\`\`
+This is a code block
+\`\`\`
+
+And this is \`inline code\`.
+`,
+            textPositioning: `# Text Positioning Test
+
+<div style="text-align: center;">
+This text should be center aligned.
+</div>
+
+<div style="text-align: right;">
+This text should be right aligned.
+</div>
+
+<div style="padding-left: 50px;">
+This text has a left padding of 50px.
+</div>
+
+<table>
+  <tr>
+    <td>Table cell 1</td>
+    <td>Table cell 2</td>
+  </tr>
+</table>
+
+<div style="display: flex; justify-content: space-between;">
+  <span>Left item</span>
+  <span>Right item</span>
+</div>
+`,
+            nestedElements: `# Nested Elements Test
+
+<div style="border: 1px solid blue; padding: 10px;">
+  <h3>Outer container</h3>
+  <div style="border: 1px solid red; padding: 10px; margin: 10px;">
+    <h4>Inner container</h4>
+    <div style="border: 1px solid green; padding: 10px; background-color: #f0f0f0;">
+      <p>This is text in a <strong>deeply nested</strong> element with <em>formatting</em>.</p>
+    </div>
+  </div>
+</div>
+
+<ul>
+  <li>
+    <div>
+      <p>Nested paragraph in list item</p>
+      <ul>
+        <li>Nested list item</li>
+      </ul>
+    </div>
+  </li>
+</ul>
+`
+        };
+        
+        // Handle conversion
+        async function convertToSvg() {
+            resultDiv.innerHTML = '<p>Converting to SVG...</p>';
+            
+            try {
+                // Get options
+                const options = {
+                    debug: debugMode.checked,
+                    verbose: verboseMode.checked,
+                    renderDelay: parseInt(renderDelay.value, 10)
+                };
+                
+                const maxWidthValue = parseInt(maxWidth.value, 10);
+                
+                // Clear previous containers if debug mode was enabled before
+                document.querySelectorAll('[data-dom-to-svg-container=true]').forEach(el => {
+                    if (el.parentNode) {
+                        el.parentNode.removeChild(el);
+                    }
+                });
+                
+                // Convert markdown to SVG
+                const markdown = markdownInput.value;
+                console.log('Converting markdown to SVG:', markdown);
+                
+                const result = await markdownToSvg(markdown, maxWidthValue, options);
+                
+                // Display SVG
+                svgContainer.innerHTML = result.svg;
+                svgCode.value = result.svg;
+                
+                // Show success message
+                resultDiv.innerHTML = `
+                    <p>Conversion successful!</p>
+                    <p>SVG Dimensions: ${result.dimensions.width}px × ${result.dimensions.height}px</p>
+                `;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Event listeners
+        convertBtn.addEventListener('click', convertToSvg);
+        
+        clearConsoleBtn.addEventListener('click', () => {
+            console.clear();
+        });
+        
+        runPreset1.addEventListener('click', () => {
+            markdownInput.value = presets.basicElements;
+            convertToSvg();
+        });
+        
+        runPreset2.addEventListener('click', () => {
+            markdownInput.value = presets.textPositioning;
+            convertToSvg();
+        });
+        
+        runPreset3.addEventListener('click', () => {
+            markdownInput.value = presets.nestedElements;
+            convertToSvg();
+        });
+    </script>
+</body>
+</html>

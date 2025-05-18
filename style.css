@@ -201,6 +201,21 @@ select {
     font-size: 16px;
 }
 
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
+
 .export-format {
     display: flex;
     align-items: center;

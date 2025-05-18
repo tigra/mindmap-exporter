@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Integration Methods Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .result-box {
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3b78e7;
+        }
+        code {
+            display: block;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SVG Integration Methods Test</h1>
+        <p>This page demonstrates the two methods for integrating Markdown-to-SVG content in the mindmap renderer:</p>
+        
+        <div class="test-section">
+            <h2>MindmapRenderer Configuration</h2>
+            <p>The MindmapRenderer class has a static property that controls which method is used for SVG integration:</p>
+            <code>static SVG_EMBEDDING_METHOD = 'extract'; // Options: 'embed' or 'extract'</code>
+            
+            <h3>Methods:</h3>
+            <ul>
+                <li><strong>extract</strong>: Extracts inner content from the SVG and applies coordinate transformations</li>
+                <li><strong>embed</strong>: Keeps the entire SVG intact and adds positioning attributes</li>
+            </ul>
+            
+            <p>This test simulates what happens when you switch between these methods.</p>
+        </div>
+
+        <div class="test-section">
+            <h2>Test with Sample Markdown</h2>
+            <button id="run-test-btn">Run Test</button>
+            
+            <div class="result-container">
+                <div class="result-box">
+                    <h3>Extract Method (Current)</h3>
+                    <div id="extract-output"></div>
+                </div>
+                <div class="result-box">
+                    <h3>Embed Method (Original)</h3>
+                    <div id="embed-output"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { markdownToSvg, extractSvgContent, embedSvg } from './src/utils/markdown-to-svg.js';
+        
+        const runTestBtn = document.getElementById('run-test-btn');
+        const extractOutput = document.getElementById('extract-output');
+        const embedOutput = document.getElementById('embed-output');
+        
+        // Test markdown content
+        const markdown = `
+# SVG Integration Test
+## Testing both methods:
+
+* The extract method uses **coordinate transformations**
+* The embed method uses _nested SVGs_
+
+\`\`\`javascript
+// Sample code
+function test() {
+  console.log("Hello from SVG!");
+}
+\`\`\`
+        `;
+        
+        async function runTest() {
+            try {
+                // Show loading
+                extractOutput.innerHTML = '<p>Loading...</p>';
+                embedOutput.innerHTML = '<p>Loading...</p>';
+                
+                // Convert markdown to SVG
+                const result = await markdownToSvg(markdown, 400);
+                const { width, height } = result.dimensions;
+                
+                // Common positioning
+                const targetX = 20;
+                const targetY = 20;
+                
+                // Create extract method output
+                const extractedContent = extractSvgContent(result.svg, targetX, targetY);
+                const extractContainer = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="${width + 40}" height="${height + 40}" viewBox="0 0 ${width + 40} ${height + 40}">
+                    <rect width="100%" height="100%" fill="#f9f9f9" />
+                    <rect x="${targetX-5}" y="${targetY-5}" width="${width+10}" height="${height+10}" 
+                          fill="transparent" stroke="#4285F4" stroke-width="2" stroke-dasharray="5,5" />
+                    ${extractedContent}
+                </svg>`;
+                
+                // Create embed method output
+                const embeddedSvg = embedSvg(result.svg, targetX, targetY);
+                const embedContainer = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="${width + 40}" height="${height + 40}" viewBox="0 0 ${width + 40} ${height + 40}">
+                    <rect width="100%" height="100%" fill="#f9f9f9" />
+                    <rect x="${targetX-5}" y="${targetY-5}" width="${width+10}" height="${height+10}" 
+                          fill="transparent" stroke="#4285F4" stroke-width="2" stroke-dasharray="5,5" />
+                    ${embeddedSvg}
+                </svg>`;
+                
+                // Set outputs
+                extractOutput.innerHTML = extractContainer;
+                embedOutput.innerHTML = embedContainer;
+                
+            } catch (error) {
+                console.error('Error running test:', error);
+                extractOutput.innerHTML = `<p>Error: ${error.message}</p>`;
+                embedOutput.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Event listeners
+        runTestBtn.addEventListener('click', runTest);
+        
+        // Auto-run on load
+        document.addEventListener('DOMContentLoaded', runTest);
+    </script>
+</body>
+</html>

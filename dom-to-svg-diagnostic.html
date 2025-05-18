@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dom-to-svg Diagnostic Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #3b78e7;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        .result-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .result-box {
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            height: 300px;
+            overflow: auto;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .note {
+            background-color: #fff8e1;
+            padding: 10px;
+            border-left: 4px solid #ffb300;
+            margin: 10px 0;
+        }
+        /* Animation to make issues more apparent */
+        @keyframes wiggle {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-1px); }
+            75% { transform: translateX(1px); }
+        }
+        .wiggle {
+            animation: wiggle 0.3s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>dom-to-svg Diagnostic Tool</h1>
+        <p>This tool helps diagnose issues with dom-to-svg text rendering by showing what the library sees and what it produces.</p>
+        
+        <div class="note">
+            <strong>Important:</strong> Check browser console for detailed diagnostic logs that show what dom-to-svg is processing.
+        </div>
+        
+        <div class="section">
+            <h2>Input HTML</h2>
+            <textarea id="html-input">
+<div style="padding: 10px; font-family: Arial, sans-serif;">
+    <h3>Test Heading</h3>
+    <p>This is a <strong>paragraph</strong> with some <em>formatted</em> text.</p>
+    <ul>
+        <li>List item 1</li>
+        <li>List item 2</li>
+    </ul>
+</div>
+            </textarea>
+            <div class="controls">
+                <button id="convert-btn">Convert to SVG</button>
+                <button id="reset-btn">Reset to Default</button>
+                <button id="clear-console-btn">Clear Console</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Conversion Process</h2>
+            
+            <div class="result-section">
+                <div class="result-box">
+                    <h3>Rendered HTML</h3>
+                    <div id="html-preview"></div>
+                </div>
+                
+                <div class="result-box">
+                    <h3>SVG Output</h3>
+                    <div id="svg-preview"></div>
+                </div>
+            </div>
+            
+            <h3>SVG Code</h3>
+            <textarea id="svg-code" readonly></textarea>
+        </div>
+        
+        <div class="section">
+            <h2>Advanced Tests</h2>
+            <div class="controls">
+                <button id="test-text-positions">Test Text Positions</button>
+                <button id="test-nested-elements">Test Nested Elements</button>
+                <button id="test-dynamic-content">Test Dynamic Content</button>
+                <button id="test-offscreen-elements">Test Offscreen Elements</button>
+            </div>
+            <div id="advanced-test-result"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { marked } from './node_modules/marked/lib/marked.esm.js'; 
+        import DOMPurify from './node_modules/dompurify/dist/purify.es.js';
+        import { elementToSVG } from './node_modules/dom-to-svg/dist/dom-to-svg.esm.js';
+        import { 
+            diagnoseDomNode, 
+            traceDomToSvgProcess, 
+            diagnoseSvgOutput 
+        } from './src/utils/dom-svg-diagnostics.js';
+        
+        // DOM Elements
+        const htmlInput = document.getElementById('html-input');
+        const htmlPreview = document.getElementById('html-preview');
+        const svgPreview = document.getElementById('svg-preview');
+        const svgCode = document.getElementById('svg-code');
+        const convertBtn = document.getElementById('convert-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const clearConsoleBtn = document.getElementById('clear-console-btn');
+        const testTextPositionsBtn = document.getElementById('test-text-positions');
+        const testNestedElementsBtn = document.getElementById('test-nested-elements');
+        const testDynamicContentBtn = document.getElementById('test-dynamic-content');
+        const testOffscreenElementsBtn = document.getElementById('test-offscreen-elements');
+        const advancedTestResult = document.getElementById('advanced-test-result');
+        
+        // Default HTML
+        const defaultHtml = htmlInput.value;
+        
+        // Initialize
+        function init() {
+            updateHtmlPreview();
+            setupEventListeners();
+        }
+        
+        // Update HTML preview
+        function updateHtmlPreview() {
+            // Sanitize HTML for security
+            const cleanHtml = DOMPurify.sanitize(htmlInput.value.trim());
+            htmlPreview.innerHTML = cleanHtml;
+        }
+        
+        // Convert HTML to SVG
+        async function convertToSvg() {
+            console.clear();
+            console.log('%c DOM-to-SVG Diagnostic Run ', 'background: #4285F4; color: white; font-size: 14px; padding: 5px;');
+            
+            try {
+                updateHtmlPreview();
+                
+                // First diagnostic - what we're sending to dom-to-svg
+                console.log('Analyzing element before conversion:');
+                traceDomToSvgProcess(htmlPreview);
+                
+                // Convert to SVG
+                console.log('Converting element to SVG with dom-to-svg...');
+                const svgDocument = elementToSVG(htmlPreview);
+                
+                // Second diagnostic - what dom-to-svg produced
+                console.log('Analyzing SVG output:');
+                diagnoseSvgOutput(svgDocument, htmlPreview);
+                
+                // Display results
+                const serializer = new XMLSerializer();
+                const svgString = serializer.serializeToString(svgDocument);
+                
+                svgCode.value = svgString;
+                svgPreview.innerHTML = svgString;
+                
+                console.log('Conversion complete.');
+            } catch (error) {
+                console.error('Error converting to SVG:', error);
+                svgPreview.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                svgCode.value = `Error: ${error.message}`;
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            convertBtn.addEventListener('click', convertToSvg);
+            
+            resetBtn.addEventListener('click', () => {
+                htmlInput.value = defaultHtml;
+                updateHtmlPreview();
+                svgPreview.innerHTML = '';
+                svgCode.value = '';
+            });
+            
+            clearConsoleBtn.addEventListener('click', () => {
+                console.clear();
+            });
+            
+            htmlInput.addEventListener('input', updateHtmlPreview);
+            
+            testTextPositionsBtn.addEventListener('click', runTextPositionsTest);
+            testNestedElementsBtn.addEventListener('click', runNestedElementsTest);
+            testDynamicContentBtn.addEventListener('click', runDynamicContentTest);
+            testOffscreenElementsBtn.addEventListener('click', runOffscreenElementsTest);
+        }
+        
+        // Test functions
+        function runTextPositionsTest() {
+            htmlInput.value = `<div style="padding: 10px; font-family: Arial, sans-serif;">
+    <h3 style="text-align: center;">Centered Heading</h3>
+    <p style="text-align: right;">Right-aligned paragraph</p>
+    <p style="text-align: justify;">This is a justified paragraph with a lot of text to demonstrate how justified text might be handled by the dom-to-svg library. Will it preserve the spacing and alignment?</p>
+    <div style="display: flex;">
+        <span style="flex: 1;">Flex item 1</span>
+        <span style="flex: 1;">Flex item 2</span>
+    </div>
+</div>`;
+            updateHtmlPreview();
+            advancedTestResult.innerHTML = '<p>Testing various text positions and alignments. See preview above.</p>';
+        }
+        
+        function runNestedElementsTest() {
+            htmlInput.value = `<div style="padding: 10px; font-family: Arial, sans-serif;">
+    <div style="border: 1px solid #ccc; padding: 10px; margin: 10px;">
+        <h4>Outer Container</h4>
+        <div style="border: 1px solid #999; padding: 10px; margin: 5px;">
+            <h5>Middle Container</h5>
+            <div style="border: 1px solid #666; padding: 10px; background: #eee;">
+                <p>This text is in a <strong>deeply nested</strong> container.</p>
+            </div>
+        </div>
+    </div>
+</div>`;
+            updateHtmlPreview();
+            advancedTestResult.innerHTML = '<p>Testing text in deeply nested elements. See preview above.</p>';
+        }
+        
+        function runDynamicContentTest() {
+            htmlInput.value = `<div style="padding: 10px; font-family: Arial, sans-serif;">
+    <div id="dynamic-container">
+        <p>This text is here from the beginning</p>
+        <!-- Dynamic content will be added here -->
+    </div>
+</div>`;
+            updateHtmlPreview();
+            
+            // Wait for the preview to update, then add dynamic content
+            setTimeout(() => {
+                const dynamicContainer = document.querySelector('#dynamic-container');
+                if (dynamicContainer) {
+                    const dynamicPara = document.createElement('p');
+                    dynamicPara.innerHTML = 'This text was added <strong>dynamically</strong> after initial render.';
+                    dynamicPara.style.color = 'red';
+                    dynamicContainer.appendChild(dynamicPara);
+                    
+                    advancedTestResult.innerHTML = '<p>Dynamic content added! Now try converting to SVG to see if it appears.</p>';
+                }
+            }, 100);
+        }
+        
+        function runOffscreenElementsTest() {
+            htmlInput.value = `<div style="padding: 10px; font-family: Arial, sans-serif; position: relative;">
+    <div style="position: relative; left: 0; top: 0;">
+        <p>This text is in the normal flow.</p>
+    </div>
+    <div style="position: absolute; left: -9999px; top: 0;">
+        <p>This text is positioned offscreen with negative coordinates.</p>
+    </div>
+    <div style="position: absolute; left: 0; top: -9999px;">
+        <p>This text is also offscreen but in a different direction.</p>
+    </div>
+</div>`;
+            updateHtmlPreview();
+            advancedTestResult.innerHTML = '<p>Testing offscreen positioned elements. The preview only shows "in the normal flow" text, but there are two more paragraphs positioned offscreen.</p>';
+        }
+        
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>

@@ -1,9 +1,9 @@
 // src/model/node.js - Enhancement for configuration overrides
 
 /**
- * Node class for the mindmap
+ * MindmapNode class for the mindmap
  */
-class Node {
+class MindmapNode {
   /**
    * Create a new Node
    * @param {string} text - The text content of the node
@@ -167,15 +167,30 @@ class Node {
    * @deprecated Use _generateDeterministicId() instead
    */
   static generateUniqueId() {
-    if (!Node.lastId) {
-      Node.lastId = 0;
+    if (!MindmapNode.lastId) {
+      MindmapNode.lastId = 0;
     }
-    return ++Node.lastId;
+    return ++MindmapNode.lastId;
   }
 
   addChild(childNode) {
     this.children.push(childNode);
     childNode.setParent(this);
+  }
+  
+  /**
+   * Remove a child node from this node's children
+   * @param {MindmapNode} childNode - The child node to remove
+   * @returns {boolean} True if the child was found and removed, false otherwise
+   */
+  removeChild(childNode) {
+    const index = this.children.indexOf(childNode);
+    if (index !== -1) {
+      this.children.splice(index, 1);
+      childNode.parent = null; // Clear parent reference
+      return true;
+    }
+    return false;
   }
 
   hasChildren() {
@@ -261,8 +276,8 @@ class Node {
 
 // For backward compatibility, export to window object if in browser
 if (typeof window !== 'undefined') {
-  window.Node = Node;
+  window.MindmapNode = MindmapNode;
 }
 
 // Also export as module for modern usage
-export default Node;
+export default MindmapNode;

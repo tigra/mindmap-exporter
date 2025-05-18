@@ -2,7 +2,8 @@
 
 import ConnectionPoint from './connection-point.js';
 import textMetrics from '../utils/text-metrics.js';
-import { markdownToSvg } from '../utils/markdown-to-svg.js';
+import { markdownToSvg, markdownToSvgSync } from '../utils/markdown-to-svg.js';
+
 
 /**
  * Base Layout class that handles common functionality
@@ -15,10 +16,14 @@ class Layout {
    * @return {Object} The calculated width and height
    */
   getNodeSize(text, levelStyle) {
+    // Check if markdown is enabled
+//    const useMarkdown = levelStyle.enableMarkdown || false;
+    const useMarkdown = true;
+
     // Get text wrapping configuration
     const wrapConfig = levelStyle.getTextWrapConfig();
-    const textWrap = wrapConfig.textWrap;
     const maxWidth = wrapConfig.maxWidth;
+    const textWrap = wrapConfig.textWrap;
     const maxWordLength = wrapConfig.maxWordLength;
     
     // Check if markdown is enabled for this level
@@ -26,58 +31,40 @@ class Layout {
     let textDimensions;
 
     if (useMarkdown) {
-      // Use the exact same markdown-to-svg method as the renderer for consistency
+      // For markdown content, use the markdownToSvgSync function for immediate sizing
       try {
-        // Convert markdown to SVG to get precise dimensions
-        const options = {
-          fontFamily: levelStyle.fontFamily,
-          fontSize: levelStyle.fontSize,
-          fontWeight: levelStyle.fontWeight,
-          color: levelStyle.textColor || '#333',
-          textAlign: 'left',
-          lineHeight: 1.5,
-          padding: 2 // Minimal padding to match renderer
-        };
+        // Get style properties
+        const fontFamily = levelStyle.fontFamily;
+        const fontSize = levelStyle.fontSize;
+        const fontWeight = levelStyle.fontWeight;
+        const textColor = levelStyle.textColor;
         
-        const calculatedWidth = maxWidth - (levelStyle.horizontalPadding * 2);
-        const result = markdownToSvg(text, calculatedWidth, options);
+        // Pass style properties to the markdownToSvgSync function
+        const svgData = markdownToSvgSync(text, maxWidth, {
+          debug: false, 
+          verbose: false,
+          fontFamily: fontFamily,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          textColor: textColor
+        });
         
-        if (result && result.dimensions) {
-          // Use the exact dimensions from markdown-to-svg
-          textDimensions = {
-            width: result.dimensions.width,
-            height: result.dimensions.height
-          };
-          
-          // Add a small buffer for rendering accuracy (10%)
-          textDimensions.height *= 1.1;
+        if (svgData && svgData.dimensions) {
+          textDimensions = svgData.dimensions;
         } else {
-          // Fallback if markdown-to-svg fails
-          textDimensions = textMetrics.wrapText(
-            text,
-            maxWidth,
-            levelStyle.fontFamily,
-            levelStyle.fontSize,
-            levelStyle.fontWeight,
-            textWrap,
-            maxWordLength
-          );
+          throw new Error(`markdownToSvg returned invalid dimensions: ${svgData}`);
         }
       } catch (error) {
-        console.warn('Error calculating markdown size in layout:', error);
-        // Fallback to regular text wrapping
-        textDimensions = textMetrics.wrapText(
-          text,
-          maxWidth,
-          levelStyle.fontFamily,
-          levelStyle.fontSize,
-          levelStyle.fontWeight,
-          textWrap,
-          maxWordLength
-        );
+        console.error('Error using markdownToSvg:', error);
+        
+        // Return simple fallback dimensions on error
+        return {
+          width: 200, 
+          height: 100
+        };
       }
     } else {
-      // Regular text handling
+      // Regular text measurement for non-markdown content
       if (textWrap === 'none') {
         // Simple case - just measure without wrapping
         textDimensions = textMetrics.measureText(
@@ -100,9 +87,7 @@ class Layout {
       }
     }
 
-    // Ensure minimum dimensions for very short content
-    const minHeight = Math.max(levelStyle.fontSize * 2, 30);
-    
+    // Apply padding to the calculated dimensions
     return {
       width: textDimensions.width + (levelStyle.horizontalPadding * 2),
       height: Math.max(textDimensions.height + (levelStyle.verticalPadding * 2), minHeight)
@@ -111,7 +96,7 @@ class Layout {
 
   /**
    * Adjust position of node and all its children recursively
-   * @param {Node} node - The node to adjust
+   * @param {MindmapNode} node - The node to adjust
    * @param {number} deltaX - Horizontal adjustment
    * @param {number} deltaY - Vertical adjustment
    */
@@ -131,7 +116,7 @@ class Layout {
    * Apply layout to a node and its children.
    * x and y are only the initial position. The position may change after laying out children recursively
    * and finding out their positions/bounding boxes.
-   * @param {Node} node - The node to layout
+   * @param {MindmapNode} node - The node to layout
    * @param {number} x - The x coordinate
    * @param {number} y - The y coordinate
    * @param {Object} style - The style to apply
@@ -143,9 +128,9 @@ class Layout {
 
   /**
    * Get the connection point for a parent node connecting to its children
-   * @param {Node} node - The parent node
+   * @param {MindmapNode} node - The parent node
    * @param {Object} levelStyle - The style for this node's level
-   * @param {Node} childNode - The specific child node being connected to (optional)
+   * @param {MindmapNode} childNode - The specific child node being connected to (optional)
    * @return {ConnectionPoint} The connection point
    */
   getParentConnectionPoint(node, levelStyle, childNode = null) {
@@ -154,8 +139,8 @@ class Layout {
   
   /**
    * Calculate horizontal position for parent connection points when distributed
-   * @param {Node} node - The parent node
-   * @param {Node} childNode - The child node
+   * @param {MindmapNode} node - The parent node
+   * @param {MindmapNode} childNode - The child node
    * @param {string} connectionPointsType - Type of distribution ('single', 'distributedRelativeToParentSize', 'distributeEvenly')
    * @param {number} widthPortion - Portion of parent width to use for connections (0.0-1.0), default 0.8
    * @returns {number} The x-coordinate for the connection point
@@ -216,7 +201,7 @@ class Layout {
 
   /**
    * Get the connection point for a child node connecting to its parent
-   * @param {Node} node - The child node
+   * @param {MindmapNode} node - The child node
    * @param {Object} levelStyle - The style for this node's level
    * @return {ConnectionPoint} The connection point
    */

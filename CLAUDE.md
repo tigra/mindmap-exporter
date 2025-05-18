@@ -9,6 +9,8 @@ Browser-based mindmap exporter that converts Markdown to visual mindmaps (SVG/PN
 - Open `index.html` directly in a browser
 
 ## Code Style Guidelines
+- **Stubs and Fallbacks Discouraged** - don't create fallbacks unless explicitly asked for. When something is broken, fix it from the first principles, not by stub or fallback.
+- **Normal imports**: Imports at start of the file, no ES imports. You have Vite.
 - **Formatting**: 2-space indentation, ES6 module syntax
 - **Naming**: Classes in PascalCase, methods/variables in camelCase
 - **Documentation**: Use JSDoc for classes/methods, add inline comments for complex logic

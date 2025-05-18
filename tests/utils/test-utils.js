@@ -3,11 +3,11 @@
  */
 
 // Import required modules
-import MindmapModel from '../../model/mindmap-model.js';
-import StyleManager from '../../style/style-manager.js';
-import MindmapStylePresets from '../../style/style-presets.js';
-import MindmapRenderer from '../../renderer/mindmap-renderer.js';
-import MindmapController from '../../controller/mindmap-controller.js';
+import MindmapModel from '../../src/model/mindmap-model.js';
+import StyleManager from '../../src/style/style-manager.js';
+import MindmapStylePresets from '../../src/style/style-presets.js';
+import MindmapRenderer from '../../src/renderer/mindmap-renderer.js';
+import MindmapController from '../../src/controller/mindmap-controller.js';
 
 // Note: DOM setup is now handled directly in test files before module imports
 

@@ -1,6 +1,6 @@
 // src/model/mindmap-model.js
 
-import Node from './node.js';
+import MindmapNode from './node.js';
 // We'll use dynamic import for marked to avoid issues with SSR or initial load
 
 /**
@@ -11,37 +11,33 @@ class MindmapModel {
    * Create a new MindmapModel
    */
   constructor() {
-    this.rootNode = new Node();
+    this.rootNode = new MindmapNode();
     this.nodeMap = new Map(); // Map of node ID to node instance
   }
 
   /**
    * Parse markdown text into a mindmap structure
    * @param {string} markdown - The markdown text to parse
-   * @param {boolean} useMarked - Whether to use the marked library (default: true)
    * @param {boolean} debug - Whether to output debug information (default: false)
-   * @return {Promise<Node|null>} The root node of the mindmap, or null if no valid nodes were found
+   * @return {Promise<MindmapNode|null>} The root node of the mindmap, or null if no valid nodes were found
    */
-  async parseFromMarkdown(markdown, useMarked = true, debug = false) {
+  async parseFromMarkdown(markdown, debug = false) {
     try {
-      if (useMarked) {
-        return await this.parseWithMarked(markdown, debug);
-      }
+      return await this._parseMarkdown(markdown, debug);
     } catch (error) {
-      console.warn('Error parsing with marked, falling back to traditional parser:', error);
+      console.error('Error parsing markdown:', error);
+      throw error;
     }
-    
-    // Fall back to traditional parser if marked fails or is disabled
-    return this.parseTraditional(markdown);
   }
   
   /**
    * Parse markdown using the marked library
+   * @private
    * @param {string} markdown - The markdown text to parse
    * @param {boolean} debug - Whether to output debug information
-   * @return {Node|null} The root node of the mindmap
+   * @return {MindmapNode|null} The root node of the mindmap
    */
-  async parseWithMarked(markdown, debug = false) {
+  async _parseMarkdown(markdown, debug = false) {
     try {
       if (!markdown || typeof markdown !== 'string') {
         console.warn('Invalid markdown input:', markdown);
@@ -72,7 +68,7 @@ class MindmapModel {
       }
       
       // Process the tokens into a node structure
-      const root = new Node('', 0);
+      const root = new MindmapNode('', 0);
       this._processTokens(tokens, root);
       
       // Set the root node
@@ -171,7 +167,7 @@ class MindmapModel {
   /**
    * Helper method to debug the node tree
    * @private
-   * @param {Node} node - The node to debug
+   * @param {MindmapNode} node - The node to debug
    * @param {string} indent - The indentation to use
    */
   _debugTree(node, indent = '') {
@@ -191,19 +187,56 @@ class MindmapModel {
    * Process marked tokens and build the node tree
    * @private
    * @param {Array} tokens - The tokens from marked lexer
-   * @param {Node} parentNode - The parent node to attach to
+   * @param {MindmapNode} parentNode - The parent node to attach to
    * @param {number} baseLevel - The base level for hierarchy
    */
   _processTokens(tokens, parentNode, baseLevel = 0) {
     let currentNode = parentNode;
     let currentLevel = baseLevel;
+    let lastParagraphNode = null; // Keep track of the last paragraph node
     
     if (!tokens || !Array.isArray(tokens)) {
       console.warn('Invalid tokens received in _processTokens:', tokens);
       return;
     }
     
-    for (const token of tokens) {
+    // Pre-process the tokens to identify paragraphs and their following lists
+    const paragraphListPairs = [];
+    
+    for (let i = 0; i < tokens.length; i++) {
+      if (tokens[i] && tokens[i].type === 'paragraph') {
+        // Look for a list token immediately following this paragraph
+        let listToken = null;
+        
+        // Look ahead for the next list token
+        for (let j = i + 1; j < tokens.length; j++) {
+          // Skip any space, html, or other tokens until we find a list or another paragraph
+          if (!tokens[j]) continue;
+          
+          if (tokens[j].type === 'list') {
+            listToken = tokens[j];
+            // Mark this list token to skip later
+            tokens[j]._processed = true;
+            break;
+          } else if (tokens[j].type === 'paragraph' || tokens[j].type === 'heading') {
+            // If we find another paragraph or heading, stop looking
+            break;
+          }
+        }
+        
+        if (listToken) {
+          // Remember this paragraph-list pair for later processing
+          paragraphListPairs.push({
+            paragraph: tokens[i],
+            list: listToken
+          });
+        }
+      }
+    }
+    
+    // Now process all tokens normally
+    for (let tokenIndex = 0; tokenIndex < tokens.length; tokenIndex++) {
+      const token = tokens[tokenIndex];
       if (!token) continue;
       
       if (token.type === 'heading') {
@@ -217,7 +250,7 @@ class MindmapModel {
         }
         
         // Create a new node for this heading
-        const node = new Node(text, level, level >= 4);
+        const node = new MindmapNode(text, level, level >= 4);
         currentNode.addChild(node);
         
         // Add to node map
@@ -226,17 +259,47 @@ class MindmapModel {
         // Update current node
         currentNode = node;
         currentLevel = level;
-      } else if (token.type === 'list') {
-        // Process list items
+        
+        // Reset last paragraph reference when heading changes
+        lastParagraphNode = null;
+      } else if (token.type === 'list' && !token._processed) {
+        // Process list items only if not already processed as part of a paragraph
         if (token.items && Array.isArray(token.items)) {
           this._processListItems(token.items, currentNode, currentLevel + 1);
         } else {
           console.warn('List token without valid items:', token);
         }
-      } else if (token.type === 'paragraph' && parentNode === currentNode) {
-        // If we have a paragraph at the top level, treat it as the root node text
+      } else if (token.type === 'paragraph') {
+        // For paragraphs at the root level, treat them as the root node text
         if (parentNode === currentNode && parentNode.text === '') {
           parentNode.text = token.text || '';
+        } else {
+          // Create a new node for this paragraph
+          const paragraphNode = new MindmapNode(token.text || '', currentLevel + 1, (currentLevel + 1) >= 4);
+          currentNode.addChild(paragraphNode);
+          
+          // Keep track of this paragraph node
+          lastParagraphNode = paragraphNode;
+          
+          // Add to node map
+          this.nodeMap.set(paragraphNode.id, paragraphNode);
+          
+          // If the paragraph has any nested list tokens, process them
+          if (token.tokens) {
+            const listTokens = token.tokens.filter(t => t.type === 'list');
+            for (const listToken of listTokens) {
+              if (listToken.items && Array.isArray(listToken.items)) {
+                this._processListItems(listToken.items, paragraphNode, paragraphNode.level + 1);
+              }
+            }
+          }
+          
+          // Check if this paragraph has an associated list in our pre-processed pairs
+          const pair = paragraphListPairs.find(p => p.paragraph === token);
+          if (pair && pair.list && pair.list.items) {
+            // Process the list items as children of this paragraph
+            this._processListItems(pair.list.items, paragraphNode, paragraphNode.level + 1);
+          }
         }
       } else if (token.type === 'text' && parentNode === currentNode && parentNode.text === '') {
         // Handle top-level text tokens too
@@ -247,7 +310,7 @@ class MindmapModel {
       }
       
       // Process any raw tokens if available (some marked versions provide these)
-      if (token.items && !token.type && Array.isArray(token.items)) {
+      if (token.items && !token.type && Array.isArray(token.items) && !token._processed) {
         // This might be an unmarked list in some marked versions
         this._processListItems(token.items, currentNode, currentLevel + 1);
       }
@@ -258,7 +321,7 @@ class MindmapModel {
    * Process list items into nodes
    * @private
    * @param {Array} items - The list items from marked
-   * @param {Node} parentNode - The parent node to attach to
+   * @param {MindmapNode} parentNode - The parent node to attach to
    * @param {number} level - The level for the list items
    */
   _processListItems(items, parentNode, level) {
@@ -322,7 +385,7 @@ class MindmapModel {
       }
       
       // Create a new node for this list item
-      const node = new Node(text, level, level >= 4);
+      const node = new MindmapNode(text, level, level >= 4);
       parentNode.addChild(node);
       
       // Add to node map
@@ -346,123 +409,6 @@ class MindmapModel {
     }
   }
   
-  /**
-   * Parse markdown using the traditional parser (for backward compatibility)
-   * @param {string} markdown - The markdown text to parse
-   * @return {Node|null} The root node of the mindmap
-   */
-  parseTraditional(markdown) {
-    const lines = markdown.split('\n');
-    const root = new Node('', 0);
-    const stack = [root];
-    let currentHeadingLevel = 0;
-    
-    // Track bullet indentation levels - map from indent size to level
-    const indentToLevelMap = new Map();
-    // Store the previous line's indentation for bullet points
-    let prevIndent = 0;
-    
-    for (let i = 0; i < lines.length; i++) {
-      const rawLine = lines[i];
-      const line = rawLine.trim();
-      if (!line) continue;
-
-      let level = 0;
-      let text = '';
-
-      // Check if it's a heading
-      if (line.startsWith('#')) {
-        // Reset bullet indentation tracking when we hit a new heading
-        indentToLevelMap.clear();
-        prevIndent = 0;
-        
-        // Count # characters to determine level
-        for (let j = 0; j < line.length; j++) {
-          if (line[j] === '#') level++;
-          else break;
-        }
-
-        // Extract text
-        text = line.substring(level).trim();
-        currentHeadingLevel = level;
-      }
-      // Check if it's a bullet point
-      else if (line.startsWith('-') || line.startsWith('*')) {
-        // Calculate actual indentation
-        const indentLength = rawLine.length - rawLine.trimLeft().length;
-        
-        // First bullet after a heading starts at heading level + 1
-        if (indentToLevelMap.size === 0) {
-          // First bullet point after a heading
-          level = currentHeadingLevel + 1;
-          indentToLevelMap.set(indentLength, level);
-        } else if (indentLength > prevIndent) {
-          // This bullet is more indented than the previous one - it's a child
-          level = indentToLevelMap.get(prevIndent) + 1;
-          indentToLevelMap.set(indentLength, level);
-        } else if (indentLength === prevIndent) {
-          // Same indentation as previous - same level
-          level = indentToLevelMap.get(indentLength);
-        } else {
-          // Less indented - need to find the matching indent level
-          // or assign a new level if this is a new indentation amount
-          if (indentToLevelMap.has(indentLength)) {
-            level = indentToLevelMap.get(indentLength);
-          } else {
-            // If we don't have this exact indentation yet, find the closest smaller indent
-            const smallerIndents = Array.from(indentToLevelMap.keys())
-              .filter(indent => indent < indentLength)
-              .sort((a, b) => b - a); // Sort descending
-              
-            if (smallerIndents.length > 0) {
-              // Use one level deeper than the closest smaller indent
-              level = indentToLevelMap.get(smallerIndents[0]) + 1;
-            } else {
-              // Fallback if no smaller indent found
-              level = currentHeadingLevel + 1;
-            }
-            indentToLevelMap.set(indentLength, level);
-          }
-        }
-        
-        // Update prevIndent for next iteration
-        prevIndent = indentLength;
-
-        // Extract text
-        text = line.substring(1).trim(); // Remove the '-' character
-      } else {
-        continue; // Skip lines that aren't headings or bullet points
-      }
-
-      // Create node and auto-collapse if level >= 4
-      const collapsed = level >= 4;
-      const node = new Node(text, level, collapsed);
-
-      // Find the parent node
-      while (stack.length > 1 && stack[stack.length - 1].level >= level) {
-        stack.pop();
-      }
-
-      // Add to parent
-      stack[stack.length - 1].addChild(node);
-
-      // Add to node map
-      this.nodeMap.set(node.id, node);
-
-      // Add to stack
-      stack.push(node);
-    }
-
-    this.rootNode = root.hasChildren() ? root.children[0] : null;
-    
-    // Once the tree is built, regenerate all IDs to ensure they're deterministic
-    // based on the final tree structure
-    if (this.rootNode) {
-      this.regenerateAllIds();
-    }
-    
-    return this.rootNode;
-  }
   
   /**
    * Regenerate deterministic IDs for all nodes in the tree
@@ -484,7 +430,7 @@ class MindmapModel {
   /**
    * Recursively rebuild the node map with the current node IDs
    * @private
-   * @param {Node} node - The node to start from
+   * @param {MindmapNode} node - The node to start from
    */
   _rebuildNodeMap(node) {
     if (!node) return;
@@ -500,7 +446,7 @@ class MindmapModel {
 
   /**
    * Get the root node of the mindmap
-   * @return {Node|null} The root node
+   * @return {MindmapNode|null} The root node
    */
   getRoot() {
     return this.rootNode;
@@ -509,7 +455,7 @@ class MindmapModel {
   /**
    * Find a node by its ID
    * @param {string} id - The ID of the node to find
-   * @return {Node|null} The node, or null if not found
+   * @return {MindmapNode|null} The node, or null if not found
    */
   findNodeById(id) {
     return this.nodeMap.get(id) || null;
@@ -518,7 +464,7 @@ class MindmapModel {
   /**
    * Find a node by its text content (first match)
    * @param {string} text - The text content to search for
-   * @return {Node|null} The node, or null if not found
+   * @return {MindmapNode|null} The node, or null if not found
    */
   findNodeByText(text) {
     for (const node of this.nodeMap.values()) {
@@ -564,12 +510,12 @@ class MindmapModel {
   }
 }
 
-// For backward compatibility, keep the existing parsing function as a bridge
+// Make the mindmap model and parsing function available globally
 if (typeof window !== 'undefined') {
   // Create a singleton instance for global use
   window.mindmapModel = new MindmapModel();
 
-  // Add backward-compatible parsing function
+  // Add global parsing function
   window.parseMindmap = async function(markdown) {
     return await window.mindmapModel.parseFromMarkdown(markdown);
   };
