@@ -226,24 +226,23 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
   container.setAttribute('data-dom-to-svg-container', 'true');
   container.innerHTML = htmlContent;
   
-  // Apply styling to the container
+  // Apply styling to the container - optimized for tighter layout
   const styles = {
     width: `${width}px`,
     fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
     fontSize: '14px',
-    lineHeight: '1',
+    lineHeight: '1', // Tight line height
     color: '#333',
-    padding: '1px',
+    padding: '0', // Remove padding completely
+    margin: '0', // Remove any margin
     boxSizing: 'border-box',
     position: 'absolute', // Needed for measurement
+    overflow: 'visible',
   };
   
   // Debug mode shows the element on screen with visual indicators
   if (useDebugMode) {
     Object.assign(styles, {
-//      background: 'rgba(240, 240, 250, 0.9)',
-//      border: '2px solid #4285F4',
-//      borderRadius: '4px',
       left: '2px',
       top: '2px',
       zIndex: 10000,
@@ -261,6 +260,30 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
   }
   
   Object.assign(container.style, styles);
+  
+  // Apply tight styling to child elements to minimize extra space
+  const childElements = container.querySelectorAll('*');
+  for (const el of childElements) {
+    el.style.margin = '0';
+    el.style.padding = '0';
+    
+    // Specific handling for different elements
+    if (el.tagName.toLowerCase() === 'p') {
+      el.style.marginTop = '0';
+      el.style.marginBottom = '0';
+      el.style.paddingTop = '0';
+      el.style.paddingBottom = '0';
+    }
+    
+    // Ensure inline elements don't have extra space
+    if (el.tagName.toLowerCase() === 'span' || 
+        el.tagName.toLowerCase() === 'a' || 
+        el.tagName.toLowerCase() === 'strong' || 
+        el.tagName.toLowerCase() === 'em') {
+      el.style.display = 'inline';
+      el.style.lineHeight = '1';
+    }
+  }
 
   console.log('container.innerHTML', container.innerHTML);
   console.log('offsetHeight', container.offsetHeight); // Reading this property forces layout
