@@ -233,10 +233,27 @@ class MindmapModel {
         } else {
           console.warn('List token without valid items:', token);
         }
-      } else if (token.type === 'paragraph' && parentNode === currentNode) {
-        // If we have a paragraph at the top level, treat it as the root node text
+      } else if (token.type === 'paragraph') {
+        // For paragraphs at the root level, treat them as the root node text
         if (parentNode === currentNode && parentNode.text === '') {
           parentNode.text = token.text || '';
+        } else {
+          // Create a new node for this paragraph
+          const paragraphNode = new MindmapNode(token.text || '', currentLevel + 1, (currentLevel + 1) >= 4);
+          currentNode.addChild(paragraphNode);
+          
+          // Add to node map
+          this.nodeMap.set(paragraphNode.id, paragraphNode);
+          
+          // If the paragraph has any nested tokens that are lists, process them
+          if (token.tokens) {
+            const listTokens = token.tokens.filter(t => t.type === 'list');
+            for (const listToken of listTokens) {
+              if (listToken.items && Array.isArray(listToken.items)) {
+                this._processListItems(listToken.items, paragraphNode, currentLevel + 2);
+              }
+            }
+          }
         }
       } else if (token.type === 'text' && parentNode === currentNode && parentNode.text === '') {
         // Handle top-level text tokens too
@@ -362,10 +379,37 @@ class MindmapModel {
     // Store the previous line's indentation for bullet points
     let prevIndent = 0;
     
+    // For paragraph handling
+    let inParagraph = false;
+    let paragraphText = '';
+    let paragraphLevel = 0;
+    
     for (let i = 0; i < lines.length; i++) {
       const rawLine = lines[i];
       const line = rawLine.trim();
-      if (!line) continue;
+      if (!line) {
+        // Empty line terminates a paragraph
+        if (inParagraph) {
+          // Create a node for the accumulated paragraph
+          const node = new MindmapNode(paragraphText, paragraphLevel, paragraphLevel >= 4);
+          
+          // Find the parent node
+          while (stack.length > 1 && stack[stack.length - 1].level >= paragraphLevel) {
+            stack.pop();
+          }
+          
+          // Add to parent
+          stack[stack.length - 1].addChild(node);
+          
+          // Add to node map
+          this.nodeMap.set(node.id, node);
+          
+          // Reset paragraph tracking
+          inParagraph = false;
+          paragraphText = '';
+        }
+        continue;
+      }
 
       let level = 0;
       let text = '';
@@ -431,7 +475,65 @@ class MindmapModel {
         // Extract text
         text = line.substring(1).trim(); // Remove the '-' character
       } else {
-        continue; // Skip lines that aren't headings or bullet points
+        // Treat regular text as paragraph child of the current heading (if any)
+        if (currentHeadingLevel > 0) {
+          // Determine level for paragraph
+          level = currentHeadingLevel + 1;
+          text = line.trim();
+          
+          // If we're already in a paragraph at this level, append to it
+          if (inParagraph && level === paragraphLevel) {
+            paragraphText += ' ' + text;
+            continue; // Skip node creation, we'll create it when the paragraph ends
+          } else {
+            // If we were in a different paragraph, finalize it first
+            if (inParagraph) {
+              // Create a node for the previously accumulated paragraph
+              const paragraphNode = new MindmapNode(paragraphText, paragraphLevel, paragraphLevel >= 4);
+              
+              // Find the parent node for this paragraph
+              while (stack.length > 1 && stack[stack.length - 1].level >= paragraphLevel) {
+                stack.pop();
+              }
+              
+              // Add to parent
+              stack[stack.length - 1].addChild(paragraphNode);
+              
+              // Add to node map
+              this.nodeMap.set(paragraphNode.id, paragraphNode);
+            }
+            
+            // Start a new paragraph
+            inParagraph = true;
+            paragraphText = text;
+            paragraphLevel = level;
+            continue; // Skip regular node creation
+          }
+        } else {
+          continue; // Skip lines that aren't headings or bullet points when no heading context exists
+        }
+      }
+
+      // If we reach this point, we're not in a paragraph context
+      // Terminate any active paragraph
+      if (inParagraph) {
+        // Create a node for the accumulated paragraph
+        const paragraphNode = new MindmapNode(paragraphText, paragraphLevel, paragraphLevel >= 4);
+        
+        // Find the parent node for this paragraph
+        while (stack.length > 1 && stack[stack.length - 1].level >= paragraphLevel) {
+          stack.pop();
+        }
+        
+        // Add to parent
+        stack[stack.length - 1].addChild(paragraphNode);
+        
+        // Add to node map
+        this.nodeMap.set(paragraphNode.id, paragraphNode);
+        
+        // Reset paragraph tracking
+        inParagraph = false;
+        paragraphText = '';
       }
 
       // Create node and auto-collapse if level >= 4
@@ -451,6 +553,23 @@ class MindmapModel {
 
       // Add to stack
       stack.push(node);
+    }
+    
+    // Handle any pending paragraph at the end of the file
+    if (inParagraph) {
+      // Create a node for the accumulated paragraph
+      const paragraphNode = new MindmapNode(paragraphText, paragraphLevel, paragraphLevel >= 4);
+      
+      // Find the parent node for this paragraph
+      while (stack.length > 1 && stack[stack.length - 1].level >= paragraphLevel) {
+        stack.pop();
+      }
+      
+      // Add to parent
+      stack[stack.length - 1].addChild(paragraphNode);
+      
+      // Add to node map
+      this.nodeMap.set(paragraphNode.id, paragraphNode);
     }
 
     this.rootNode = root.hasChildren() ? root.children[0] : null;
