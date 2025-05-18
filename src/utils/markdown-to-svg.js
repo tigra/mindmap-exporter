@@ -65,10 +65,10 @@ export async function markdownToSvg(
     log(`Container dimensions: ${container.offsetWidth}px × ${forceLayoutHeight}px`);
 
     // Add a delay to ensure the DOM is fully updated before measuring
-    if (renderDelay > 0) {
-      log(`Waiting ${renderDelay}ms for DOM updates...`);
-      await sleep(renderDelay);
-    }
+//    if (renderDelay > 0) {
+//      log(`Waiting ${renderDelay}ms for DOM updates...`);
+//      await sleep(renderDelay);
+//    }
 
     // Run diagnostic trace before conversion if verbose mode is enabled
     if (verbose) {
@@ -131,8 +131,8 @@ export async function markdownToSvg(
       // Add error message to container
       const errorDiv = document.createElement('div');
       errorDiv.style.color = '#ff0000';
-      errorDiv.style.padding = '10px';
-      errorDiv.style.marginTop = '10px';
+      errorDiv.style.padding = '1px';
+      errorDiv.style.marginTop = '1px';
       errorDiv.style.border = '1px solid #ff0000';
       errorDiv.style.background = 'rgba(255, 255, 255, 0.8)';
       errorDiv.textContent = `Error: ${error.message}`;
@@ -163,12 +163,12 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
   measureDiv.style.position = 'absolute';
   measureDiv.style.visibility = 'hidden';
   measureDiv.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif';
-  measureDiv.style.padding = '10px';
+  measureDiv.style.padding = '1px';
   measureDiv.style.display = 'inline-block';
   measureDiv.style.boxSizing = 'border-box';
   measureDiv.innerHTML = htmlContent;
 
-  // Add to DOM to get accurate measurements
+  // Add to DOM to get accurate measurementsProject Planning
   document.body.appendChild(measureDiv);
   
   // Find the minimum width needed by measuring text without wrapping
@@ -231,9 +231,9 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
     width: `${width}px`,
     fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
     fontSize: '14px',
-    lineHeight: '1.5',
+    lineHeight: '1',
     color: '#333',
-    padding: '10px',
+    padding: '1px',
     boxSizing: 'border-box',
     position: 'absolute', // Needed for measurement
   };
@@ -244,8 +244,8 @@ function createStyledContainer(htmlContent, width, useDebugMode = false) {
 //      background: 'rgba(240, 240, 250, 0.9)',
 //      border: '2px solid #4285F4',
 //      borderRadius: '4px',
-      left: '10px',
-      top: '10px',
+      left: '2px',
+      top: '2px',
       zIndex: 10000,
       visibility: 'visible',
       display: 'block',
@@ -285,6 +285,27 @@ function configureSvgDocument(svgDocument, width) {
     
     // Remove any overflow restrictions
     svgDocument.documentElement.style.overflow = 'visible';
+    
+    // Get the current height
+    const height = svgDocument.documentElement.getBoundingClientRect().height;
+    
+    // Add debug rectangle as the first child
+    const rect = svgDocument.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', '0');
+    rect.setAttribute('y', '0');
+    rect.setAttribute('width', width);
+    rect.setAttribute('height', height);
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', 'red');
+    rect.setAttribute('stroke-width', '1');
+    rect.setAttribute('stroke-dasharray', '5,5');
+    
+    // Add the rect as the first child
+    if (svgDocument.documentElement.firstChild) {
+      svgDocument.documentElement.insertBefore(rect, svgDocument.documentElement.firstChild);
+    } else {
+      svgDocument.documentElement.appendChild(rect);
+    }
   }
 }
 
@@ -319,7 +340,7 @@ export function extractSvgContent(svgString, targetX, targetY) {
   // Get inner content (all child nodes)
   let innerContent = '';
   for (const child of svgElement.childNodes) {
-    if (child.nodeType === 1) { // Element nodes only
+    if (child.nodeType === 1) { // Element nodes only TODO check
       const serializer = new XMLSerializer();
       innerContent += serializer.serializeToString(child);
     }
@@ -341,14 +362,16 @@ export function extractSvgContent(svgString, targetX, targetY) {
   }
   
   // Create group with appropriate transforms to compensate for coordinate system
+  // Add debug dashed rectangle around the content
+  const debugRect = `<rect x="${minX}" y="${minY}" width="${vbWidth}" height="${vbHeight}" 
+                          fill="none" stroke="red" stroke-width="1" stroke-dasharray="5,5" />`;
+  
   return `
-    <!-- Extracted SVG content with coordinate transformations -->
-    <g transform="translate(${targetX - minX}, ${targetY - minY})">
-      <!-- Apply original SVG's viewBox scale if needed -->
-      <g transform="scale(${width / vbWidth}, ${height / vbHeight})">
-        ${innerContent}
-      </g>
-    </g>
+<g transform="translate(${targetX - minX}, ${targetY - minY})">
+ <g transform="scale(${width / vbWidth}, ${height / vbHeight})">
+  ${debugRect}
+  ${innerContent}
+</g></g>
   `;
 }
 
@@ -360,8 +383,25 @@ export function extractSvgContent(svgString, targetX, targetY) {
  * @returns {string} - The modified SVG with positioning attributes
  */
 export function embedSvg(svgString, x, y) {
-  // Simply add x/y positioning to the root SVG element
-  return svgString.replace(/<svg/, `<svg x="${x}" y="${y}"`);
+  // Parse the SVG to get its dimensions
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svgElement = svgDoc.documentElement;
+  
+  // Get dimensions
+  const width = parseFloat(svgElement.getAttribute('width') || 0);
+  const height = parseFloat(svgElement.getAttribute('height') || 0);
+  
+  // Add debug rectangle
+  const debugRect = `<rect x="0" y="0" width="${width}" height="${height}" 
+                        fill="none" stroke="red" stroke-width="1" stroke-dasharray="5,5" />`;
+  
+  // Add the debug rectangle at the beginning of the SVG content
+  let modifiedSvg = svgString.replace(/<svg([^>]*)>/, 
+                                      `<svg$1>${debugRect}`);
+  
+  // Add x/y positioning to the root SVG element
+  return modifiedSvg.replace(/<svg/, `<svg x="${x}" y="${y}"`);
 }
 
 /**
@@ -421,14 +461,14 @@ export function markdownToSvgSync(markdownContent, maxWidth = 400, options = { v
   } catch (error) {
     console.error('Error in synchronous markdown measurement:', error);
     
-    // Return fallback dimensions on error
-    return {
-      dimensions: {
-        width: maxWidth * 0.8,
-        height: 100
-      },
-      error: error.message
-    };
+//    // Return fallback dimensions on error
+//    return {
+//      dimensions: {
+//        width: maxWidth * 0.8,
+//        height: 100
+//      },
+//      error: error.message
+//    };
   }
 }
 
