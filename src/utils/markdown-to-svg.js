@@ -180,11 +180,13 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400, styleOptions = {}) {
   measureDiv.style.fontWeight = fontWeight || 'normal';
   measureDiv.style.color = textColor || '#333';
   measureDiv.style.padding = '0'; // No padding to match rendering
+  measureDiv.style.margin = '0';
   measureDiv.style.display = 'inline-block';
   measureDiv.style.boxSizing = 'border-box';
   measureDiv.style.overflow = 'hidden'; // Prevent content overflow
   measureDiv.style.textOverflow = 'ellipsis'; // Match rendering settings
   measureDiv.style.maxWidth = `${maxWidth}px`; // Set max width constraint
+//  measureDiv.style.overflowWrap = 'break-word'; // Allow text to break at any point if needed
   measureDiv.innerHTML = htmlContent;
 
   // Add to DOM to get accurate measurements
@@ -197,6 +199,8 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400, styleOptions = {}) {
     el.style.padding = '0';
     el.style.width = 'fit-content'; // Make elements only as wide as their content
     el.style.maxWidth = '100%'; // But don't exceed container width
+    el.style.boxSizing = 'border-box'; // Include padding in the width
+  //  el.style.overflowWrap = 'break-word'; // Allow text to break at any point if needed
     
     // Specific handling for different elements
     if (el.tagName.toLowerCase() === 'p') {
@@ -204,15 +208,26 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400, styleOptions = {}) {
       el.style.marginBottom = '0';
       el.style.paddingTop = '0';
       el.style.paddingBottom = '0';
+      el.style.paddingRight = '0'; // Remove right padding
       el.style.textAlign = 'left'; // Align text left for consistent width
     }
     
+    // Ensure inline elements don't have extra space
     if (el.tagName.toLowerCase() === 'span' || 
         el.tagName.toLowerCase() === 'a' || 
         el.tagName.toLowerCase() === 'strong' || 
         el.tagName.toLowerCase() === 'em') {
       el.style.display = 'inline';
       el.style.lineHeight = '1';
+      el.style.whiteSpace = 'normal'; // Allow text to wrap normally
+      el.style.paddingRight = '0'; // Remove right padding
+    }
+    
+    // Ensure list items have proper wrapping
+    if (el.tagName.toLowerCase() === 'ul' || el.tagName.toLowerCase() === 'ol' || el.tagName.toLowerCase() === 'li') {
+      el.style.marginLeft = '0';
+      el.style.paddingRight = '0';
+      el.style.overflowWrap = 'break-word';
     }
   }
   
@@ -249,7 +264,7 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400, styleOptions = {}) {
     maxLineWidth = measureDiv.getBoundingClientRect().width;
   }
   
-  // Add minimal padding for better display
+  // Add minimal padding - reduced from 5px to 2px to minimize extra space
   maxLineWidth += 5;
 
   // Remove measure element
@@ -294,6 +309,7 @@ function createStyledContainer(htmlContent, width, useDebugMode = false, styleOp
     overflow: 'hidden', // Prevent content from extending beyond container width
     textOverflow: 'ellipsis', // Show ellipsis for overflowing text
     whiteSpace: 'normal', // Allow text wrapping
+    maxWidth: `${width}px`, // Ensure container doesn't exceed the specified width
   };
   
   // Debug mode shows the element on screen with visual indicators
@@ -324,6 +340,8 @@ function createStyledContainer(htmlContent, width, useDebugMode = false, styleOp
     el.style.padding = '0';
     el.style.width = 'fit-content'; // Make elements only as wide as their content
     el.style.maxWidth = '100%'; // But don't exceed container width
+    el.style.boxSizing = 'border-box'; // Include padding in the width
+//    el.style.overflowWrap = 'break-word'; // Allow text to break at any point if needed
     
     // Specific handling for different elements
     if (el.tagName.toLowerCase() === 'p') {
@@ -331,6 +349,7 @@ function createStyledContainer(htmlContent, width, useDebugMode = false, styleOp
       el.style.marginBottom = '0';
       el.style.paddingTop = '0';
       el.style.paddingBottom = '0';
+      el.style.paddingRight = '0'; // Remove right padding
       el.style.textAlign = 'left'; // Align text left for consistent width
     }
     
@@ -342,11 +361,19 @@ function createStyledContainer(htmlContent, width, useDebugMode = false, styleOp
       el.style.display = 'inline';
       el.style.lineHeight = '1';
       el.style.whiteSpace = 'normal'; // Allow text to wrap normally
+      el.style.paddingRight = '0'; // Remove right padding
     }
+    
+    // Ensure list items have proper wrapping
+    if (el.tagName.toLowerCase() === 'ul' || el.tagName.toLowerCase() === 'ol' || el.tagName.toLowerCase() === 'li') {
+      el.style.marginLeft = '1';  // ?
+      el.style.paddingRight = '1'; // ?
+      el.style.overflowWrap = 'break-word'; // ?
+     }
   }
 
-  console.log('container.innerHTML', container.innerHTML);
-  console.log('offsetHeight', container.offsetHeight); // Reading this property forces layout
+  // Force relayout to ensure proper dimensions
+  const offset = container.offsetHeight;
   
   return container;
 }
@@ -360,7 +387,7 @@ function createStyledContainer(htmlContent, width, useDebugMode = false, styleOp
  */
 function configureSvgDocument(svgDocument, width, options = {}) {
   if (svgDocument && svgDocument.documentElement) {
-    // Set width to our calculated width plus a small buffer to prevent text cutoff
+    // Set width exactly to our calculated width - no extra buffer
     const contentWidth = width;
     svgDocument.documentElement.setAttribute('width', contentWidth);
     
@@ -369,8 +396,8 @@ function configureSvgDocument(svgDocument, width, options = {}) {
       svgDocument.documentElement.setAttribute('height', 'auto');
     }
     
-    // Remove any overflow restrictions
-    svgDocument.documentElement.style.overflow = 'visible';
+    // Set overflow to hidden to prevent content from extending beyond the SVG boundaries
+    svgDocument.documentElement.style.overflow = 'hidden';
     
     // Get the current height
     const height = svgDocument.documentElement.getBoundingClientRect().height;
@@ -387,7 +414,7 @@ function configureSvgDocument(svgDocument, width, options = {}) {
       const rect = svgDocument.createElementNS('http://www.w3.org/2000/svg', 'rect');
       rect.setAttribute('x', '0');
       rect.setAttribute('y', '0');
-      rect.setAttribute('width', width - 1); // Reduce width by 1px to ensure it doesn't cause extra space
+      rect.setAttribute('width', width - 2); // Reduce width by 2px to ensure it's inside the SVG boundary
       rect.setAttribute('height', height);
       rect.setAttribute('fill', 'none');
       rect.setAttribute('stroke', 'red');
@@ -462,8 +489,9 @@ export function extractSvgContent(svgString, targetX, targetY) {
   const showDebugRect = typeof window !== 'undefined' ? window.showMarkdownDebugRect : true;
   
   // Add debug dashed rectangle around the content if enabled
+  // Width reduced by 2px to ensure it doesn't cause extra space and stays within bounds
   const debugRect = showDebugRect ? 
-    `<rect x="${minX}" y="${minY}" width="${vbWidth}" height="${vbHeight}" 
+    `<rect x="${minX}" y="${minY}" width="${vbWidth - 2}" height="${vbHeight}" 
           fill="none" stroke="red" stroke-width="1" stroke-dasharray="5,5" class="markdown-debug-rect" />` : 
     '';
   
@@ -496,9 +524,9 @@ export function embedSvg(svgString, x, y) {
   // Determine if debug rect should be shown
   const showDebugRect = typeof window !== 'undefined' ? window.showMarkdownDebugRect : true;
   
-  // Add debug rectangle if enabled
+  // Add debug rectangle if enabled (width reduced by 2px)
   const debugRect = showDebugRect ? 
-    `<rect x="0" y="0" width="${width}" height="${height}" 
+    `<rect x="0" y="0" width="${width - 2}" height="${height}" 
           fill="none" stroke="red" stroke-width="1" stroke-dasharray="5,5" class="markdown-debug-rect" />` : 
     '';
   
