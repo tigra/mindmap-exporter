@@ -4,7 +4,6 @@ import ConnectionPoint from './connection-point.js';
 import textMetrics from '../utils/text-metrics.js';
 import { markdownToSvg, markdownToSvgSync } from '../utils/markdown-to-svg.js';
 
-
 /**
  * Base Layout class that handles common functionality
  */

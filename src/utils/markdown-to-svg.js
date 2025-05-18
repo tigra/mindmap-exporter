@@ -42,7 +42,6 @@ export async function markdownToSvg(
   
   // --- Step 1: Convert Markdown to sanitized HTML ---
   log('1️⃣ Converting Markdown to HTML');
-
   const rawHtml = marked.parse(markdownContent);
   log('Raw HTML generated:', rawHtml.substring(0, 200) + (rawHtml.length > 200 ? '...' : ''));
   
@@ -58,7 +57,6 @@ export async function markdownToSvg(
   log('3️⃣ Creating styled container');
   const container = createStyledContainer(cleanHtml, width, debug, { fontFamily, fontSize, fontWeight, textColor });
   log('Container created with ID:', container.id);
-
   
   // --- Step 4: Convert to SVG ---
   try {
