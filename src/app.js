@@ -68,6 +68,7 @@ class MindmapApp {
     this.generateBtn = document.getElementById(this.options.generateBtnId);
     this.exportBtn = document.getElementById(this.options.exportBtnId);
     this.loadingIndicator = document.getElementById(this.options.loadingIndicator);
+    this.boundingBoxCheckbox = document.getElementById('enable-bounding-box');
     
     // YAML editor elements
     this.styleYamlEditor = document.getElementById('style-yaml-editor');
@@ -160,6 +161,29 @@ class MindmapApp {
     if (this.stylePreset) {
       this.stylePreset.addEventListener('change', () => {
         this.controller.handleStyleChange(this.stylePreset.value);
+      });
+    }
+    
+    // Get the apply settings button
+    this.applySettingsBtn = document.getElementById('apply-settings-btn');
+    
+    if (this.boundingBoxCheckbox) {
+      // We'll use the apply settings button instead of immediately applying on checkbox change
+      this.boundingBoxCheckbox.addEventListener('change', () => {
+        console.log("Bounding box checkbox changed:", this.boundingBoxCheckbox.checked);
+      });
+    }
+    
+    // Add event listener for apply settings button
+    if (this.applySettingsBtn) {
+      this.applySettingsBtn.addEventListener('click', () => {
+        console.log('Apply Settings button clicked');
+        
+        // Note: Don't need to apply boundingBox here as handleGenerate() will take care of it
+        // The checkbox state will be checked in handleGenerate before applying layout
+        
+        console.log('Apply Settings: calling handleGenerate()');
+        this.handleGenerate();
       });
     }
 
@@ -262,6 +286,15 @@ class MindmapApp {
     // Apply the selected style preset
     const presetName = this.stylePreset.value;
     MindmapStylePresets.applyPreset(presetName, style);
+
+    // Apply boundingBox setting FIRST if checkbox exists
+    // Important: we need to apply the setting whether it's checked or not!
+    if (this.boundingBoxCheckbox) {
+      const isChecked = this.boundingBoxCheckbox.checked;
+      console.log('Checkbox state during generation:', isChecked);
+      console.log(`Applying boundingBox=${isChecked} from handleGenerate BEFORE layout`);
+      this.applyBoundingBoxToAllLevels(isChecked);
+    }
 
 //    style.setGlobalLayoutType(this.layoutType.value);
     // TODO factor out this behavoir, find the proper class responsible for it
@@ -456,17 +489,6 @@ class MindmapApp {
         "level5": style.levelStyles[5],
         "level6": style.levelStyles[6]
       });
-      
-      // TODO make it steerable through the UI
-//      style.configure({
-//        levelStyles: {
-//            1: {boundingBox: true},
-//            2: {boundingBox: true},
-////            3: {boundingBox: true},
-////            4: {boundingBox: true}
-//        },
-//        default: {boundingBox: true},
-//      });
     }
 
     // Apply layout type
@@ -610,6 +632,50 @@ class MindmapApp {
     this.testMoveBoundingBoxTo(node.id, x, y);
   }
   
+  /**
+   * Apply bounding box to all levels
+   * @param {boolean} enabled - Whether the bounding box should be enabled for all levels
+   */
+  applyBoundingBoxToAllLevels(enabled) {
+    console.log(`Setting boundingBox: ${enabled} for all levels`);
+    
+    // Create a configuration object with boundingBox set for each level
+    const styleConfig = {
+      levelStyles: {
+        1: {boundingBox: enabled},
+        2: {boundingBox: enabled},
+        3: {boundingBox: enabled},
+        4: {boundingBox: enabled},
+        5: {boundingBox: enabled},
+        6: {boundingBox: enabled}
+      },
+      defaultStyle: {
+        boundingBox: enabled
+      }
+    };
+    
+    // Apply the configuration to the style manager
+    this.styleManager.configure(styleConfig);
+    
+    // Debug output to show the effect of the setting
+    console.group('Debug: boundingBox settings');
+    console.log('Applied boundingBox configuration:', styleConfig);
+    
+    // Log the current boundingBox value for each level
+    Object.keys(this.styleManager.levelStyles).forEach(level => {
+      const style = this.styleManager.levelStyles[level];
+      console.log(`Level ${level} boundingBox:`, style.boundingBox);
+    });
+    
+    // Log default style boundingBox value
+    if (this.styleManager.defaultLevelStyle) {
+      console.log('Default style boundingBox:', this.styleManager.defaultLevelStyle.boundingBox);
+    }
+    console.groupEnd();
+    
+    return this; // Allow method chaining
+  }
+
   /**
    * Test the ClassicMindmapLayout by applying it to the current mindmap
    */

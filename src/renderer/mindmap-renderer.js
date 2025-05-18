@@ -397,7 +397,10 @@ class MindmapRenderer {
 //    svg += `<circle r="5" cx="${node.x}" cy="${node.y}" fill="red" />`
 //    svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
 //    svg += this._drawChildDropZone(node, layout, parentChildPadding);
-    if (levelStyle.boundingBox) {
+    // Check if bounding box should be displayed based on level style
+    const showBoundingBox = this.styleManager.getEffectiveValue(node, 'boundingBox');
+    console.log(`Node ${node.id} (${node.text}): show bounding box = ${showBoundingBox}`);
+    if (showBoundingBox) {
        svg += this._drawBoundingBox(node);
     }
     // Only draw connections to children if not collapsed
@@ -780,7 +783,9 @@ class MindmapRenderer {
   }
 
   _drawBoundingBox(node) {
-      if (node.boundingBox) {
+      // Check if node has a boundingBox property (with dimensions) to render
+      if (node.boundingBox && node.boundingBox.width && node.boundingBox.height) {
+          console.log(`Drawing bounding box for node ${node.id} (${node.text}): ${JSON.stringify(node.boundingBox)}`);
           return this._createRectElement({
               x: node.boundingBox.x,
               y: node.boundingBox.y,
@@ -795,6 +800,7 @@ class MindmapRenderer {
               strokeWidth: 1
           });
       } else {
+          console.log(`No bounding box data for node ${node.id} (${node.text})`);
           return '';
       }
   }
