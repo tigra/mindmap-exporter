@@ -30,8 +30,21 @@ class Layout {
     if (useMarkdown) {
       // For markdown content, use the markdownToSvgSync function for immediate sizing
       try {
-        // Simply use our synchronous wrapper function
-        const svgData = markdownToSvgSync(text, maxWidth, {debug: true, verbose: true});
+        // Get style properties
+        const fontFamily = levelStyle.fontFamily;
+        const fontSize = levelStyle.fontSize;
+        const fontWeight = levelStyle.fontWeight;
+        const textColor = levelStyle.textColor;
+        
+        // Pass style properties to the markdownToSvgSync function
+        const svgData = markdownToSvgSync(text, maxWidth, {
+          debug: false, 
+          verbose: false,
+          fontFamily: fontFamily,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          textColor: textColor
+        });
         
         if (svgData && svgData.dimensions) {
           textDimensions = svgData.dimensions;

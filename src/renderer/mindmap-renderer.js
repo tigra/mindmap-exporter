@@ -990,8 +990,18 @@ class MindmapRenderer {
       // Minimal debugging info
       console.log(`Rendering markdown for node: ${node.id}`);
       
-      // Convert markdown to SVG directly
-      const markdownResult = await markdownToSvg(node.text, maxWidth);
+      // Get font style properties from the style
+      const fontFamily = levelStyle.fontFamily || MindmapRenderer.DEFAULT_FONT_FAMILY;
+      const fontSize = levelStyle.fontSize || MindmapRenderer.DEFAULT_FONT_SIZE;
+      const fontWeight = levelStyle.fontWeight || MindmapRenderer.DEFAULT_FONT_WEIGHT;
+      
+      // Convert markdown to SVG with style properties
+      const markdownResult = await markdownToSvg(node.text, maxWidth, {
+        fontFamily: fontFamily,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        textColor: textColor
+      });
 //      console.log('markdownResult', markdownResult);
 //      console.log('markdownResult.svg', markdownResult.svg);
       // Position the SVG within the node (centered)

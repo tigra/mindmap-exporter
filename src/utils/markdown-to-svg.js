@@ -19,14 +19,18 @@ function sleep(ms) {
  * @param {boolean} options.debug - Whether to enable debug mode, showing containers
  * @param {boolean} options.verbose - Whether to enable verbose logging
  * @param {number} options.renderDelay - Delay in ms before conversion (for DOM updates)
+ * @param {string} options.fontFamily - Font family to use
+ * @param {number} options.fontSize - Font size in pixels
+ * @param {string} options.fontWeight - Font weight (normal, bold, etc.)
+ * @param {string} options.textColor - Text color (hex or named color)
  * @returns {Promise<Object>} - Promise that resolves to object containing the SVG markup string and its dimensions
  */
 export async function markdownToSvg(
   markdownContent, 
   maxWidth = 400, 
-  options = { debug: false, verbose: false, renderDelay: 0 }
+  options = { debug: false, verbose: false, renderDelay: 0, fontFamily: null, fontSize: null, fontWeight: null, textColor: null }
 ) {
-  const { debug, verbose, renderDelay } = options;
+  const { debug, verbose, renderDelay, fontFamily, fontSize, fontWeight, textColor } = options;
   
   // Helper for conditional logging
   const log = (...args) => {
@@ -46,12 +50,12 @@ export async function markdownToSvg(
 
   // --- Step 2: Calculate optimal width ---
   log('2️⃣ Calculating optimal width');
-  const width = calculateNaturalWidth(cleanHtml, maxWidth);
+  const width = calculateNaturalWidth(cleanHtml, maxWidth, { fontFamily, fontSize, fontWeight, textColor });
   log(`Calculated width: ${width}px (max allowed: ${maxWidth}px)`);
   
   // --- Step 3: Create a styled container for conversion ---
   log('3️⃣ Creating styled container');
-  const container = createStyledContainer(cleanHtml, width, debug);
+  const container = createStyledContainer(cleanHtml, width, debug, { fontFamily, fontSize, fontWeight, textColor });
   log('Container created with ID:', container.id);
   
   // --- Step 4: Convert to SVG ---
@@ -155,14 +159,24 @@ export async function markdownToSvg(
  * Calculates the natural width of content without wrapping
  * @param {string} htmlContent - HTML content to measure
  * @param {number} maxWidth - Maximum width constraint
+ * @param {Object} styleOptions - Style options for measurement
+ * @param {string} styleOptions.fontFamily - Font family to use
+ * @param {number} styleOptions.fontSize - Font size in pixels
+ * @param {string} styleOptions.fontWeight - Font weight (normal, bold, etc.)
+ * @param {string} styleOptions.textColor - Text color (hex or named color)
  * @returns {number} - The optimal width for the content
  */
-function calculateNaturalWidth(htmlContent, maxWidth = 400) {
+function calculateNaturalWidth(htmlContent, maxWidth = 400, styleOptions = {}) {
   // Create a temporary div to measure the natural content width
+  const { fontFamily, fontSize, fontWeight, textColor } = styleOptions;
+  
   const measureDiv = document.createElement('div');
   measureDiv.style.position = 'absolute';
   measureDiv.style.visibility = 'hidden';
-  measureDiv.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif';
+  measureDiv.style.fontFamily = fontFamily || 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif';
+  measureDiv.style.fontSize = fontSize ? `${fontSize}px` : '14px';
+  measureDiv.style.fontWeight = fontWeight || 'normal';
+  measureDiv.style.color = textColor || '#333';
   measureDiv.style.padding = '0'; // No padding to match rendering
   measureDiv.style.display = 'inline-block';
   measureDiv.style.boxSizing = 'border-box';
@@ -248,21 +262,29 @@ function calculateNaturalWidth(htmlContent, maxWidth = 400) {
  * @param {string} htmlContent - HTML content to put in the container
  * @param {number} width - Container width
  * @param {boolean} useDebugMode - Whether to show container for debugging
+ * @param {Object} styleOptions - Style options for the container
+ * @param {string} styleOptions.fontFamily - Font family to use
+ * @param {number} styleOptions.fontSize - Font size in pixels
+ * @param {string} styleOptions.fontWeight - Font weight (normal, bold, etc.)
+ * @param {string} styleOptions.textColor - Text color (hex or named color)
  * @returns {HTMLElement} - Styled container element
  */
-function createStyledContainer(htmlContent, width, useDebugMode = false) {
+function createStyledContainer(htmlContent, width, useDebugMode = false, styleOptions = {}) {
   const container = document.createElement('div');
   container.id = 'markdown-container-' + Math.random().toString(36).substr(2, 9);
   container.setAttribute('data-dom-to-svg-container', 'true');
   container.innerHTML = htmlContent;
   
   // Apply styling to the container - optimized for tighter layout
+  const { fontFamily, fontSize, fontWeight, textColor } = styleOptions;
+  
   const styles = {
     width: `${width}px`,
-    fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
-    fontSize: '14px',
+    fontFamily: fontFamily || 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+    fontSize: fontSize ? `${fontSize}px` : '14px',
+    fontWeight: fontWeight || 'normal',
     lineHeight: '1', // Tight line height
-    color: '#333',
+    color: textColor || '#333',
     padding: '0', // Remove padding completely
     margin: '0', // Remove any margin
     boxSizing: 'border-box',
@@ -469,11 +491,17 @@ export function embedSvg(svgString, x, y) {
  * @param {string} markdownContent - The markdown content to convert
  * @param {number} maxWidth - Maximum width allowed for the SVG (default: 400)
  * @param {Object} options - Additional options for conversion
+ * @param {boolean} options.verbose - Whether to enable verbose logging
+ * @param {string} options.fontFamily - Font family to use
+ * @param {number} options.fontSize - Font size in pixels
+ * @param {string} options.fontWeight - Font weight (normal, bold, etc.)
+ * @param {string} options.textColor - Text color (hex or named color)
  * @returns {Object} - Object containing dimensions
  */
-export function markdownToSvgSync(markdownContent, maxWidth = 400, options = { verbose: false }) {
-  console.log('markdownToSvgSync(', markdownContent, maxWidth, options);
-  const { verbose } = options;
+export function markdownToSvgSync(markdownContent, maxWidth = 400, options = { verbose: false, fontFamily: null, fontSize: null, fontWeight: null, textColor: null }) {
+  // Don't log every measurement call as it creates too much noise
+  // console.log('markdownToSvgSync(', markdownContent, maxWidth, options);
+  const { verbose, fontFamily, fontSize, fontWeight, textColor } = options;
   
   // Helper for conditional logging
   const log = (...args) => {
@@ -486,10 +514,10 @@ export function markdownToSvgSync(markdownContent, maxWidth = 400, options = { v
     const cleanHtml = DOMPurify.sanitize(rawHtml);
     
     // --- Step 2: Calculate optimal width ---
-    const width = calculateNaturalWidth(cleanHtml, maxWidth);
+    const width = calculateNaturalWidth(cleanHtml, maxWidth, { fontFamily, fontSize, fontWeight, textColor });
     
     // --- Step 3: Create a styled container for measurement ---
-    const container = createStyledContainer(cleanHtml, width, options['debug']);
+    const container = createStyledContainer(cleanHtml, width, options['debug'], { fontFamily, fontSize, fontWeight, textColor });
     
     // Add container to DOM for measuring
     document.body.appendChild(container);
@@ -516,7 +544,7 @@ export function markdownToSvgSync(markdownContent, maxWidth = 400, options = { v
     if (typeof window !== 'undefined') {
       window.markdownToSvgSync = markdownToSvgSync;
     }
-    console.log('markdownToSvgSync result:', result);
+    if (verbose) console.log('markdownToSvgSync result:', result);
     return result;
   } catch (error) {
     console.error('Error in synchronous markdown measurement:', error);
