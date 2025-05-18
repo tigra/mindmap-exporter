@@ -3,6 +3,7 @@
 import eventBridge from '../utils/event-bridge.js';
 import { markdownToSvg, markdownToSvgSync, markdownToText, extractSvgContent, embedSvg } from '../utils/markdown-to-svg.js';
 
+
 /**
  * MindmapRenderer class for SVG generation with interactive expand/collapse
  */
@@ -959,25 +960,23 @@ class MindmapRenderer {
     
     // For markdown rendering, we'll use the markdownToSvg utility directly
     
-    // Calculate position based on node type
-    let x, y, width, height;
+    // Calculate position 
+    let x, y, width;
     if (insideBox) {
-      // Inside a box - use the node's dimensions
-      x = node.x;
-      y = node.y;
-      width = node.width;
-      height = node.height;
+      // Inside a box - center position
+      x = node.x + (node.width / 2);
+      y = node.y + (node.height / 2);
+      width = node.width * 0.9; // Leave some margin
     } else {
-      // Standalone text - use the node's position but adjust for text
+      // Standalone text - left aligned
       x = node.x;
-      y = node.y;
+      y = node.y + (node.height / 2);
       width = node.width;
-      height = node.height;
     }
     
     // Create a unique identifier for this node's markdown content
 //    const markdownId = `markdown-${node.id}`;
-    
+
     // Extract the text color to ensure visibility
     const textColor = insideBox 
       ? (levelStyle.textColor || MindmapRenderer.DEFAULT_TEXT_COLOR_BOXED)

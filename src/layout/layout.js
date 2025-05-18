@@ -4,6 +4,7 @@ import ConnectionPoint from './connection-point.js';
 import textMetrics from '../utils/text-metrics.js';
 import { markdownToSvg, markdownToSvgSync } from '../utils/markdown-to-svg.js';
 
+
 /**
  * Base Layout class that handles common functionality
  */
@@ -24,7 +25,9 @@ class Layout {
     const maxWidth = wrapConfig.maxWidth;
     const textWrap = wrapConfig.textWrap;
     const maxWordLength = wrapConfig.maxWordLength;
-
+    
+    // Check if markdown is enabled for this level
+    const useMarkdown = levelStyle.enableMarkdown || false;
     let textDimensions;
 
     if (useMarkdown) {
@@ -87,7 +90,7 @@ class Layout {
     // Apply padding to the calculated dimensions
     return {
       width: textDimensions.width + (levelStyle.horizontalPadding * 2),
-      height: textDimensions.height + (levelStyle.verticalPadding * 2)
+      height: Math.max(textDimensions.height + (levelStyle.verticalPadding * 2), minHeight)
     };
   }
 
