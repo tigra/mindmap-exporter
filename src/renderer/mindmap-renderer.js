@@ -1,7 +1,7 @@
 // src/renderer/mindmap-renderer.js
 
 import eventBridge from '../utils/event-bridge.js';
-import { markdownToSvg, markdownToText, extractSvgContent, embedSvg } from '../utils/markdown-to-svg.js';
+import { markdownToSvg, markdownToSvgSync, markdownToText, extractSvgContent, embedSvg } from '../utils/markdown-to-svg.js';
 
 /**
  * MindmapRenderer class for SVG generation with interactive expand/collapse
@@ -986,8 +986,8 @@ class MindmapRenderer {
       
       // Convert markdown to SVG directly
       const markdownResult = await markdownToSvg(node.text, maxWidth);
-      console.log('markdownResult', markdownResult);
-      console.log('markdownResult.svg', markdownResult.svg);
+//      console.log('markdownResult', markdownResult);
+//      console.log('markdownResult.svg', markdownResult.svg);
       // Position the SVG within the node (centered)
       const svgX = x + (width - markdownResult.dimensions.width) / 2;
       const svgY = y + (height - markdownResult.dimensions.height) / 2;
@@ -1007,7 +1007,7 @@ class MindmapRenderer {
       if (MindmapRenderer.SVG_EMBEDDING_METHOD === 'extract') {
         // Use extraction method with coordinate transformations
         const extractedContent = extractSvgContent(markdownResult.svg, svgX, svgY);
-        console.log("extractedContent", extractedContent);
+//        console.log("extractedContent", extractedContent);
         
         // Return the extracted content (which will be a g element with transformed coordinates)
         return extractedContent;
@@ -1018,10 +1018,10 @@ class MindmapRenderer {
         return embeddedSvg;
       }
     } catch (error) {
-      console.error(`Error rendering markdown for node ${node.id}:`, error);
-      
-      // Fallback to plain text if markdown conversion fails
-      return this._drawPlainNodeText(node, insideBox);
+//      console.error(`Error rendering markdown for node ${node.id}:`, error);
+//
+//      // Fallback to plain text if markdown conversion fails
+//      return this._drawPlainNodeText(node, insideBox);
     }
   }
   

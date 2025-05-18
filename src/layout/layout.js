@@ -2,6 +2,7 @@
 
 import ConnectionPoint from './connection-point.js';
 import textMetrics from '../utils/text-metrics.js';
+import { markdownToSvg, markdownToSvgSync } from '../utils/markdown-to-svg.js';
 
 /**
  * Base Layout class that handles common functionality
@@ -15,46 +16,37 @@ class Layout {
    */
   getNodeSize(text, levelStyle) {
     // Check if markdown is enabled
-    const useMarkdown = levelStyle.enableMarkdown || false;
-    
-    // If markdown is enabled and we're in a browser environment,
-    // we could attempt to pre-calculate sizes based on markdown-to-svg.js
-    // But for simplicity and to avoid slowing down layout calculations,
-    // we'll use an enhanced text measurement approach for markdown
-    
+//    const useMarkdown = levelStyle.enableMarkdown || false;
+    const useMarkdown = true;
+
     // Get text wrapping configuration
     const wrapConfig = levelStyle.getTextWrapConfig();
-    const textWrap = wrapConfig.textWrap;
     const maxWidth = wrapConfig.maxWidth;
+    const textWrap = wrapConfig.textWrap;
     const maxWordLength = wrapConfig.maxWordLength;
 
     let textDimensions;
 
     if (useMarkdown) {
-      // For markdown content, add some extra space to accommodate formatting
-      // This is an estimation - exact sizing would require async rendering
-      // We add 10% extra width and 15% extra height as an approximation
-      const plainTextDimensions = textWrap === 'none'
-        ? textMetrics.measureText(
-            text,
-            levelStyle.fontFamily,
-            levelStyle.fontSize,
-            levelStyle.fontWeight
-          )
-        : textMetrics.wrapText(
-            text,
-            maxWidth,
-            levelStyle.fontFamily,
-            levelStyle.fontSize,
-            levelStyle.fontWeight,
-            textWrap,
-            maxWordLength
-          );
-          
-      textDimensions = {
-        width: plainTextDimensions.width * 1.1,  // Add 10% for markdown formatting
-        height: plainTextDimensions.height * 1.15 // Add 15% for markdown formatting
-      };
+      // For markdown content, use the markdownToSvgSync function for immediate sizing
+      try {
+        // Simply use our synchronous wrapper function
+        const svgData = markdownToSvgSync(text, maxWidth, {debug: true, verbose: true});
+        
+        if (svgData && svgData.dimensions) {
+          textDimensions = svgData.dimensions;
+        } else {
+          throw new Error(`markdownToSvg returned invalid dimensions: ${svgData}`);
+        }
+      } catch (error) {
+        console.error('Error using markdownToSvg:', error);
+        
+        // Return simple fallback dimensions on error
+        return {
+          width: 200, 
+          height: 100
+        };
+      }
     } else {
       // Regular text measurement for non-markdown content
       if (textWrap === 'none') {

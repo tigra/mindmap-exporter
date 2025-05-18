@@ -4,6 +4,8 @@ import DOMPurify from 'dompurify';
 import { elementToSVG } from 'dom-to-svg';
 import { traceDomToSvgProcess, diagnoseSvgOutput } from './dom-svg-diagnostics.js';
 
+// Simple synchronous implementation - no caching
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -22,7 +24,7 @@ function sleep(ms) {
 export async function markdownToSvg(
   markdownContent, 
   maxWidth = 400, 
-  options = { debug: false, verbose: true, renderDelay: 0 }
+  options = { debug: false, verbose: false, renderDelay: 0 }
 ) {
   const { debug, verbose, renderDelay } = options;
   
@@ -107,7 +109,7 @@ export async function markdownToSvg(
     
     log('✅ Conversion complete');
     
-    // Return both SVG and its dimensions
+    // Return both SVG and its dimensions without caching
     return {
       svg: svgString,
       dimensions: { width, height }
@@ -360,6 +362,74 @@ export function extractSvgContent(svgString, targetX, targetY) {
 export function embedSvg(svgString, x, y) {
   // Simply add x/y positioning to the root SVG element
   return svgString.replace(/<svg/, `<svg x="${x}" y="${y}"`);
+}
+
+/**
+ * Simple synchronous version of markdownToSvg that returns immediate dimensions
+ * @param {string} markdownContent - The markdown content to convert
+ * @param {number} maxWidth - Maximum width allowed for the SVG (default: 400)
+ * @param {Object} options - Additional options for conversion
+ * @returns {Object} - Object containing dimensions
+ */
+export function markdownToSvgSync(markdownContent, maxWidth = 400, options = { verbose: false }) {
+  console.log('markdownToSvgSync(', markdownContent, maxWidth, options);
+  const { verbose } = options;
+  
+  // Helper for conditional logging
+  const log = (...args) => {
+    if (verbose) console.log(...args);
+  };
+  
+  try {
+    // --- Step 1: Convert Markdown to sanitized HTML ---
+    const rawHtml = marked.parse(markdownContent);
+    const cleanHtml = DOMPurify.sanitize(rawHtml);
+    
+    // --- Step 2: Calculate optimal width ---
+    const width = calculateNaturalWidth(cleanHtml, maxWidth);
+    
+    // --- Step 3: Create a styled container for measurement ---
+    const container = createStyledContainer(cleanHtml, width, options['debug']);
+    
+    // Add container to DOM for measuring
+    document.body.appendChild(container);
+    
+    // Force layout calculation to ensure proper dimensions
+    container.getBoundingClientRect();
+    
+    // Get the dimensions
+    const calculatedWidth = Math.min(container.offsetWidth, maxWidth);
+    const calculatedHeight = container.offsetHeight;
+    
+    // Remove the temporary container
+    document.body.removeChild(container);
+    
+    // Create result object with dimensions
+    const result = {
+      dimensions: {
+        width: calculatedWidth,
+        height: calculatedHeight
+      }
+    };
+    
+    // If there's a global reference, attach this for convenience
+    if (typeof window !== 'undefined') {
+      window.markdownToSvgSync = markdownToSvgSync;
+    }
+    console.log('markdownToSvgSync result:', result);
+    return result;
+  } catch (error) {
+    console.error('Error in synchronous markdown measurement:', error);
+    
+    // Return fallback dimensions on error
+    return {
+      dimensions: {
+        width: maxWidth * 0.8,
+        height: 100
+      },
+      error: error.message
+    };
+  }
 }
 
 /**

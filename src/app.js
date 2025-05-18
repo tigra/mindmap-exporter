@@ -82,8 +82,50 @@ class MindmapApp {
     this.initYamlEditors();
 
    // Sample data
-    this.markdownInput.value = `# Project <br>Planning
-## *Research*
+    this.markdownInput.value = `# **Project Planning**<br><img src=https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Farmer_meme_with_apostrophe.jpg/250px-Farmer_meme_with_apostrophe.jpg width=300 height=160></p>
+## Research
+- competitive landscape
+    - existing mindmap apps on the market
+        - open source
+           - Xmind
+              - pros
+                - open source
+                - more feature rich then FreeMind
+              - cons
+                - doesn't have a really future-proof file format
+                - 5555555555
+        - proprietary
+    - subbullet 2
+        - subsub, again
+            - 1111111
+            - 2222222222222 2222222222
+               - 333333
+                 - 3
+### Market Analysis
+### Technical Feasibility
+## **Design** <ul><li>one<li>two<li>three</ul>
+### UI/UX Design
+### System Architecture
+#### Class Diagram
+#### Deployment Diagram
+- browser
+- browser
+- and only browser
+## Development
+### Frontend
+- markdown parsing
+  - support for
+    - headings
+    - bullet-point lists
+- layout algorithms
+- styling
+- interactivity
+### Backend
+* not needed
+## **Testing**: This document analyzes potential issues with the [dom-to-svg](https://github.com/felixfbecker/dom-to-svg/) library that could cause text elements to be missing in SVG output. This analysis is relevant for understanding potential rendering issues in the markdown-to-svg integration in our mindmap application.
+- Regression
+- Functional
+- Performance
 `;
     
     // For testing purposes, log when layout is changed
