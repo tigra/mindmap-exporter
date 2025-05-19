@@ -85,8 +85,11 @@ class HorizontalLayout extends Layout {
     // Calculate child position and dimensions
     const { totalHeight, maxChildWidth } = this.positionChildren(node, x, y, nodeSize, effectiveDirection, style);
     
-    // Center parent relative to children and calculate bounding box
-    this.centerParentAndCalculateBoundingBox(node, x, y, nodeSize, totalHeight, maxChildWidth, effectiveDirection);
+    // Center parent relative to children
+    this.centerParentAndChildren(node, x, y, nodeSize, totalHeight);
+    
+    // Calculate bounding box
+    this.calculateBoundingBox(node, x, y, nodeSize, maxChildWidth, effectiveDirection);
 
     console.groupEnd();
     return node.boundingBox;
@@ -118,24 +121,31 @@ class HorizontalLayout extends Layout {
   }
 
   /**
-   * Center parent node relative to children and calculate bounding box
+   * Center parent node relative to children
    * @param {Node} node - The parent node
    * @param {number} x - The parent x coordinate
    * @param {number} y - The parent y coordinate
    * @param {Object} nodeSize - The parent node size
    * @param {number} totalHeight - Total height of children
-   * @param {number} maxChildWidth - Maximum width of children
-   * @param {string} effectiveDirection - The layout direction
    */
-  centerParentAndCalculateBoundingBox(node, x, y, nodeSize, totalHeight, maxChildWidth, effectiveDirection) {
+  centerParentAndChildren(node, x, y, nodeSize, totalHeight) {
     // Always center parent vertically against its children, regardless of which is taller
     // Calculate the vertical center point of all children combined
     const childrenVerticalCenter = y + (totalHeight / 2);
     // Place the node so its center aligns with the center of its children
     node.y = childrenVerticalCenter - (nodeSize.height / 2);
+  }
 
-    // Direction is retrieved directly from the parameter
-
+  /**
+   * Calculate bounding box for node and its children
+   * @param {Node} node - The parent node
+   * @param {number} x - The parent x coordinate
+   * @param {number} y - The parent y coordinate
+   * @param {Object} nodeSize - The parent node size
+   * @param {number} maxChildWidth - Maximum width of children
+   * @param {string} effectiveDirection - The layout direction
+   */
+  calculateBoundingBox(node, x, y, nodeSize, maxChildWidth, effectiveDirection) {
     // Calculate bounding box dimensions
     const bbX = effectiveDirection === 'right' ? x : x - maxChildWidth - this.parentPadding;
     const bbWidth = nodeSize.width + this.parentPadding + maxChildWidth;
@@ -144,8 +154,8 @@ class HorizontalLayout extends Layout {
     // Start with the parent node's position and size
     let minX = x;
     let maxX = x + nodeSize.width;
-    let minY = y - nodeSize.height / 2;
-    let maxY = y + nodeSize.height / 2;
+    let minY = node.y;
+    let maxY = node.y + nodeSize.height;
 
     // Now check all children's bounding boxes to ensure our bounding box contains them all
     for (let i = 0; i < node.children.length; i++) {
