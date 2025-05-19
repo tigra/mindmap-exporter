@@ -216,9 +216,10 @@ class MindmapNode {
   }
   
   /**
-   * Move the node and all its descendants so that the bounding box is positioned at the specified coordinates
-   * @param {number} x - The target x coordinate for the bounding box
-   * @param {number} y - The target y coordinate for the bounding box
+   * Move the node, its bounding box, and all descendants to position the bounding box top-left corner at the specified coordinates
+   * This moves the entire node structure (node itself + its children + bounding boxes) while maintaining relative positions
+   * @param {number} x - The target x coordinate for the top-left corner of the bounding box
+   * @param {number} y - The target y coordinate for the top-left corner of the bounding box
    */
   moveBoundingBoxTo(x, y) {
     if (!this.boundingBox) {
