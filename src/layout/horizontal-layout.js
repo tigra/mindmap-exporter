@@ -105,10 +105,11 @@ class HorizontalLayout extends Layout {
     // Remove extra padding from last child
     totalHeight -= this.childPadding;
 
-    // Center parent vertically
-    if (totalHeight > nodeSize.height) {
-      node.y = y - (nodeSize.height / 2) + ((totalHeight - nodeSize.height) / 2);
-    }
+    // Always center parent vertically against its children, regardless of which is taller
+    // Calculate the vertical center point of all children combined
+    const childrenVerticalCenter = y + (totalHeight / 2);
+    // Place the node so its center aligns with the center of its children
+    node.y = childrenVerticalCenter - (nodeSize.height / 2);
 
     // Adjust positions for left-directed layouts
     if (effectiveDirection === 'left') {

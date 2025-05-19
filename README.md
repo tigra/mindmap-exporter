@@ -67,11 +67,11 @@ The Classic MindMap Layout places the parent node in the center with children di
 ```
     Left Column                 Parent                 Right Column
     +---------+               +--------+               +----------+
-    | Child 1 |------→        |        |        ←------|  Child 4 |
+    | Child 1 |------+        |        |        +------|  Child 4 |
     +---------+      |        |        |        |      +----------+
                      |========# Parent #========|
     +---------+      |        |  Node  |        |      +----------+
-    | Child 2|+------→        |        |        ←------|  Child 3 |
+    | Child 2|+------+        |        |        +------|  Child 3 |
     +---------+               +--------+               +----------+
 ```
 
