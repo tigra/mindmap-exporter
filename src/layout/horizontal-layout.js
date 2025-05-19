@@ -30,7 +30,20 @@ class HorizontalLayout extends Layout {
    * @return {Object} The size of the laid out subtree
    */
   applyLayout(node, x, y, style) {
-    console.groupCollapsed(`HorizontalLayout.applyLayout(${node.text})`);
+    const boundingBox = this.applyLayoutRelative(node, x, y, style);
+    return boundingBox;
+  }
+
+  /**
+   * Apply horizontal layout to a node and its children (recursive implementation)
+   * @param {Node} node - The node to layout
+   * @param {number} x - The x coordinate
+   * @param {number} y - The y coordinate
+   * @param {Object} style - The style to apply (StyleManager)
+   * @return {Object} The size of the laid out subtree
+   */
+  applyLayoutRelative(node, x, y, style) {
+    console.groupCollapsed(`HorizontalLayout.applyLayoutRelative(${node.text})`);
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
@@ -95,8 +108,8 @@ class HorizontalLayout extends Layout {
         childLevelStyle.childPadding
       );
 
-      // Apply layout to child
-      const childSize = childLayout.applyLayout(child, childX, y + totalHeight, style);
+      // Apply layout to child - call applyLayoutRelative recursively
+      const childSize = childLayout.applyLayoutRelative(child, childX, y + totalHeight, style);
 
       totalHeight += childSize.height + this.childPadding;
       maxChildWidth = Math.max(maxChildWidth, childSize.width);
