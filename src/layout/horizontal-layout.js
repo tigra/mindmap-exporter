@@ -82,41 +82,8 @@ class HorizontalLayout extends Layout {
       return node.boundingBox;
     }
 
-    // Calculate child X position based on direction
-    var childX;
-    if (effectiveDirection === 'right') {
-       childX = x + nodeSize.width + this.parentPadding;
-    } else {
-       childX = x - this.parentPadding;
-    }
-
-    let totalHeight = 0;
-    let maxChildWidth = 0;
-
-    // Position children
-    for (let i = 0; i < node.children.length; i++) {
-      const child = node.children[i];
-
-      // Get the appropriate layout for the child's level
-      const childLevelStyle = style.getLevelStyle(child.level);
-      const childLayoutType = style.getEffectiveValue(child, 'layoutType');
-
-      // Create appropriate layout for child using LayoutFactory
-      const childLayout = LayoutFactory.createLayout(
-        childLayoutType,
-        childLevelStyle.parentPadding,
-        childLevelStyle.childPadding
-      );
-
-      // Apply layout to child - call applyLayoutRelative recursively
-      const childSize = childLayout.applyLayoutRelative(child, childX, y + totalHeight, style);
-
-      totalHeight += childSize.height + this.childPadding;
-      maxChildWidth = Math.max(maxChildWidth, childSize.width);
-    }
-
-    // Remove extra padding from last child
-    totalHeight -= this.childPadding;
+    // Calculate child position and dimensions
+    const { totalHeight, maxChildWidth } = this.positionChildren(node, x, y, nodeSize, effectiveDirection, style);
 
     // Always center parent vertically against its children, regardless of which is taller
     // Calculate the vertical center point of all children combined
@@ -189,6 +156,56 @@ class HorizontalLayout extends Layout {
       // When direction is left, parent connects from its left side
       return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
     }
+  }
+
+  /**
+   * Position children nodes and calculate dimensions
+   * @param {Node} node - The parent node
+   * @param {number} x - The parent x coordinate
+   * @param {number} y - The parent y coordinate
+   * @param {Object} nodeSize - The parent node size
+   * @param {string} effectiveDirection - The layout direction
+   * @param {Object} style - The style to apply
+   * @return {Object} Total height and max child width
+   */
+  positionChildren(node, x, y, nodeSize, effectiveDirection, style) {
+    // Calculate child X position based on direction
+    var childX;
+    if (effectiveDirection === 'right') {
+       childX = x + nodeSize.width + this.parentPadding;
+    } else {
+       childX = x - this.parentPadding;
+    }
+
+    let totalHeight = 0;
+    let maxChildWidth = 0;
+
+    // Position children
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
+
+      // Get the appropriate layout for the child's level
+      const childLevelStyle = style.getLevelStyle(child.level);
+      const childLayoutType = style.getEffectiveValue(child, 'layoutType');
+
+      // Create appropriate layout for child using LayoutFactory
+      const childLayout = LayoutFactory.createLayout(
+        childLayoutType,
+        childLevelStyle.parentPadding,
+        childLevelStyle.childPadding
+      );
+
+      // Apply layout to child - call applyLayoutRelative recursively
+      const childSize = childLayout.applyLayoutRelative(child, childX, y + totalHeight, style);
+
+      totalHeight += childSize.height + this.childPadding;
+      maxChildWidth = Math.max(maxChildWidth, childSize.width);
+    }
+
+    // Remove extra padding from last child
+    totalHeight -= this.childPadding;
+    
+    return { totalHeight, maxChildWidth };
   }
 
   /**
