@@ -91,13 +91,6 @@ class HorizontalLayout extends Layout {
     // Place the node so its center aligns with the center of its children
     node.y = childrenVerticalCenter - (nodeSize.height / 2);
 
-    // Adjust positions for left-directed layouts
-    if (effectiveDirection === 'left') {
-      for (let i = 0; i < node.children.length; i++) {
-        this.adjustPositionRecursive(node.children[i], -node.children[i].width, 0);
-      }
-    }
-
     // Calculate bounding box dimensions
     const bbX = effectiveDirection === 'right' ? x : x - maxChildWidth - this.parentPadding;
     const bbWidth = nodeSize.width + this.parentPadding + maxChildWidth;
@@ -119,8 +112,6 @@ class HorizontalLayout extends Layout {
           maxY = Math.max(maxY, child.boundingBox.y + child.boundingBox.height);
         }
       }
-
-//      node.moveBoundingBoxTo(x, y);
 
       node.boundingBox = {
         x: minX,
@@ -204,7 +195,14 @@ class HorizontalLayout extends Layout {
 
     // Remove extra padding from last child
     totalHeight -= this.childPadding;
-    
+
+        // Adjust positions for left-directed layouts
+    if (effectiveDirection === 'left') {
+      for (let i = 0; i < node.children.length; i++) {
+        this.adjustPositionRecursive(node.children[i], -node.children[i].width, 0);
+      }
+    }
+
     return { totalHeight, maxChildWidth };
   }
 
