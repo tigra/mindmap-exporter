@@ -84,41 +84,9 @@ class HorizontalLayout extends Layout {
 
     // Calculate child position and dimensions
     const { totalHeight, maxChildWidth } = this.positionChildren(node, x, y, nodeSize, effectiveDirection, style);
-
-    // Always center parent vertically against its children, regardless of which is taller
-    // Calculate the vertical center point of all children combined
-    const childrenVerticalCenter = y + (totalHeight / 2);
-    // Place the node so its center aligns with the center of its children
-    node.y = childrenVerticalCenter - (nodeSize.height / 2);
-
-    // Calculate bounding box dimensions
-    const bbX = effectiveDirection === 'right' ? x : x - maxChildWidth - this.parentPadding;
-    const bbWidth = nodeSize.width + this.parentPadding + maxChildWidth;
-
-      // Calculate bounding box dimensions by properly accounting for all children's actual bounding boxes
-      // Start with the parent node's position and size
-      let minX = x;
-      let maxX = x + nodeSize.width;
-      let minY = y - nodeSize.height / 2;
-      let maxY = y + nodeSize.height / 2;
-
-      // Now check all children's bounding boxes to ensure our bounding box contains them all
-      for (let i = 0; i < node.children.length; i++) {
-        const child = node.children[i];
-        if (child.boundingBox) {
-          minX = Math.min(minX, child.boundingBox.x);
-          maxX = Math.max(maxX, child.boundingBox.x + child.boundingBox.width);
-          minY = Math.min(minY, child.boundingBox.y);
-          maxY = Math.max(maxY, child.boundingBox.y + child.boundingBox.height);
-        }
-      }
-
-      node.boundingBox = {
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY
-      };
+    
+    // Center parent relative to children and calculate bounding box
+    this.centerParentAndCalculateBoundingBox(node, x, y, nodeSize, totalHeight, maxChildWidth, effectiveDirection);
 
     console.groupEnd();
     return node.boundingBox;
@@ -147,6 +115,55 @@ class HorizontalLayout extends Layout {
       // When direction is left, parent connects from its left side
       return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
     }
+  }
+
+  /**
+   * Center parent node relative to children and calculate bounding box
+   * @param {Node} node - The parent node
+   * @param {number} x - The parent x coordinate
+   * @param {number} y - The parent y coordinate
+   * @param {Object} nodeSize - The parent node size
+   * @param {number} totalHeight - Total height of children
+   * @param {number} maxChildWidth - Maximum width of children
+   * @param {string} effectiveDirection - The layout direction
+   */
+  centerParentAndCalculateBoundingBox(node, x, y, nodeSize, totalHeight, maxChildWidth, effectiveDirection) {
+    // Always center parent vertically against its children, regardless of which is taller
+    // Calculate the vertical center point of all children combined
+    const childrenVerticalCenter = y + (totalHeight / 2);
+    // Place the node so its center aligns with the center of its children
+    node.y = childrenVerticalCenter - (nodeSize.height / 2);
+
+    // Direction is retrieved directly from the parameter
+
+    // Calculate bounding box dimensions
+    const bbX = effectiveDirection === 'right' ? x : x - maxChildWidth - this.parentPadding;
+    const bbWidth = nodeSize.width + this.parentPadding + maxChildWidth;
+
+    // Calculate bounding box dimensions by properly accounting for all children's actual bounding boxes
+    // Start with the parent node's position and size
+    let minX = x;
+    let maxX = x + nodeSize.width;
+    let minY = y - nodeSize.height / 2;
+    let maxY = y + nodeSize.height / 2;
+
+    // Now check all children's bounding boxes to ensure our bounding box contains them all
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
+      if (child.boundingBox) {
+        minX = Math.min(minX, child.boundingBox.x);
+        maxX = Math.max(maxX, child.boundingBox.x + child.boundingBox.width);
+        minY = Math.min(minY, child.boundingBox.y);
+        maxY = Math.max(maxY, child.boundingBox.y + child.boundingBox.height);
+      }
+    }
+
+    node.boundingBox = {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
   }
 
   /**
