@@ -82,8 +82,8 @@ class HorizontalLayout extends Layout {
       return node.boundingBox;
     }
 
-    // Calculate child position and dimensions using relative positioning (x=0, y=0)
-    const { totalHeight, maxChildWidth } = this.positionChildren(node, 0, 0, nodeSize, effectiveDirection, style);
+    // Calculate child position and dimensions using relative positioning
+    const { totalHeight, maxChildWidth } = this.positionChildren(node, nodeSize, effectiveDirection, style);
 
     // Adjust all children positions to compensate for relative positioning
     for (let i = 0; i < node.children.length; i++) {
@@ -184,20 +184,18 @@ class HorizontalLayout extends Layout {
   /**
    * Position children nodes and calculate dimensions
    * @param {Node} node - The parent node
-   * @param {number} x - The parent x coordinate
-   * @param {number} y - The parent y coordinate
    * @param {Object} nodeSize - The parent node size
    * @param {string} effectiveDirection - The layout direction
    * @param {Object} style - The style to apply
    * @return {Object} Total height and max child width
    */
-  positionChildren(node, x, y, nodeSize, effectiveDirection, style) {
-    // Calculate child X position based on direction
+  positionChildren(node, nodeSize, effectiveDirection, style) {
+    // Calculate child X position based on direction (x=0, y=0 inlined)
     var childX;
     if (effectiveDirection === 'right') {
-       childX = x + nodeSize.width + this.parentPadding;
+       childX = nodeSize.width + this.parentPadding;
     } else {
-       childX = x - this.parentPadding;
+       childX = -this.parentPadding;
     }
 
     let totalHeight = 0;
@@ -219,7 +217,7 @@ class HorizontalLayout extends Layout {
       );
 
       // Apply layout to child - call applyLayoutRelative recursively
-      const childSize = childLayout.applyLayoutRelative(child, childX, y + totalHeight, style);
+      const childSize = childLayout.applyLayoutRelative(child, childX, totalHeight, style);
 
       totalHeight += childSize.height + this.childPadding;
       maxChildWidth = Math.max(maxChildWidth, childSize.width);
