@@ -5,6 +5,120 @@ import ConnectionPoint from './connection-point.js';
 import LayoutFactory from './layout-factory.js';
 
 /**
+ * Right column positioning for horizontal layout
+ */
+class RightColumn {
+  constructor(parentPadding, childPadding) {
+    this.parentPadding = parentPadding;
+    this.childPadding = childPadding;
+  }
+
+  /**
+   * Position nodes in a right column
+   * @param {Array} nodes - The nodes to position
+   * @param {Object} nodeSize - The parent node size
+   * @param {Object} style - The style to apply
+   * @return {Object} Total height and max child width
+   */
+  positionNodes(nodes, nodeSize, style) {
+    // Calculate child X position for right direction
+    const childX = nodeSize.width + this.parentPadding;
+
+    let totalHeight = 0;
+    let maxChildWidth = 0;
+
+    // Position children
+    for (let i = 0; i < nodes.length; i++) {
+      const child = nodes[i];
+
+      // Get the appropriate layout for the child's level
+      const childLevelStyle = style.getLevelStyle(child.level);
+      const childLayoutType = style.getEffectiveValue(child, 'layoutType');
+
+      // Create appropriate layout for child using LayoutFactory
+      const childLayout = LayoutFactory.createLayout(
+        childLayoutType,
+        childLevelStyle.parentPadding,
+        childLevelStyle.childPadding
+      );
+
+      // Apply layout to child - call applyLayoutRelative recursively
+      const childSize = childLayout.applyLayoutRelative(child, childX, totalHeight, style);
+
+      totalHeight += childSize.height + this.childPadding;
+      maxChildWidth = Math.max(maxChildWidth, childSize.width);
+    }
+
+    // Remove extra padding from last child
+    if (nodes.length > 0) {
+      totalHeight -= this.childPadding;
+    }
+
+    return { totalHeight, maxChildWidth };
+  }
+}
+
+/**
+ * Left column positioning for horizontal layout
+ */
+class LeftColumn {
+  constructor(parentPadding, childPadding, adjustPositionRecursive) {
+    this.parentPadding = parentPadding;
+    this.childPadding = childPadding;
+    this.adjustPositionRecursive = adjustPositionRecursive;
+  }
+
+  /**
+   * Position nodes in a left column
+   * @param {Array} nodes - The nodes to position
+   * @param {Object} nodeSize - The parent node size
+   * @param {Object} style - The style to apply
+   * @return {Object} Total height and max child width
+   */
+  positionNodes(nodes, nodeSize, style) {
+    // Calculate child X position for left direction
+    const childX = -this.parentPadding;
+
+    let totalHeight = 0;
+    let maxChildWidth = 0;
+
+    // Position children
+    for (let i = 0; i < nodes.length; i++) {
+      const child = nodes[i];
+
+      // Get the appropriate layout for the child's level
+      const childLevelStyle = style.getLevelStyle(child.level);
+      const childLayoutType = style.getEffectiveValue(child, 'layoutType');
+
+      // Create appropriate layout for child using LayoutFactory
+      const childLayout = LayoutFactory.createLayout(
+        childLayoutType,
+        childLevelStyle.parentPadding,
+        childLevelStyle.childPadding
+      );
+
+      // Apply layout to child - call applyLayoutRelative recursively
+      const childSize = childLayout.applyLayoutRelative(child, childX, totalHeight, style);
+
+      totalHeight += childSize.height + this.childPadding;
+      maxChildWidth = Math.max(maxChildWidth, childSize.width);
+    }
+
+    // Remove extra padding from last child
+    if (nodes.length > 0) {
+      totalHeight -= this.childPadding;
+    }
+
+    // Adjust positions for left-directed layouts
+    for (let i = 0; i < nodes.length; i++) {
+      this.adjustPositionRecursive(nodes[i], -nodes[i].width, 0);
+    }
+
+    return { totalHeight, maxChildWidth };
+  }
+}
+
+/**
  * Horizontal layout implementation
  */
 class HorizontalLayout extends Layout {
@@ -82,17 +196,24 @@ class HorizontalLayout extends Layout {
       return node.boundingBox;
     }
 
-    // Calculate child position and dimensions using relative positioning
-    const { totalHeight, maxChildWidth } = this.positionChildren(node, nodeSize, effectiveDirection, style);
+    // Calculate child position and dimensions using appropriate column class
+    let column;
+    if (effectiveDirection === 'right') {
+      column = new RightColumn(this.parentPadding, this.childPadding);
+    } else {
+      column = new LeftColumn(this.parentPadding, this.childPadding, this.adjustPositionRecursive.bind(this));
+    }
+    
+    const { totalHeight, maxChildWidth } = column.positionNodes(node.children, nodeSize, style);
+
+    // Center parent relative to children
+    this.centerParentAndChildren(node, x, y, nodeSize, totalHeight);
 
     // Adjust all children positions to compensate for relative positioning
     for (let i = 0; i < node.children.length; i++) {
       this.adjustPositionRecursive(node.children[i], x, y);
     }
-    
-    // Center parent relative to children
-    this.centerParentAndChildren(node, x, y, nodeSize, totalHeight);
-    
+
     // Calculate bounding box
     this.calculateBoundingBox(node, x, y, nodeSize, maxChildWidth, effectiveDirection);
 
@@ -181,60 +302,6 @@ class HorizontalLayout extends Layout {
     };
   }
 
-  /**
-   * Position children nodes and calculate dimensions
-   * @param {Node} node - The parent node
-   * @param {Object} nodeSize - The parent node size
-   * @param {string} effectiveDirection - The layout direction
-   * @param {Object} style - The style to apply
-   * @return {Object} Total height and max child width
-   */
-  positionChildren(node, nodeSize, effectiveDirection, style) {
-    // Calculate child X position based on direction (x=0, y=0 inlined)
-    var childX;
-    if (effectiveDirection === 'right') {
-       childX = nodeSize.width + this.parentPadding;
-    } else {
-       childX = -this.parentPadding;
-    }
-
-    let totalHeight = 0;
-    let maxChildWidth = 0;
-
-    // Position children
-    for (let i = 0; i < node.children.length; i++) {
-      const child = node.children[i];
-
-      // Get the appropriate layout for the child's level
-      const childLevelStyle = style.getLevelStyle(child.level);
-      const childLayoutType = style.getEffectiveValue(child, 'layoutType');
-
-      // Create appropriate layout for child using LayoutFactory
-      const childLayout = LayoutFactory.createLayout(
-        childLayoutType,
-        childLevelStyle.parentPadding,
-        childLevelStyle.childPadding
-      );
-
-      // Apply layout to child - call applyLayoutRelative recursively
-      const childSize = childLayout.applyLayoutRelative(child, childX, totalHeight, style);
-
-      totalHeight += childSize.height + this.childPadding;
-      maxChildWidth = Math.max(maxChildWidth, childSize.width);
-    }
-
-    // Remove extra padding from last child
-    totalHeight -= this.childPadding;
-
-    // Adjust positions for left-directed layouts
-    if (effectiveDirection === 'left') {
-      for (let i = 0; i < node.children.length; i++) {
-        this.adjustPositionRecursive(node.children[i], -node.children[i].width, 0);
-      }
-    }
-
-    return { totalHeight, maxChildWidth };
-  }
 
   /**
    * Get the connection point for a child node in horizontal layout
