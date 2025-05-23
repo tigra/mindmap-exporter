@@ -242,10 +242,10 @@ class HorizontalLayout extends Layout {
     const { totalHeight, maxChildWidth } = column.positionNodes(node.children, nodeSize, style);
 
     // Center parent relative to children (while still at relative positions)
-    this.centerParentAndChildren(node, 0, 0, nodeSize, totalHeight);
+    this.centerParentAndChildren(node, nodeSize, totalHeight);
 
     // Calculate bounding box at relative positions
-    this.calculateBoundingBox(node, 0, 0, nodeSize, maxChildWidth, effectiveDirection);
+    this.calculateBoundingBox(node, nodeSize, maxChildWidth, effectiveDirection);
 
     // Final adjustment: move both node and all children to rectangle at (x, y)
     this.adjustNodeTreeToPosition(node, x, y);
@@ -282,12 +282,10 @@ class HorizontalLayout extends Layout {
   /**
    * Center parent node relative to children
    * @param {Node} node - The parent node
-   * @param {number} x - The parent x coordinate
-   * @param {number} y - The parent y coordinate
    * @param {Object} nodeSize - The parent node size
    * @param {number} totalHeight - Total height of children
    */
-  centerParentAndChildren(node, x, y, nodeSize, totalHeight) {
+  centerParentAndChildren(node, nodeSize, totalHeight) {
     // If no children, keep the parent at its current position
     if (node.children.length === 0) {
       return;
@@ -381,13 +379,11 @@ class HorizontalLayout extends Layout {
   /**
    * Calculate bounding box for node and its children
    * @param {Node} node - The parent node
-   * @param {number} x - The parent x coordinate
-   * @param {number} y - The parent y coordinate
    * @param {Object} nodeSize - The parent node size
    * @param {number} maxChildWidth - Maximum width of children
    * @param {string} effectiveDirection - The layout direction
    */
-  calculateBoundingBox(node, x, y, nodeSize, maxChildWidth, effectiveDirection) {
+  calculateBoundingBox(node, nodeSize, maxChildWidth, effectiveDirection) {
     // Calculate bounding box dimensions by properly accounting for all children's actual bounding boxes
     // Start with the parent node's position and size (using top-left positioning)
     let minX = node.x;
