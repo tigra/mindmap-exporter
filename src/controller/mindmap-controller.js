@@ -381,6 +381,54 @@ logPropertyInheritanceChain(node, property) {
       if (rootNode) {
         rootNode.setOverride('direction', 'right');
       }
+    } else if (layoutType === 'outline-left') {
+      // Configure style system for outline left layout
+      this.styleManager.configure({
+        levelStyles: {
+          1: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          2: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          3: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          4: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          5: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          6: { layoutType: 'outline', direction: 'left', horizontalShift: 50 }
+        },
+        defaultStyle: { 
+          layoutType: 'outline', 
+          direction: 'left', 
+          horizontalShift: 50 
+        }
+      });
+      
+      // Set node overrides
+      if (rootNode) {
+        rootNode.setOverride('layoutType', 'outline');
+        rootNode.setOverride('direction', 'left');
+        rootNode.setOverride('horizontalShift', 50);
+      }
+    } else if (layoutType === 'outline-right') {
+      // Configure style system for outline right layout
+      this.styleManager.configure({
+        levelStyles: {
+          1: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          2: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          3: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          4: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          5: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          6: { layoutType: 'outline', direction: 'right', horizontalShift: 50 }
+        },
+        defaultStyle: { 
+          layoutType: 'outline', 
+          direction: 'right', 
+          horizontalShift: 50 
+        }
+      });
+      
+      // Set node overrides
+      if (rootNode) {
+        rootNode.setOverride('layoutType', 'outline');
+        rootNode.setOverride('direction', 'right');
+        rootNode.setOverride('horizontalShift', 50);
+      }
     } else if (layoutType === 'vertical-up') {
       // Configure style system
       this.styleManager.configure({

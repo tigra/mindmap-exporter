@@ -475,6 +475,40 @@ class MindmapApp {
              direction: 'up'
         }
       });
+    } else if (layoutType === 'outline-left') {
+      console.log('applying outline left layout...');
+      style.configure({
+        levelStyles: {
+          1: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          2: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          3: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          4: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          5: { layoutType: 'outline', direction: 'left', horizontalShift: 50 },
+          6: { layoutType: 'outline', direction: 'left', horizontalShift: 50 }
+        },
+        defaultStyle: { 
+          layoutType: 'outline', 
+          direction: 'left', 
+          horizontalShift: 50 
+        }
+      });
+    } else if (layoutType === 'outline-right') {
+      console.log('applying outline right layout...');
+      style.configure({
+        levelStyles: {
+          1: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          2: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          3: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          4: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          5: { layoutType: 'outline', direction: 'right', horizontalShift: 50 },
+          6: { layoutType: 'outline', direction: 'right', horizontalShift: 50 }
+        },
+        defaultStyle: { 
+          layoutType: 'outline', 
+          direction: 'right', 
+          horizontalShift: 50 
+        }
+      });
     } else {
       style.setGlobalLayoutType(layoutType);
     }
@@ -498,6 +532,14 @@ class MindmapApp {
     } else if (layoutType === 'vertical-over-taproot') {
         this.model.getRoot().setOverride('layoutType', 'vertical');
         this.model.getRoot().setOverride('direction', 'down');
+    } else if (layoutType === 'outline-left') {
+        this.model.getRoot().setOverride('layoutType', 'outline');
+        this.model.getRoot().setOverride('direction', 'left');
+        this.model.getRoot().setOverride('horizontalShift', 50);
+    } else if (layoutType === 'outline-right') {
+        this.model.getRoot().setOverride('layoutType', 'outline');
+        this.model.getRoot().setOverride('direction', 'right');
+        this.model.getRoot().setOverride('horizontalShift', 50);
     } else {
         this.model.getRoot().clearOverridesRecursive();
     }

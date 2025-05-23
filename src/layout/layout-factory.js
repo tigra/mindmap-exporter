@@ -4,6 +4,7 @@ import HorizontalLayout from './horizontal-layout.js';
 import VerticalLayout from './vertical-layout.js';
 import TaprootLayout from './taproot-layout.js';
 import ClassicMindmapLayout from './classic-mindmap-layout.js';
+import OutlineLayout from './outline-layout.js';
 
 /**
  * Factory for creating appropriate layouts
@@ -11,13 +12,14 @@ import ClassicMindmapLayout from './classic-mindmap-layout.js';
 class LayoutFactory {
   /**
    * Create a layout based on type and parameters
-   * @param {string} type - The layout type ('horizontal', 'vertical', 'taproot', or 'classic')
+   * @param {string} type - The layout type ('horizontal', 'vertical', 'taproot', 'classic', or 'outline')
    * @param {number} parentPadding - Padding between parent and children
    * @param {number} childPadding - Padding between siblings
    * @param {string} direction - Direction of layout ('right', 'left', 'down', or 'up')
+   * @param {number} horizontalShift - Horizontal shift for outline layout (optional)
    * @return {Layout} The created layout instance
    */
-  static createLayout(type, parentPadding, childPadding, direction) {
+  static createLayout(type, parentPadding, childPadding, direction, horizontalShift) {
     // Set default values
     parentPadding = parentPadding || 80;
     childPadding = childPadding || 20;
@@ -39,6 +41,13 @@ class LayoutFactory {
         // Default direction for vertical layout is 'down'
         const verticalDirection = direction === 'up' ? 'up' : 'down';
         layout = new VerticalLayout(parentPadding, childPadding, verticalDirection);
+        break;
+
+      case 'outline':
+        // Default direction for outline layout is 'right'
+        const outlineDirection = direction === 'left' ? 'left' : 'right';
+        const outlineHorizontalShift = horizontalShift || 50;
+        layout = new OutlineLayout(parentPadding, childPadding, outlineHorizontalShift, outlineDirection);
         break;
 
       case 'horizontal':
