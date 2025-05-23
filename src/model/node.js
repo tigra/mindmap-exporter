@@ -273,6 +273,77 @@ class MindmapNode {
       this.children[i]._moveNodeAndDescendantsBy(deltaX, deltaY);
     }
   }
+
+  /**
+   * Calculate bounding box for this node and its children
+   * Updates this node's boundingBox property to contain itself and all children
+   */
+  calculateBoundingBox() {
+    // Calculate bounding box dimensions by properly accounting for all children's actual bounding boxes
+    // Start with this node's position and size (using top-left positioning)
+    let minX = this.x;
+    let maxX = this.x + this.width;
+    let minY = this.y;
+    let maxY = this.y + this.height;
+
+    // Now check all children's bounding boxes to ensure our bounding box contains them all
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      if (child.boundingBox) {
+        minX = Math.min(minX, child.boundingBox.x);
+        maxX = Math.max(maxX, child.boundingBox.x + child.boundingBox.width);
+        minY = Math.min(minY, child.boundingBox.y);
+        maxY = Math.max(maxY, child.boundingBox.y + child.boundingBox.height);
+      }
+    }
+
+    this.boundingBox = {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
+  }
+
+  /**
+   * Adjust entire node tree so that the bounding box moves to a target position
+   * @param {number} targetX - Target x position for the bounding box
+   * @param {number} targetY - Target y position for the bounding box
+   */
+  adjustNodeTreeToPosition(targetX, targetY) {
+    if (!this.boundingBox) {
+      console.warn(`adjustNodeTreeToPosition: No bounding box for node (${this.text})`);
+      return;
+    }
+
+    const deltaX = targetX - this.boundingBox.x;
+    const deltaY = targetY - this.boundingBox.y;
+    
+    // Adjust this node's position
+    this.x += deltaX;
+    this.y += deltaY;
+    
+    // Adjust all children positions recursively
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i]._moveNodeAndDescendantsBy(deltaX, deltaY);
+    }
+    
+    // Adjust bounding box
+    this.boundingBox.x = targetX;
+    this.boundingBox.y = targetY;
+
+    // Log positions after adjustment
+    console.log(`adjustNodeTreeToPosition() - after adjustment for node (${this.text}) - bounding box moved to (${targetX}, ${targetY}):`);
+    console.log(`  Parent: position = {x: ${this.x}, y: ${this.y}}, boundingBox = {x: ${this.boundingBox.x}, y: ${this.boundingBox.y}, width: ${this.boundingBox.width}, height: ${this.boundingBox.height}}`);
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      if (child.boundingBox) {
+        console.log(`  Child ${i} (${child.text}): position = {x: ${child.x}, y: ${child.y}}, boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}`);
+      } else {
+        console.log(`  Child ${i} (${child.text}): position = {x: ${child.x}, y: ${child.y}}, no boundingBox`);
+      }
+    }
+  }
 }
 
 // For backward compatibility, export to window object if in browser
