@@ -387,6 +387,9 @@ class HorizontalLayout extends Layout {
 // For backward compatibility
 if (typeof window !== 'undefined') {
   window.HorizontalLayout = HorizontalLayout;
+  window.RightColumn = RightColumn;
+  window.LeftColumn = LeftColumn;
 }
 
 export default HorizontalLayout;
+export { RightColumn, LeftColumn };
