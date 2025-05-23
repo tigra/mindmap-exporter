@@ -91,7 +91,7 @@ class LeftColumn {
     let totalHeight = 0;
     let maxChildWidth = 0;
 
-    // Position children
+    // Position children initially
     for (let i = 0; i < nodes.length; i++) {
       const child = nodes[i];
 
@@ -118,17 +118,30 @@ class LeftColumn {
       totalHeight -= this.childPadding;
     }
 
-    // Adjust positions for left-directed layouts
-    for (let i = 0; i < nodes.length; i++) {
-      this.adjustPositionRecursive(nodes[i], -nodes[i].width, 0);
-    }
-
-    // Log resulting bounding boxes
-    console.log(`LeftColumn.positionNodes() - positioned ${nodes.length} nodes:`);
+    // Align all children's right edges to the same vertical line
+    // Calculate the rightmost edge position (relative to parent at 0,0)
+    const alignmentX = -this.parentPadding;
+    
     for (let i = 0; i < nodes.length; i++) {
       const child = nodes[i];
       if (child.boundingBox) {
-        console.log(`  Child ${i} (${child.text}): boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}`);
+        // Calculate how much to move the child so its right edge aligns
+        const currentRightEdge = child.boundingBox.x + child.boundingBox.width;
+        const targetRightEdge = alignmentX;
+        const adjustment = targetRightEdge - currentRightEdge;
+        
+        // Adjust the child's position to align its right edge
+        this.adjustPositionRecursive(child, adjustment, 0);
+      }
+    }
+
+    // Log resulting bounding boxes
+    console.log(`LeftColumn.positionNodes() - positioned ${nodes.length} nodes with right-edge alignment:`);
+    for (let i = 0; i < nodes.length; i++) {
+      const child = nodes[i];
+      if (child.boundingBox) {
+        const rightEdge = child.boundingBox.x + child.boundingBox.width;
+        console.log(`  Child ${i} (${child.text}): boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}, rightEdge: ${rightEdge}`);
       }
     }
 
@@ -226,10 +239,7 @@ class HorizontalLayout extends Layout {
     } else {
       column = new LeftColumn(this.parentPadding, this.childPadding, this.adjustPositionRecursive.bind(this));
     }
-
-    console.log("zzz");
     const { totalHeight, maxChildWidth } = column.positionNodes(node.children, nodeSize, style);
-    console.log('xxx');
 
     // Center parent relative to children (while still at relative positions)
     this.centerParentAndChildren(node, 0, 0, nodeSize, totalHeight);
