@@ -54,6 +54,15 @@ class RightColumn {
       totalHeight -= this.childPadding;
     }
 
+    // Log resulting bounding boxes
+    console.log(`RightColumn.positionNodes() - positioned ${nodes.length} nodes:`);
+    for (let i = 0; i < nodes.length; i++) {
+      const child = nodes[i];
+      if (child.boundingBox) {
+        console.log(`  Child ${i} (${child.text}): boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}`);
+      }
+    }
+
     return { totalHeight, maxChildWidth };
   }
 }
@@ -114,6 +123,15 @@ class LeftColumn {
       this.adjustPositionRecursive(nodes[i], -nodes[i].width, 0);
     }
 
+    // Log resulting bounding boxes
+    console.log(`LeftColumn.positionNodes() - positioned ${nodes.length} nodes:`);
+    for (let i = 0; i < nodes.length; i++) {
+      const child = nodes[i];
+      if (child.boundingBox) {
+        console.log(`  Child ${i} (${child.text}): boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}`);
+      }
+    }
+
     return { totalHeight, maxChildWidth };
   }
 }
@@ -161,8 +179,9 @@ class HorizontalLayout extends Layout {
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
-    node.x = x;
-    node.y = y - (nodeSize.height / 2);
+    // Start by positioning node at (0, 0) by top-left corner
+    node.x = 0;
+    node.y = 0;
     node.width = nodeSize.width;
     node.height = nodeSize.height;
 
@@ -184,11 +203,15 @@ class HorizontalLayout extends Layout {
       borderRadius: levelStyle.borderRadius
     };
 
-    // If the node has no children or is collapsed, return its dimensions
+    // If the node has no children or is collapsed, adjust to final position and return
     if (node.children.length === 0 || node.collapsed) {
+      // Adjust node position to (x, y) by top-left corner
+      node.x = x;
+      node.y = y;
+      
       node.boundingBox = {
         x: x,
-        y: y - 0.5 * nodeSize.height,
+        y: y,
         width: nodeSize.width,
         height: nodeSize.height
       };
@@ -203,19 +226,19 @@ class HorizontalLayout extends Layout {
     } else {
       column = new LeftColumn(this.parentPadding, this.childPadding, this.adjustPositionRecursive.bind(this));
     }
-    
+
+    console.log("zzz");
     const { totalHeight, maxChildWidth } = column.positionNodes(node.children, nodeSize, style);
+    console.log('xxx');
 
-    // Center parent relative to children
-    this.centerParentAndChildren(node, x, y, nodeSize, totalHeight);
+    // Center parent relative to children (while still at relative positions)
+    this.centerParentAndChildren(node, 0, 0, nodeSize, totalHeight);
 
-    // Adjust all children positions to compensate for relative positioning
-    for (let i = 0; i < node.children.length; i++) {
-      this.adjustPositionRecursive(node.children[i], x, y);
-    }
+    // Calculate bounding box at relative positions
+    this.calculateBoundingBox(node, 0, 0, nodeSize, maxChildWidth, effectiveDirection);
 
-    // Calculate bounding box
-    this.calculateBoundingBox(node, x, y, nodeSize, maxChildWidth, effectiveDirection);
+    // Final adjustment: move both node and all children to rectangle at (x, y)
+    this.adjustNodeTreeToPosition(node, x, y);
 
     console.groupEnd();
     return node.boundingBox;
@@ -255,11 +278,94 @@ class HorizontalLayout extends Layout {
    * @param {number} totalHeight - Total height of children
    */
   centerParentAndChildren(node, x, y, nodeSize, totalHeight) {
-    // Always center parent vertically against its children, regardless of which is taller
-    // Calculate the vertical center point of all children combined
-    const childrenVerticalCenter = y + (totalHeight / 2);
-    // Place the node so its center aligns with the center of its children
-    node.y = childrenVerticalCenter - (nodeSize.height / 2);
+    // If no children, keep the parent at its current position
+    if (node.children.length === 0) {
+      return;
+    }
+
+    // Find the actual vertical bounds of all children after positioning
+    let minChildY = Number.MAX_VALUE;
+    let maxChildY = Number.MIN_VALUE;
+
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
+      minChildY = Math.min(minChildY, child.y);
+      maxChildY = Math.max(maxChildY, child.y + child.height);
+    }
+
+    // Calculate the actual vertical center of all children
+    const childrenVerticalCenter = (minChildY + maxChildY) / 2;
+    
+    // Calculate the parent's vertical center
+    const parentVerticalCenter = node.y + (nodeSize.height / 2);
+    
+    // Determine which is taller: parent or combined children
+    const childrenHeight = maxChildY - minChildY;
+    const parentHeight = nodeSize.height;
+    
+    if (parentHeight > childrenHeight) {
+      // Parent is taller - center children relative to parent
+      const adjustment = parentVerticalCenter - childrenVerticalCenter;
+      for (let i = 0; i < node.children.length; i++) {
+        this.adjustPositionRecursive(node.children[i], 0, adjustment);
+      }
+    } else {
+      // Children are taller or equal - center parent relative to children
+      node.y = childrenVerticalCenter - (nodeSize.height / 2);
+    }
+
+    // Log parent and children bounding boxes after centering
+    console.log(`centerParentAndChildren() - after centering for node (${node.text}):`);
+    console.log(`  Parent: position = {x: ${node.x}, y: ${node.y}}, size = {width: ${node.width}, height: ${node.height}}`);
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
+      if (child.boundingBox) {
+        console.log(`  Child ${i} (${child.text}): position = {x: ${child.x}, y: ${child.y}}, boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}`);
+      } else {
+        console.log(`  Child ${i} (${child.text}): position = {x: ${child.x}, y: ${child.y}}, no boundingBox`);
+      }
+    }
+  }
+
+  /**
+   * Adjust entire node tree so that the bounding box moves to a target position
+   * @param {Node} node - The parent node
+   * @param {number} targetX - Target x position for the bounding box
+   * @param {number} targetY - Target y position for the bounding box
+   */
+  adjustNodeTreeToPosition(node, targetX, targetY) {
+    if (!node.boundingBox) {
+      console.warn(`adjustNodeTreeToPosition: No bounding box for node (${node.text})`);
+      return;
+    }
+
+    const deltaX = targetX - node.boundingBox.x;
+    const deltaY = targetY - node.boundingBox.y;
+    
+    // Adjust parent node position
+    node.x += deltaX;
+    node.y += deltaY;
+    
+    // Adjust all children positions
+    for (let i = 0; i < node.children.length; i++) {
+      this.adjustPositionRecursive(node.children[i], deltaX, deltaY);
+    }
+    
+    // Adjust bounding box
+    node.boundingBox.x = targetX;
+    node.boundingBox.y = targetY;
+
+    // Log positions after adjustment
+    console.log(`adjustNodeTreeToPosition() - after adjustment for node (${node.text}) - bounding box moved to (${targetX}, ${targetY}):`);
+    console.log(`  Parent: position = {x: ${node.x}, y: ${node.y}}, boundingBox = {x: ${node.boundingBox.x}, y: ${node.boundingBox.y}, width: ${node.boundingBox.width}, height: ${node.boundingBox.height}}`);
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
+      if (child.boundingBox) {
+        console.log(`  Child ${i} (${child.text}): position = {x: ${child.x}, y: ${child.y}}, boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}`);
+      } else {
+        console.log(`  Child ${i} (${child.text}): position = {x: ${child.x}, y: ${child.y}}, no boundingBox`);
+      }
+    }
   }
 
   /**
@@ -272,14 +378,10 @@ class HorizontalLayout extends Layout {
    * @param {string} effectiveDirection - The layout direction
    */
   calculateBoundingBox(node, x, y, nodeSize, maxChildWidth, effectiveDirection) {
-    // Calculate bounding box dimensions
-    const bbX = effectiveDirection === 'right' ? x : x - maxChildWidth - this.parentPadding;
-    const bbWidth = nodeSize.width + this.parentPadding + maxChildWidth;
-
     // Calculate bounding box dimensions by properly accounting for all children's actual bounding boxes
-    // Start with the parent node's position and size
-    let minX = x;
-    let maxX = x + nodeSize.width;
+    // Start with the parent node's position and size (using top-left positioning)
+    let minX = node.x;
+    let maxX = node.x + nodeSize.width;
     let minY = node.y;
     let maxY = node.y + nodeSize.height;
 
