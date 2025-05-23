@@ -168,6 +168,8 @@ class ColumnBasedLayout extends Layout {
       console.log('Positioning left column children...');
       leftColumn.currentY = childStartY;
       leftColumn.childX = parentCenterX - this.columnGap / 2;
+      // Set the alignment point for left column (right edge alignment)
+      leftColumn.alignmentX = parentCenterX - this.columnGap / 2;
       
       leftChildren.forEach(child => {
         leftColumn.addNode(child);
