@@ -126,6 +126,26 @@ class ColumnBasedLayout extends Layout {
   }
   
   /**
+   * Get column positioning configuration - can be overridden by subclasses
+   * @param {Node} node - The parent node
+   * @param {Object} nodeSize - The parent node size
+   * @param {number} childStartY - Starting Y coordinate for children
+   * @return {Object} Configuration for column positioning
+   */
+  getColumnPositioningConfig(node, nodeSize, childStartY) {
+    // Default TaprootLayout behavior
+    const parentCenterX = nodeSize.width / 2;
+    
+    return {
+      rightColumnX: parentCenterX + this.columnGap / 2,
+      leftColumnAlignmentX: parentCenterX - this.columnGap / 2,
+      rightColumnStartY: childStartY,
+      leftColumnStartY: childStartY,
+      paddingForColumns: this.parentPadding
+    };
+  }
+
+  /**
    * Position children in columns using the stateful RightColumn and LeftColumn classes
    * @param {Node} node - The parent node
    * @param {Array} leftChildren - Children in left column 
@@ -141,18 +161,18 @@ class ColumnBasedLayout extends Layout {
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
     
-    // Calculate the center point for the parent node (relative)
-    const parentCenterX = nodeSize.width / 2;
+    // Get positioning configuration (can be customized by subclasses)
+    const config = this.getColumnPositioningConfig(node, nodeSize, childStartY);
     
     // Create column instances with appropriate positioning
-    const rightColumn = new RightColumn(this.parentPadding, this.childPadding, nodeSize, style);
-    const leftColumn = new LeftColumn(this.parentPadding, this.childPadding, this.adjustPositionRecursive.bind(this), nodeSize, style);
+    const rightColumn = new RightColumn(config.paddingForColumns, this.childPadding, nodeSize, style);
+    const leftColumn = new LeftColumn(config.paddingForColumns, this.childPadding, this.adjustPositionRecursive.bind(this), nodeSize, style);
     
     // Position right column children using the column's addNode method
     if (rightChildren.length > 0) {
       console.log('Positioning right column children...');
-      rightColumn.currentY = childStartY;
-      rightColumn.childX = parentCenterX + this.columnGap / 2;
+      rightColumn.currentY = config.rightColumnStartY;
+      rightColumn.childX = config.rightColumnX;
       
       rightChildren.forEach(child => {
         rightColumn.addNode(child);
@@ -166,10 +186,10 @@ class ColumnBasedLayout extends Layout {
     // Position left column children using the column's addNode method
     if (leftChildren.length > 0) {
       console.log('Positioning left column children...');
-      leftColumn.currentY = childStartY;
-      leftColumn.childX = parentCenterX - this.columnGap / 2;
+      leftColumn.currentY = config.leftColumnStartY;
+      leftColumn.childX = config.leftColumnAlignmentX;
       // Set the alignment point for left column (right edge alignment)
-      leftColumn.alignmentX = parentCenterX - this.columnGap / 2;
+      leftColumn.alignmentX = config.leftColumnAlignmentX;
       
       leftChildren.forEach(child => {
         leftColumn.addNode(child);
@@ -180,7 +200,22 @@ class ColumnBasedLayout extends Layout {
       this.columnMaxY = Math.max(this.columnMaxY, leftColumn.currentY);
     }
     
+    // Apply post-processing for layouts that need vertical centering (like ClassicMindmapLayout)
+    this.applyColumnPostProcessing(node, leftColumn, rightColumn, config);
+    
     console.log('Column positioning complete. Left max width:', this.leftColumnMaxWidth, 'Right max width:', this.rightColumnMaxWidth);
+  }
+
+  /**
+   * Apply post-processing to columns - can be overridden by subclasses
+   * @param {Node} node - The parent node
+   * @param {LeftColumn} leftColumn - The left column instance
+   * @param {RightColumn} rightColumn - The right column instance
+   * @param {Object} config - The positioning configuration
+   */
+  applyColumnPostProcessing(node, leftColumn, rightColumn, config) {
+    // Default implementation does nothing
+    // Subclasses like ClassicMindmapLayout can override this for vertical centering
   }
 
   /**

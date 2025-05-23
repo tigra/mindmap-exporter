@@ -23,6 +23,69 @@ class ClassicMindmapLayout extends ColumnBasedLayout {
   }
 
   /**
+   * Get column positioning configuration for ClassicMindmapLayout
+   * @param {Node} node - The parent node
+   * @param {Object} nodeSize - The parent node size
+   * @param {number} childStartY - Starting Y coordinate for children
+   * @return {Object} Configuration for column positioning
+   */
+  getColumnPositioningConfig(node, nodeSize, childStartY) {
+    // Calculate positions based on parent edges and childPadding distance
+    const parentLeftEdge = 0; // relative positioning
+    const parentRightEdge = nodeSize.width; // relative positioning
+    const parentCenterY = nodeSize.height / 2 + this.verticalOffset;
+    
+    return {
+      rightColumnX: parentRightEdge + this.childPadding,
+      leftColumnAlignmentX: parentLeftEdge - this.childPadding,
+      rightColumnStartY: childStartY, // Will be updated after height calculation
+      leftColumnStartY: childStartY, // Will be updated after height calculation
+      paddingForColumns: this.childPadding, // Use childPadding instead of parentPadding
+      parentCenterY: parentCenterY
+    };
+  }
+
+  /**
+   * Apply vertical centering for ClassicMindmapLayout columns
+   * @param {Node} node - The parent node
+   * @param {LeftColumn} leftColumn - The left column instance
+   * @param {RightColumn} rightColumn - The right column instance
+   * @param {Object} config - The positioning configuration
+   */
+  applyColumnPostProcessing(node, leftColumn, rightColumn, config) {
+    console.log('ClassicMindmapLayout.applyColumnPostProcessing() - applying vertical centering');
+    
+    // Calculate total heights for each column
+    const leftTotalHeight = leftColumn.currentY - config.leftColumnStartY;
+    const rightTotalHeight = rightColumn.currentY - config.rightColumnStartY;
+    
+    console.log('Column heights - Left:', leftTotalHeight, 'Right:', rightTotalHeight);
+    console.log('Parent center Y:', config.parentCenterY);
+    
+    // Calculate centering adjustments
+    const leftCenteringAdjustment = config.parentCenterY - (leftTotalHeight / 2) - config.leftColumnStartY;
+    const rightCenteringAdjustment = config.parentCenterY - (rightTotalHeight / 2) - config.rightColumnStartY;
+    
+    console.log('Centering adjustments - Left:', leftCenteringAdjustment, 'Right:', rightCenteringAdjustment);
+    
+    // Apply vertical centering to left column children
+    if (leftColumn.childrenPositioned.length > 0) {
+      leftColumn.childrenPositioned.forEach(child => {
+        this.adjustPositionRecursive(child, 0, leftCenteringAdjustment);
+      });
+    }
+    
+    // Apply vertical centering to right column children
+    if (rightColumn.childrenPositioned.length > 0) {
+      rightColumn.childrenPositioned.forEach(child => {
+        this.adjustPositionRecursive(child, 0, rightCenteringAdjustment);
+      });
+    }
+    
+    console.log('Vertical centering applied');
+  }
+
+  /**
    * Position children in left and right columns horizontally aligned with parent
    * @param {Node} node - The parent node
    * @param {Array} leftChildren - Children in left column 
