@@ -5,6 +5,187 @@ import ConnectionPoint from './connection-point.js';
 import LayoutFactory from './layout-factory.js';
 
 /**
+ * Down row positioning for vertical layout
+ */
+class DownRow {
+  constructor(parentPadding, childPadding, nodeSize, style) {
+    this.parentPadding = parentPadding;
+    this.childPadding = childPadding;
+    this.nodeSize = nodeSize;
+    this.style = style;
+    
+    // State tracking
+    this.currentX = 0;
+    this.maxChildHeight = 0;
+    this.childrenPositioned = [];
+    
+    // Calculate child Y position for down direction
+    this.childY = nodeSize.height + this.parentPadding;
+  }
+
+  /**
+   * Add a single node to the row
+   * @param {Node} node - The node to add
+   * @return {Object} The size of the positioned node
+   */
+  addNode(node) {
+    console.log(`DownRow.addNode(${node.text}) - currentX: ${this.currentX}`);
+    
+    // Get the appropriate layout for the child's level
+    const childLevelStyle = this.style.getLevelStyle(node.level);
+    const childLayoutType = this.style.getEffectiveValue(node, 'layoutType');
+
+    // Create appropriate layout for child using LayoutFactory
+    const childLayout = LayoutFactory.createLayout(
+      childLayoutType,
+      childLevelStyle.parentPadding,
+      childLevelStyle.childPadding
+    );
+
+    // Apply layout to child at relative position (0,0)
+    const childSize = childLayout.applyLayoutRelative(node, 0, 0, this.style);
+    
+    // Now position the child at the correct X position in the row
+    node.adjustNodeTreeToPosition(this.currentX, this.childY);
+    
+    console.log(`  Child "${node.text}" positioned at x:${this.currentX}, y:${this.childY}, size: ${childSize.width}x${childSize.height}`);
+    console.log(`  Node final position: x:${node.x}, y:${node.y}`);
+
+    // Update state
+    this.currentX += childSize.width + this.childPadding;
+    this.maxChildHeight = Math.max(this.maxChildHeight, childSize.height);
+    this.childrenPositioned.push(node);
+    
+    console.log(`  Updated currentX: ${this.currentX}`);
+
+    return childSize;
+  }
+
+  /**
+   * Position nodes in a down row
+   * @param {Array} nodes - The nodes to position
+   * @param {Object} nodeSize - The parent node size
+   * @param {Object} style - The style to apply
+   * @return {Object} Total width and max child height
+   */
+  positionNodes(nodes, nodeSize, style) {
+    // Position children using addNode
+    for (let i = 0; i < nodes.length; i++) {
+      this.addNode(nodes[i]);
+    }
+
+    // Calculate final width (remove extra padding from last child)
+    let totalWidth = this.currentX;
+    if (nodes.length > 0) {
+      totalWidth -= this.childPadding;
+    }
+
+    // Log positioned children bounding boxes
+    console.log(`DownRow positioned ${this.childrenPositioned.length} children:`);
+    for (let i = 0; i < this.childrenPositioned.length; i++) {
+      const child = this.childrenPositioned[i];
+      if (child.boundingBox) {
+        console.log(`  Child ${i} (${child.text}): boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}`);
+      }
+    }
+
+    return { totalWidth, maxChildHeight: this.maxChildHeight };
+  }
+}
+
+/**
+ * Up row positioning for vertical layout
+ */
+class UpRow {
+  constructor(parentPadding, childPadding, adjustPositionRecursive, nodeSize, style) {
+    this.parentPadding = parentPadding;
+    this.childPadding = childPadding;
+    this.adjustPositionRecursive = adjustPositionRecursive;
+    this.nodeSize = nodeSize;
+    this.style = style;
+    
+    // State tracking
+    this.currentX = 0;
+    this.maxChildHeight = 0;
+    this.childrenPositioned = [];
+    
+    // Calculate child Y position for up direction (above parent)
+    this.childY = -this.parentPadding;
+  }
+
+  /**
+   * Add a single node to the row
+   * @param {Node} node - The node to add
+   * @return {Object} The size of the positioned node
+   */
+  addNode(node) {
+    console.log(`UpRow.addNode(${node.text}) - currentX: ${this.currentX}`);
+    
+    // Get the appropriate layout for the child's level
+    const childLevelStyle = this.style.getLevelStyle(node.level);
+    const childLayoutType = this.style.getEffectiveValue(node, 'layoutType');
+
+    // Create appropriate layout for child using LayoutFactory
+    const childLayout = LayoutFactory.createLayout(
+      childLayoutType,
+      childLevelStyle.parentPadding,
+      childLevelStyle.childPadding
+    );
+
+    // Apply layout to child at relative position (0,0)
+    const childSize = childLayout.applyLayoutRelative(node, 0, 0, this.style);
+
+    // Position the child at the correct X position, but need to adjust Y for upward direction
+    // For upward direction, we want the child's bottom edge to align with this.childY
+    const targetY = this.childY - childSize.height;
+    node.adjustNodeTreeToPosition(this.currentX, targetY);
+    
+    console.log(`  Child "${node.text}" positioned at x:${this.currentX}, y:${targetY}, size: ${childSize.width}x${childSize.height}`);
+    console.log(`  Node final position: x:${node.x}, y:${node.y}`);
+
+    // Update state
+    this.currentX += childSize.width + this.childPadding;
+    this.maxChildHeight = Math.max(this.maxChildHeight, childSize.height);
+    this.childrenPositioned.push(node);
+    
+    console.log(`  Updated currentX: ${this.currentX}`);
+
+    return childSize;
+  }
+
+  /**
+   * Position nodes in an up row
+   * @param {Array} nodes - The nodes to position
+   * @param {Object} nodeSize - The parent node size
+   * @param {Object} style - The style to apply
+   * @return {Object} Total width and max child height
+   */
+  positionNodes(nodes, nodeSize, style) {
+    // Position children using addNode
+    for (let i = 0; i < nodes.length; i++) {
+      this.addNode(nodes[i]);
+    }
+
+    // Calculate final width (remove extra padding from last child)
+    let totalWidth = this.currentX;
+    if (nodes.length > 0) {
+      totalWidth -= this.childPadding;
+    }
+
+    // Log positioned children bounding boxes
+    console.log(`UpRow positioned ${this.childrenPositioned.length} children:`);
+    for (let i = 0; i < this.childrenPositioned.length; i++) {
+      const child = this.childrenPositioned[i];
+      if (child.boundingBox) {
+        console.log(`  Child ${i} (${child.text}): boundingBox = {x: ${child.boundingBox.x}, y: ${child.boundingBox.y}, width: ${child.boundingBox.width}, height: ${child.boundingBox.height}}`);
+      }
+    }
+
+    return { totalWidth, maxChildHeight: this.maxChildHeight };
+  }
+}
+
+/**
  * Vertical layout implementation
  */
 class VerticalLayout extends Layout {
@@ -30,47 +211,35 @@ class VerticalLayout extends Layout {
    * @return {Object} The size of the laid out subtree
    */
   applyLayout(node, x, y, style) {
-    console.groupCollapsed(`VerticalLayout.applyLayout(${node.text})`);
+    const boundingBox = this.applyLayoutRelative(node, x, y, style);
+    node.adjustNodeTreeToPosition(x, y);
+    return boundingBox;
+  }
+
+  /**
+   * Apply vertical layout to a node and its children (recursive implementation)
+   * @param {Node} node - The node to layout
+   * @param {number} x - The x coordinate
+   * @param {number} y - The y coordinate
+   * @param {Object} style - The style to apply (StyleManager)
+   * @return {Object} The size of the laid out subtree
+   */
+  applyLayoutRelative(node, x, y, style) {
+    console.groupCollapsed(`VerticalLayout.applyLayoutRelative(${node.text})`);
     console.log('node', node);
-//    console.log('x', x, 'y', y);
-    if (node.level == 1) {
-        console.log('style', style);
-    }
-    
-    // Log additional details for level 4+ nodes
-    if (node.level >= 4) {
-        console.log(`LEVEL ${node.level} NODE: "${node.text}"`);
-        console.log(`  Original position: x=${x}, y=${y}`);
-        if (node.overrides) {
-            console.log(`  Overrides:`, node.overrides);
-        }
-        console.log(`  Parent: "${node.parent ? node.parent.text : 'none'}"`);
-    }
     
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
-    // The entire branch left top corner is (x, y)
-    // Initially place the parent at this position
-    node.x = x;
-    node.y = y;
+    // Start by positioning node at (0, 0) by top-left corner
+    node.x = 0;
+    node.y = 0;
     node.width = nodeSize.width;
     node.height = nodeSize.height;
 
     // Get direction from StyleManager with fallback to default
     const effectiveDirection = style.getEffectiveValue(node, 'direction') || this.direction;
     console.log('effectiveDirection', effectiveDirection);
-    
-    // For level 4+ nodes, log layout information
-    if (node.level >= 4) {
-        console.log(`  Layout info for "${node.text}":`);
-        console.log(`    node.x=${node.x}, node.y=${node.y}, width=${node.width}, height=${node.height}`);
-        console.log(`    Layout type: ${levelStyle.layoutType || 'not set'}`);
-        console.log(`    Effective direction: ${effectiveDirection}`);
-    }
-
-    // Direction multiplier for positioning (1 for down, -1 for up)
-    const directionMultiplier = effectiveDirection === 'down' ? 1 : -1;
 
     // Apply style properties to the node for rendering later
     node.style = {
@@ -84,11 +253,11 @@ class VerticalLayout extends Layout {
       borderRadius: levelStyle.borderRadius
     };
 
-    // If the node has no children or is collapsed, return its dimensions
+    // If the node has no children or is collapsed, adjust to final position and return
     if (node.children.length === 0 || node.collapsed) {
       node.boundingBox = {
-        x: x,
-        y: y,
+        x: 0,
+        y: 0,
         width: nodeSize.width,
         height: nodeSize.height
       };
@@ -96,38 +265,53 @@ class VerticalLayout extends Layout {
       return node.boundingBox;
     }
 
-    // Calculate child Y position based on direction
-    const childY = y + (directionMultiplier * (nodeSize.height + this.parentPadding));
-
-    let totalWidth = 0;
-    let maxChildHeight = 0;
-
-    // Position children
-    for (let i = 0; i < node.children.length; i++) {
-      const child = node.children[i];
-
-      // Get layout type from StyleManager
-      const childLayoutType = style.getEffectiveValue(child, 'layoutType');
-      console.log('childLayoutType', childLayoutType);
-      const childLevelStyle = style.getLevelStyle(child.level);
-
-      // Create layout for child
-      const childLayout = LayoutFactory.createLayout(
-        childLayoutType,
-        childLevelStyle.parentPadding,
-        childLevelStyle.childPadding
-      );
-
-      // Apply layout to child
-      const childSize = childLayout.applyLayout(child, x + totalWidth, childY, style);
-
-      totalWidth += childSize.width + this.childPadding;
-      maxChildHeight = Math.max(maxChildHeight, childSize.height);
+    // Position children using the appropriate row class
+    let totalWidth, maxChildHeight;
+    
+    if (effectiveDirection === 'down') {
+      const downRow = new DownRow(this.parentPadding, this.childPadding, nodeSize, style);
+      
+      // Position children using the row's addNode method
+      node.children.forEach(child => {
+        downRow.addNode(child);
+      });
+      
+      // Calculate final width (remove extra padding from last child)
+      totalWidth = node.children.length > 0 ? downRow.currentX - this.childPadding : 0;
+      maxChildHeight = downRow.maxChildHeight;
+    } else {
+      const upRow = new UpRow(this.parentPadding, this.childPadding, this.adjustPositionRecursive.bind(this), nodeSize, style);
+      
+      // Position children using the row's addNode method
+      node.children.forEach(child => {
+        upRow.addNode(child);
+      });
+      
+      // Calculate final width (remove extra padding from last child)
+      totalWidth = node.children.length > 0 ? upRow.currentX - this.childPadding : 0;
+      maxChildHeight = upRow.maxChildHeight;
     }
 
-    // Remove extra padding from last child
-    totalWidth -= this.childPadding;
+    // Center parent and children horizontally
+    this.centerParentAndChildren(node, totalWidth, nodeSize);
 
+    // Calculate bounding box at relative positions
+    node.calculateBoundingBox();
+    
+    console.groupEnd();
+    return node.boundingBox;
+  }
+
+  /**
+   * Center parent and children horizontally
+   * @param {Node} node - The parent node
+   * @param {number} totalWidth - Total width of children
+   * @param {Object} nodeSize - Parent node size
+   */
+  centerParentAndChildren(node, totalWidth, nodeSize) {
+    console.log(`centerParentAndChildren() for node (${node.text}):`);
+    console.log(`  totalWidth: ${totalWidth}, nodeSize.width: ${nodeSize.width}`);
+    
     // Depending on total size of children and the size of parent, adjust them
     // Both the parent, and all bounding boxes of children should have aligned centers
     let parentShift = 0;
@@ -135,12 +319,14 @@ class VerticalLayout extends Layout {
 
     if (totalWidth < nodeSize.width) {
       childShift = (nodeSize.width - totalWidth) / 2;
+      console.log(`  Children are narrower than parent. Child shift: ${childShift}`);
     } else {
       parentShift = (totalWidth - nodeSize.width) / 2;
+      console.log(`  Parent is narrower than children. Parent shift: ${parentShift}`);
     }
 
-    // Center parent horizontally
-    node.x = x + parentShift;
+    // Adjust parent position
+    node.x = parentShift;
 
     // Adjust children positions
     if (childShift !== 0) {
@@ -149,21 +335,7 @@ class VerticalLayout extends Layout {
       }
     }
 
-    // We don't need additional adjustment for up-directed layouts anymore
-    // The directionMultiplier in childY calculation already handles this correctly
-    
-    // Calculate bounding box dimensions
-    const bbHeight = nodeSize.height + this.parentPadding + maxChildHeight;
-    const bbY = effectiveDirection === 'down' ? y : y - nodeSize.height;
-
-    node.boundingBox = {
-      x: x,
-      y: bbY,
-      width: Math.max(nodeSize.width, totalWidth),
-      height: bbHeight
-    };
-    console.groupEnd();
-    return node.boundingBox;
+    console.log(`  Final parent position: x=${node.x}, y=${node.y}`);
   }
 
   /**
@@ -249,5 +421,8 @@ class VerticalLayout extends Layout {
 if (typeof window !== 'undefined') {
   window.VerticalLayout = VerticalLayout;
 }
+
+// Export row classes for reuse by other layouts
+export { DownRow, UpRow };
 
 export default VerticalLayout;

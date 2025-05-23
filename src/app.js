@@ -119,6 +119,13 @@ class MindmapApp {
   - support for
     - headings
     - bullet-point lists
+    - paragraphs
+    - images
+    -
+       | aa | bb |
+       |----|----|
+       | cc | dd |
+
 - layout algorithms
 - styling
 - interactivity

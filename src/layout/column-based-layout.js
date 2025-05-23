@@ -3,6 +3,7 @@
 
 import Layout from './layout.js';
 import ConnectionPoint from './connection-point.js';
+import { RightColumn, LeftColumn } from './horizontal-layout.js';
 
 /**
  * Abstract ColumnBasedLayout implements common functionality for layouts that organize
@@ -32,18 +33,6 @@ class ColumnBasedLayout extends Layout {
     this.rightColumnMaxWidth = 0;
   }
 
-  /**
-   * Abstract method that must be implemented by subclasses to handle specific positioning
-   * of children in columns
-   * @param {Node} node - The parent node
-   * @param {Array} leftChildren - Children in left column 
-   * @param {Array} rightChildren - Children in right column
-   * @param {number} childStartY - Starting Y coordinate for children
-   * @param {Object} style - The style to apply
-   */
-  positionChildrenInColumns(node, leftChildren, rightChildren, childStartY, style) {
-    throw new Error('Method positionChildrenInColumns must be implemented by subclasses');
-  }
   
   /**
    * Apply column based layout to a node and its children
@@ -54,14 +43,28 @@ class ColumnBasedLayout extends Layout {
    * @return {Object} The size of the laid out subtree
    */
   applyLayout(node, x, y, style) {
-    console.groupCollapsed(`ColumnBasedLayout.applyLayout(${node.text})`);
+    const boundingBox = this.applyLayoutRelative(node, x, y, style);
+    node.adjustNodeTreeToPosition(x, y);
+    return boundingBox;
+  }
+
+  /**
+   * Apply column based layout to a node and its children (recursive implementation)
+   * @param {Node} node - The node to layout
+   * @param {number} x - The x coordinate
+   * @param {number} y - The y coordinate
+   * @param {Object} style - The style to apply
+   * @return {Object} The size of the laid out subtree
+   */
+  applyLayoutRelative(node, x, y, style) {
+    console.groupCollapsed(`ColumnBasedLayout.applyLayoutRelative(${node.text})`);
     console.log('node', node);
     const levelStyle = style.getLevelStyle(node.level);
     const nodeSize = this.getNodeSize(node.text, levelStyle);
 
-    // Position the parent node at the specified coordinates
-    node.x = x;
-    node.y = y;
+    // Start by positioning node at (0, 0) by top-left corner
+    node.x = 0;
+    node.y = 0;
     node.width = nodeSize.width;
     node.height = nodeSize.height;
 
@@ -77,8 +80,12 @@ class ColumnBasedLayout extends Layout {
       borderRadius: levelStyle.borderRadius
     };
 
-    // If the node has no children or is collapsed, return its dimensions
+    // If the node has no children or is collapsed, adjust to final position and return
     if (node.children.length === 0 || node.collapsed) {
+      // Adjust node position to (x, y) by top-left corner
+      node.x = x;
+      node.y = y;
+      
       node.boundingBox = {
         x: x,
         y: y,
@@ -89,13 +96,13 @@ class ColumnBasedLayout extends Layout {
       return node.boundingBox;
     }
 
-    // Start positioning children below the parent
-    const childStartY = y + nodeSize.height + this.parentPadding;
+    // Start positioning children below the parent (relative positioning)
+    const childStartY = nodeSize.height + this.parentPadding;
 
-    // Calculate the center point for the parent node
-    const parentCenterX = x + (nodeSize.width / 2);
+    // Calculate the center point for the parent node (relative)
+    const parentCenterX = nodeSize.width / 2;
     
-    // Store column alignment coordinates for debugging
+    // Store column alignment coordinates for debugging (relative)
     this.leftColumnX = parentCenterX - this.columnGap / 2;
     this.rightColumnX = parentCenterX + this.columnGap / 2;
     this.columnMinY = childStartY;
@@ -108,49 +115,109 @@ class ColumnBasedLayout extends Layout {
     // Distribute children into columns using the child distribution algorithm
     this.distributeChildrenIntoColumns(node, leftChildren, rightChildren);
     
-    // Position the children in their respective columns
-    this.positionChildrenInColumns(node, leftChildren, rightChildren, childStartY, style);
+    // Position the children in their respective columns using column classes
+    this.positionChildrenInColumnsWithColumnClasses(node, leftChildren, rightChildren, childStartY, style);
     
-    // Calculate the overall bounding box
-    let minX = node.x;
-    let minY = node.y;
-    let maxX = node.x + node.width;
-    let maxY = node.y + node.height;
-
-    // Include all left column children
-    for (let i = 0; i < leftChildren.length; i++) {
-      const child = leftChildren[i];
-      const childBB = child.boundingBox;
-
-      minX = Math.min(minX, childBB.x);
-      minY = Math.min(minY, childBB.y);
-      maxX = Math.max(maxX, childBB.x + childBB.width);
-      maxY = Math.max(maxY, childBB.y + childBB.height);
-    }
-
-    // Include all right column children
-    for (let i = 0; i < rightChildren.length; i++) {
-      const child = rightChildren[i];
-      const childBB = child.boundingBox;
-
-      minX = Math.min(minX, childBB.x);
-      minY = Math.min(minY, childBB.y);
-      maxX = Math.max(maxX, childBB.x + childBB.width);
-      maxY = Math.max(maxY, childBB.y + childBB.height);
-    }
-
-    // Set the bounding box to encompass everything
-    node.boundingBox = {
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY
-    };
+    // Calculate bounding box at relative positions
+    node.calculateBoundingBox();
     
     console.groupEnd();
     return node.boundingBox;
   }
   
+  /**
+   * Get column positioning configuration - can be overridden by subclasses
+   * @param {Node} node - The parent node
+   * @param {Object} nodeSize - The parent node size
+   * @param {number} childStartY - Starting Y coordinate for children
+   * @return {Object} Configuration for column positioning
+   */
+  getColumnPositioningConfig(node, nodeSize, childStartY) {
+    // Default TaprootLayout behavior
+    const parentCenterX = nodeSize.width / 2;
+    
+    return {
+      rightColumnX: parentCenterX + this.columnGap / 2,
+      leftColumnAlignmentX: parentCenterX - this.columnGap / 2,
+      rightColumnStartY: childStartY,
+      leftColumnStartY: childStartY,
+      paddingForColumns: this.parentPadding
+    };
+  }
+
+  /**
+   * Position children in columns using the stateful RightColumn and LeftColumn classes
+   * @param {Node} node - The parent node
+   * @param {Array} leftChildren - Children in left column 
+   * @param {Array} rightChildren - Children in right column
+   * @param {number} childStartY - Starting Y coordinate for children
+   * @param {Object} style - The style to apply
+   */
+  positionChildrenInColumnsWithColumnClasses(node, leftChildren, rightChildren, childStartY, style) {
+    console.log('ColumnBasedLayout.positionChildrenInColumnsWithColumnClasses()');
+    console.log('leftChildren:', leftChildren.map(c => c.text));
+    console.log('rightChildren:', rightChildren.map(c => c.text));
+    
+    const levelStyle = style.getLevelStyle(node.level);
+    const nodeSize = this.getNodeSize(node.text, levelStyle);
+    
+    // Get positioning configuration (can be customized by subclasses)
+    const config = this.getColumnPositioningConfig(node, nodeSize, childStartY);
+    
+    // Create column instances with appropriate positioning
+    const rightColumn = new RightColumn(config.paddingForColumns, this.childPadding, nodeSize, style);
+    const leftColumn = new LeftColumn(config.paddingForColumns, this.childPadding, this.adjustPositionRecursive.bind(this), nodeSize, style);
+    
+    // Position right column children using the column's addNode method
+    if (rightChildren.length > 0) {
+      console.log('Positioning right column children...');
+      rightColumn.currentY = config.rightColumnStartY;
+      rightColumn.childX = config.rightColumnX;
+      
+      rightChildren.forEach(child => {
+        rightColumn.addNode(child);
+      });
+      
+      // Update column tracking
+      this.rightColumnMaxWidth = rightColumn.maxChildWidth;
+      this.columnMaxY = Math.max(this.columnMaxY, rightColumn.currentY);
+    }
+    
+    // Position left column children using the column's addNode method
+    if (leftChildren.length > 0) {
+      console.log('Positioning left column children...');
+      leftColumn.currentY = config.leftColumnStartY;
+      leftColumn.childX = config.leftColumnAlignmentX;
+      // Set the alignment point for left column (right edge alignment)
+      leftColumn.alignmentX = config.leftColumnAlignmentX;
+      
+      leftChildren.forEach(child => {
+        leftColumn.addNode(child);
+      });
+      
+      // Update column tracking
+      this.leftColumnMaxWidth = leftColumn.maxChildWidth;
+      this.columnMaxY = Math.max(this.columnMaxY, leftColumn.currentY);
+    }
+    
+    // Apply post-processing for layouts that need vertical centering (like ClassicMindmapLayout)
+    this.applyColumnPostProcessing(node, leftColumn, rightColumn, config);
+    
+    console.log('Column positioning complete. Left max width:', this.leftColumnMaxWidth, 'Right max width:', this.rightColumnMaxWidth);
+  }
+
+  /**
+   * Apply post-processing to columns - can be overridden by subclasses
+   * @param {Node} node - The parent node
+   * @param {LeftColumn} leftColumn - The left column instance
+   * @param {RightColumn} rightColumn - The right column instance
+   * @param {Object} config - The positioning configuration
+   */
+  applyColumnPostProcessing(node, leftColumn, rightColumn, config) {
+    // Default implementation does nothing
+    // Subclasses like ClassicMindmapLayout can override this for vertical centering
+  }
+
   /**
    * Distribute children into left and right columns for balanced layout
    * @param {Node} node - The parent node
