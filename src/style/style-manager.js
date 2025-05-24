@@ -10,6 +10,9 @@ class StyleManager {
    * Create a new StyleManager
    */
   constructor() {
+    // Initialize global configuration
+    this.globalConfig = {};
+    
     // Initialize the level styles and default style
     this.reset();
   }
@@ -222,6 +225,24 @@ class StyleManager {
         ...options.defaultStyle     // Specific properties defined for defaultStyle
       }, this);
     }
+    
+    // Handle global configuration properties (properties not specific to levels)
+    const globalProps = ['outlineEdgeAlignment'];
+    globalProps.forEach(prop => {
+      if (prop in options) {
+        this.globalConfig[prop] = options[prop];
+      }
+    });
+  }
+
+  /**
+   * Get a global configuration value
+   * @param {string} property - The property name
+   * @param {*} defaultValue - Default value if property is not set
+   * @return {*} The configuration value
+   */
+  getGlobalConfig(property, defaultValue = undefined) {
+    return this.globalConfig[property] !== undefined ? this.globalConfig[property] : defaultValue;
   }
 
   /**

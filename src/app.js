@@ -70,6 +70,8 @@ class MindmapApp {
     this.loadingIndicator = document.getElementById(this.options.loadingIndicator);
     this.boundingBoxCheckbox = document.getElementById('enable-bounding-box');
     this.debugRectCheckbox = document.getElementById('enable-debug-rect');
+    this.outlineEdgeAlignmentSelect = document.getElementById('outline-edge-alignment');
+    this.applySettingsBtn = document.getElementById('apply-settings-btn');
     
     // YAML editor elements
     this.styleYamlEditor = document.getElementById('style-yaml-editor');
@@ -191,24 +193,12 @@ class MindmapApp {
       window.showMarkdownDebugRect = false;
     }
     
-    // Add event listener for apply settings button
-    if (this.applySettingsBtn) {
-      this.applySettingsBtn.addEventListener('click', () => {
-        console.log('Apply Settings button clicked');
-        
-        // Apply debug rect setting
-        if (this.debugRectCheckbox) {
-          window.showMarkdownDebugRect = this.debugRectCheckbox.checked;
-          console.log('Applied debug rect setting:', window.showMarkdownDebugRect);
-        }
-        
-        // Note: Don't need to apply boundingBox here as handleGenerate() will take care of it
-        // The checkbox state will be checked in handleGenerate before applying layout
-        
-        console.log('Apply Settings: calling handleGenerate()');
-        this.handleGenerate();
+    if (this.outlineEdgeAlignmentSelect) {
+      this.outlineEdgeAlignmentSelect.addEventListener('change', () => {
+        console.log("Outline edge alignment select changed:", this.outlineEdgeAlignmentSelect.value);
       });
     }
+    
 
     // Generate initial mindmap
     this.handleGenerate();
@@ -274,6 +264,34 @@ class MindmapApp {
     
     // Re-render the mindmap
     this.controller.initialize();
+  }
+
+  /**
+   * Handle apply settings button click
+   */
+  handleApplySettings() {
+    console.log('Apply Settings button clicked');
+    
+    // Apply debug rect setting
+    if (this.debugRectCheckbox) {
+      window.showMarkdownDebugRect = this.debugRectCheckbox.checked;
+      console.log('Applied debug rect setting:', window.showMarkdownDebugRect);
+    }
+    
+    // Apply outline edge alignment setting
+    if (this.outlineEdgeAlignmentSelect) {
+      const edgeAlignment = this.outlineEdgeAlignmentSelect.value === 'near' ? 'start' : 'end';
+      this.styleManager.configure({
+        outlineEdgeAlignment: edgeAlignment
+      });
+      console.log('Applied outline edge alignment setting:', edgeAlignment);
+    }
+    
+    // Note: Don't need to apply boundingBox here as handleGenerate() will take care of it
+    // The checkbox state will be checked in handleGenerate before applying layout
+    
+    console.log('Apply Settings: calling handleGenerate()');
+    this.handleGenerate();
   }
 
   /**

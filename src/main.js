@@ -48,8 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (applySettingsBtn) {
     applySettingsBtn.addEventListener('click', () => {
-      // Call the same function as the generate button
-      if (generateBtn && typeof generateBtn.click === 'function') {
+      // Call the app's apply settings method which handles checkbox values
+      if (window.mindmapApp && typeof window.mindmapApp.handleApplySettings === 'function') {
+        window.mindmapApp.handleApplySettings();
+      } else if (generateBtn && typeof generateBtn.click === 'function') {
         generateBtn.click();
       } else if (window.mindmapApp && typeof window.mindmapApp.handleGenerate === 'function') {
         window.mindmapApp.handleGenerate();

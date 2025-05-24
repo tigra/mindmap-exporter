@@ -23,10 +23,22 @@ class LeftOutlineColumn {
     
     // Calculate child Y position below parent
     this.childStartY = nodeSize.height + this.parentPadding;
-    // Calculate initial child X position for layout calculation
-    this.childX = -this.horizontalShift;
-    // Calculate the alignment line (right edge position relative to parent at 0,0)
-    this.alignmentX = -this.horizontalShift;
+    
+    // Get edge alignment preference from style: 'start' or 'end'
+    // For left direction: 'start' = near edge (parent's right), 'end' = far edge (parent's left)
+    const edgeAlignment = this.style.getGlobalConfig('outlineEdgeAlignment', 'start');
+    
+    if (edgeAlignment === 'start') {
+      // Position children's right edges relative to parent's right edge (near edge, to the left)
+      this.alignmentX = nodeSize.width - this.horizontalShift; // Line at horizontalShift left of parent's right edge
+      this.alignToRightEdge = true; // Align children's right edges to this line
+      this.childX = nodeSize.width - this.horizontalShift;
+    } else {
+      // Position children's right edges relative to parent's left edge (far edge, to the left)  
+      this.alignmentX = -this.horizontalShift; // Line at horizontalShift left of parent's left edge (which is at x=0)
+      this.alignToRightEdge = true; // Align children's right edges to this line
+      this.childX = -this.horizontalShift;
+    }
   }
 
   /**
@@ -60,16 +72,25 @@ class LeftOutlineColumn {
     this.maxChildWidth = Math.max(this.maxChildWidth, childSize.width);
     this.childrenPositioned.push(node);
 
-    // Apply right-edge alignment immediately after positioning
+    // Apply edge alignment immediately after positioning
     if (node.boundingBox) {
-      // Calculate how much to move the child so its right edge aligns with alignmentX
-      const currentRightEdge = node.boundingBox.x + node.boundingBox.width;
-      const targetRightEdge = this.alignmentX;
-      const adjustment = targetRightEdge - currentRightEdge;
+      let adjustment = 0;
       
-      console.log(`  Child "${node.text}" right-edge alignment: current=${currentRightEdge}, target=${targetRightEdge}, adjustment=${adjustment}`);
+      if (this.alignToRightEdge) {
+        // Align right edges to the alignment line
+        const currentRightEdge = node.boundingBox.x + node.boundingBox.width;
+        const targetRightEdge = this.alignmentX;
+        adjustment = targetRightEdge - currentRightEdge;
+        console.log(`  Child "${node.text}" right-edge alignment: current=${currentRightEdge}, target=${targetRightEdge}, adjustment=${adjustment}`);
+      } else {
+        // Align left edges to the alignment line
+        const currentLeftEdge = node.boundingBox.x;
+        const targetLeftEdge = this.alignmentX;
+        adjustment = targetLeftEdge - currentLeftEdge;
+        console.log(`  Child "${node.text}" left-edge alignment: current=${currentLeftEdge}, target=${targetLeftEdge}, adjustment=${adjustment}`);
+      }
       
-      // Adjust the child's position to align its right edge
+      // Adjust the child's position
       this.adjustPositionRecursive(node, adjustment, 0);
     }
     
@@ -116,10 +137,11 @@ class LeftOutlineColumn {
  * Right outline column positioning for outline layout
  */
 class RightOutlineColumn {
-  constructor(parentPadding, childPadding, horizontalShift, nodeSize, style) {
+  constructor(parentPadding, childPadding, horizontalShift, adjustPositionRecursive, nodeSize, style) {
     this.parentPadding = parentPadding;
     this.childPadding = childPadding;
     this.horizontalShift = horizontalShift;
+    this.adjustPositionRecursive = adjustPositionRecursive;
     this.nodeSize = nodeSize;
     this.style = style;
     
@@ -130,8 +152,22 @@ class RightOutlineColumn {
     
     // Calculate child Y position below parent
     this.childStartY = nodeSize.height + this.parentPadding;
-    // Calculate child X position shifted right from parent right edge
-    this.childX = nodeSize.width + this.horizontalShift;
+    
+    // Get edge alignment preference from style: 'start' or 'end'
+    // For right direction: 'start' = relative to parent's left edge, 'end' = relative to parent's right edge
+    const edgeAlignment = this.style.getGlobalConfig('outlineEdgeAlignment', 'start');
+    
+    if (edgeAlignment === 'start') {
+      // Position children column's left edge relative to parent's left edge (to the right)
+      this.alignmentX = this.horizontalShift; // Line at horizontalShift right of parent's left edge (which is at x=0)
+      this.alignToRightEdge = false; // Align children's left edges to this line
+      this.childX = this.horizontalShift;
+    } else {
+      // Position children column relative to parent's right edge (to the right)
+      this.alignmentX = this.nodeSize.width + this.horizontalShift; // Line at horizontalShift right of parent's right edge
+      this.alignToRightEdge = false; // Align children's left edges to this line
+      this.childX = this.nodeSize.width + this.horizontalShift;
+    }
   }
 
   /**
@@ -156,18 +192,38 @@ class RightOutlineColumn {
     // Apply layout to child at relative position (0,0)
     const childSize = childLayout.applyLayoutRelative(node, 0, 0, this.style);
     
-    // Position the child at the correct position
+    // Position the child at the correct position initially
     const targetY = this.childStartY + this.currentY;
     node.adjustNodeTreeToPosition(this.childX, targetY);
     
-    console.log(`  Child "${node.text}" positioned at x:${this.childX}, y:${targetY}, size: ${childSize.width}x${childSize.height}`);
-    console.log(`  Node final position: x:${node.x}, y:${node.y}`);
-
     // Update state
     this.currentY += childSize.height + this.childPadding;
     this.maxChildWidth = Math.max(this.maxChildWidth, childSize.width);
     this.childrenPositioned.push(node);
+
+    // Apply edge alignment immediately after positioning
+    if (node.boundingBox) {
+      let adjustment = 0;
+      
+      if (this.alignToRightEdge) {
+        // Align right edges to the alignment line
+        const currentRightEdge = node.boundingBox.x + node.boundingBox.width;
+        const targetRightEdge = this.alignmentX;
+        adjustment = targetRightEdge - currentRightEdge;
+        console.log(`  Child "${node.text}" right-edge alignment: current=${currentRightEdge}, target=${targetRightEdge}, adjustment=${adjustment}`);
+      } else {
+        // Align left edges to the alignment line
+        const currentLeftEdge = node.boundingBox.x;
+        const targetLeftEdge = this.alignmentX;
+        adjustment = targetLeftEdge - currentLeftEdge;
+        console.log(`  Child "${node.text}" left-edge alignment: current=${currentLeftEdge}, target=${targetLeftEdge}, adjustment=${adjustment}`);
+      }
+      
+      // Adjust the child's position
+      this.adjustPositionRecursive(node, adjustment, 0);
+    }
     
+    console.log(`  Child "${node.text}" final position after alignment: x:${node.x}, y:${node.y}`);
     console.log(`  Updated currentY: ${this.currentY}`);
 
     return childSize;
@@ -317,6 +373,7 @@ class OutlineLayout extends Layout {
         this.parentPadding, 
         this.childPadding, 
         effectiveHorizontalShift, 
+        this.adjustPositionRecursive.bind(this),
         nodeSize, 
         style
       );
