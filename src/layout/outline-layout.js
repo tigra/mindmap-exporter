@@ -402,16 +402,38 @@ class OutlineLayout extends Layout {
    * @return {ConnectionPoint} The connection point
    */
   getParentConnectionPoint(node, levelStyle, childNode = null) {
-    // Get direction from StyleManager with fallback to default
+    // Get direction and edge alignment from StyleManager
     const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
+    const edgeAlignment = levelStyle.styleManager.getGlobalConfig('outlineEdgeAlignment', 'start');
+    const effectiveHorizontalShift = levelStyle.styleManager.getEffectiveValue(node, 'horizontalShift') || this.horizontalShift;
     
-    // For outline layout, parent connects from the side closest to children
-    if (effectiveDirection === 'left') {
-      // Children are to the left, connect from left side
-      return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
+    // For near edge (start), position connection point on bottom of parent between near edge and alignment line
+    if (edgeAlignment === 'start') {
+      let connectionX;
+      
+      if (effectiveDirection === 'left') {
+        // Near edge is parent's right edge, alignment line is at parent's right edge - horizontalShift
+        const nearEdge = node.x + node.width; // Parent's right edge
+        const alignmentLine = node.x + node.width - effectiveHorizontalShift; // Alignment line position
+        connectionX = (nearEdge + alignmentLine) / 2; // Middle between them
+      } else {
+        // Near edge is parent's left edge, alignment line is at parent's left edge + horizontalShift  
+        const nearEdge = node.x; // Parent's left edge
+        const alignmentLine = node.x + effectiveHorizontalShift; // Alignment line position
+        connectionX = (nearEdge + alignmentLine) / 2; // Middle between them
+      }
+      
+      // Connect from bottom of parent node
+      return new ConnectionPoint(connectionX, node.y + node.height, 'bottom');
     } else {
-      // Children are to the right, connect from right side
-      return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'right');
+      // For far edge (end), use the original side connections
+      if (effectiveDirection === 'left') {
+        // Children are to the left, connect from left side
+        return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
+      } else {
+        // Children are to the right, connect from right side
+        return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'right');
+      }
     }
   }
 

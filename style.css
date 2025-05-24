@@ -216,6 +216,44 @@ select {
     font-weight: normal;
 }
 
+/* Layout-specific settings */
+#layout-specific-settings {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+#layout-specific-settings.hidden {
+    display: none;
+}
+
+#layout-specific-settings h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+}
+
+.layout-settings-group {
+    display: none; /* Hidden by default */
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.layout-settings-group.active {
+    display: block;
+}
+
+.layout-settings-group .form-group {
+    margin-bottom: 10px;
+}
+
+.layout-settings-group .form-group:last-child {
+    margin-bottom: 0;
+}
+
 .export-format {
     display: flex;
     align-items: center;

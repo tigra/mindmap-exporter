@@ -164,6 +164,7 @@ class MindmapApp {
       this.layoutType.addEventListener('change', () => {
 //              this.controller.handleStyleChange(this.stylePreset.value);
         this.controller.handleLayoutChange(this.layoutType.value);
+        this.updateLayoutSpecificSettings(this.layoutType.value);
         this.handleGenerate();
       });
     }
@@ -199,6 +200,11 @@ class MindmapApp {
       });
     }
     
+
+    // Initialize layout-specific settings visibility
+    if (this.layoutType) {
+      this.updateLayoutSpecificSettings(this.layoutType.value);
+    }
 
     // Generate initial mindmap
     this.handleGenerate();
@@ -264,6 +270,46 @@ class MindmapApp {
     
     // Re-render the mindmap
     this.controller.initialize();
+  }
+
+  /**
+   * Update visibility of layout-specific settings based on selected layout
+   * @param {string} layoutType - The selected layout type
+   */
+  updateLayoutSpecificSettings(layoutType) {
+    // Get all layout settings groups and the container
+    const layoutSettingsGroups = document.querySelectorAll('.layout-settings-group');
+    const layoutSettingsContainer = document.getElementById('layout-specific-settings');
+    
+    // Hide all groups first
+    layoutSettingsGroups.forEach(group => {
+      group.classList.remove('active');
+    });
+    
+    let hasActiveSettings = false;
+    
+    // Show groups that match the current layout
+    layoutSettingsGroups.forEach(group => {
+      const supportedLayouts = group.getAttribute('data-layouts');
+      if (supportedLayouts) {
+        const layoutList = supportedLayouts.split(',').map(layout => layout.trim());
+        if (layoutList.includes(layoutType)) {
+          group.classList.add('active');
+          hasActiveSettings = true;
+        }
+      }
+    });
+    
+    // Show/hide the entire container based on whether any settings are active
+    if (layoutSettingsContainer) {
+      if (hasActiveSettings) {
+        layoutSettingsContainer.classList.remove('hidden');
+      } else {
+        layoutSettingsContainer.classList.add('hidden');
+      }
+    }
+    
+    console.log(`Updated layout-specific settings for layout: ${layoutType}, hasActiveSettings: ${hasActiveSettings}`);
   }
 
   /**
