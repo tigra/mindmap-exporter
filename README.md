@@ -156,24 +156,66 @@ Best suited for:
 - Timeline visualizations
 - When vertical relationships are important
 
+### Outline Layout
+
+The Outline Layout places all children in a vertical column to the side of the parent node, creating a structure similar to traditional outlines or table of contents. This layout supports precise positioning control through edge alignment settings.
+
+```
+Near edge:                          Far edge:
+                                        
++----------+                           +----------+   
+|  Parent  |                           |  Parent  |   
++----------+                           +----------+   
+ | +---------+                                          +----------+
+ +-|Child 1  |                                          | Child 1  |
+ | +---------+                                          +----------+
+ | +---------+                                          +----------+
+ +-|Child 2  |                                          | Child 2  |
+ | +---------+                                          +----------+
+ | +---------+                                          +----------+ 
+ +-|Child 3  |                                          | Child 3  |
+   +---------+                                          +----------+
+```
+
+**Edge Alignment Options:**
+- **Near Edge**: Positions children relative to the parent's near edge (the edge closest to the children)
+  - Left direction: Children's right edges align relative to parent's right edge
+  - Right direction: Children's left edges align relative to parent's left edge
+- **Far Edge**: Positions children relative to the parent's far edge (the edge furthest from the children)
+  - Left direction: Children's right edges align relative to parent's left edge  
+  - Right direction: Children's left edges align relative to parent's right edge
+
+**Connection Points:**
+- **Near Edge**: Parent connects from its bottom edge at a point halfway between the near edge and the alignment line
+- **Far Edge**: Parent connects from its side edge (left for left direction, right for right direction)
+
+Two direction options are available:
+- **Outline Left**: Places children to the left of the parent
+- **Outline Right**: Places children to the right of the parent
+
+Best suited for:
+- Document outlines and table of contents
+- Sequential processes and workflows
+- When precise alignment control is needed
+- Lists and hierarchical structures with many items
+
 ### Vertical-over-TapRoot Layout
 
 This special layout combines a Vertical layout at the root level with TapRoot layouts for all second-level nodes. It creates a hybrid structure where main topics are arranged horizontally, and each main topic has its own balanced TapRoot-style subtree.
 
 ```
-                                       Root Node
-                                          |
-            +---------------------------------------------------------------------------------+
-            |                             |                               |                   |
-       +----+-----+                  +----+-----+                    +----+-----+        +----+-----+
-       | Topic 1  |                  | Topic 2  |                    | Topic 3  |        | Topic 4  |
-       +----------+                  +----------+                    +----------+        +----------+
-            |                             |                               |                   |
-     +------+------+               +------+------+                 +------+------+      +------+------+
-     |             |               |             |                 |             |      |             |
-+----+----+   +----+----+     +----+----+   +----+----+       +----+----+   +----+----+ | +----+----+ | +----+----+
-|Subtopic1|   |Subtopic2|     |Subtopic3|   |Subtopic4|       |Subtopic5|   |Subtopic6| | |Subtopic7| | |Subtopic8|
-+---------+   +---------+     +---------+   +---------+       +---------+   +---------+ | +---------+ | +---------+
+                                                 Root Node
+                                                     |
+            +--------------------------------------------------------------------------------------+
+            |                             |                               |                        |
+      +----+-----+                  +----+-----+                     +----+-----+             +----+-----+
+      | Topic 1  |                  | Topic 2  |                     | Topic 3  |             | Topic 4  |
+      +----------+                  +----------+                     +----------+             +----------+
+          |  |                          |  |                             |  |                     |  |
+          |  |                          |  |                             |  |                     |  |
++---------+  +----+----+      +---------+   +---------+        +---------+  +---------+ +---------+  +---------+
+|Subtopic1|  |Subtopic2|      |Subtopic3|   |Subtopic4|        |Subtopic5|  |Subtopic6| |Subtopic7|  |Subtopic8|
++---------+  +---------+      +---------+   +---------+        +---------+  +---------+ +---------+  +---------+
 ```
 
 Best suited for:
@@ -190,4 +232,56 @@ Each layout supports multiple connection point modes that control how lines conn
 - **Distribute Evenly**: Connection points are evenly spaced along the parent node edge
 
 Different layouts use different amounts of the parent width for connections: vertical layouts use 75% and TapRoot layouts use 40% to maintain consistent visual appearance.
+
+## Layout-Specific Configuration
+
+The mindmap exporter features a dynamic configuration system that shows relevant settings only for the currently selected layout. This keeps the interface clean and uncluttered while providing precise control where needed.
+
+### How It Works
+
+1. **Automatic Display**: When you select a layout from the "Layout Style" dropdown, the interface automatically shows only the configuration options relevant to that layout.
+
+2. **Layout Settings Section**: A "Layout Settings" section appears below the general layout controls when layout-specific options are available for the selected layout.
+
+3. **Contextual Options**: Each setting group is tagged with the layouts it applies to, ensuring users only see options that will affect their current mindmap.
+
+### Current Layout-Specific Settings
+
+**Outline Layout (Left & Right)**
+- **Edge Alignment**: Controls how children are positioned relative to the parent node
+  - *Near edge*: Positions children relative to the parent's near edge (closest to children)
+  - *Far edge*: Positions children relative to the parent's far edge (furthest from children)
+
+### For Developers
+
+The system uses a data attribute approach for maximum flexibility:
+
+```html
+<!-- Setting group that applies to outline layouts -->
+<div class="layout-settings-group" data-layouts="outline-left,outline-right">
+    <div class="form-group">
+        <label for="outline-edge-alignment">Edge Alignment:</label>
+        <select id="outline-edge-alignment">
+            <option value="near" selected>Near edge</option>
+            <option value="far">Far edge</option>
+        </select>
+    </div>
+</div>
+```
+
+**Adding New Layout-Specific Settings:**
+1. Create a `.layout-settings-group` div with appropriate `data-layouts` attribute
+2. Add your form controls inside the group
+3. The JavaScript automatically handles show/hide logic
+4. Add any necessary event handlers for your new controls
+
+**Supported Layout Identifiers:**
+- `horizontal-left`, `horizontal-right`
+- `vertical`, `vertical-up`
+- `taproot`
+- `classic`
+- `outline-left`, `outline-right`
+- `vertical-over-taproot`
+
+This system is designed to scale as more layouts and configuration options are added to the mindmap exporter.
 
