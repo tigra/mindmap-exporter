@@ -28,11 +28,6 @@ class DragDropManager {
     this.currentDropZone = null;
     this.dropZoneElements = [];
     
-    // Dragging visual element
-    this.draggingElement = null;
-    this.draggingOffsetX = 0;
-    this.draggingOffsetY = 0;
-    
     // Bind methods
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
@@ -165,9 +160,6 @@ class DragDropManager {
   startDrag(event) {
     this.isDragging = true;
     
-    // Create the dragging visual element
-    this.createDraggingElement(event);
-    
     // Change cursor to indicate dragging
     this.originalCursor = document.body.style.cursor;
     console.log(`Original cursor: "${this.originalCursor}"`);
@@ -191,9 +183,6 @@ class DragDropManager {
    * @param {MouseEvent} event - The mouse event
    */
   updateDrag(event) {
-    // Update dragging element position
-    this.updateDraggingElement(event);
-    
     // Detect drop zone under cursor
     const dropZone = this.detectDropZone(event.clientX, event.clientY);
     
@@ -210,9 +199,6 @@ class DragDropManager {
    */
   endDrag(event) {
     if (!this.isDragging) return;
-    
-    // Remove the dragging visual element
-    this.removeDraggingElement();
     
     // Restore cursor
     document.body.style.cursor = this.originalCursor;
@@ -691,119 +677,6 @@ class DragDropManager {
     for (const child of node.children) {
       this.logNodeTree(child, depth + 1);
     }
-  }
-  
-  /**
-   * Create the dragging visual element
-   * @param {MouseEvent} event - The mouse event
-   */
-  createDraggingElement(event) {
-    // Find the original node element
-    const nodeElement = document.querySelector(`[data-node-id="${this.draggedNode.id}"]`);
-    if (!nodeElement) return;
-    
-    // Get the SVG element and its bounding rect
-    const svgElement = this.container.querySelector('svg');
-    if (!svgElement) return;
-    
-    const svgRect = svgElement.getBoundingClientRect();
-    const nodeRect = nodeElement.getBoundingClientRect();
-    
-    // Calculate offset from mouse to node position
-    this.draggingOffsetX = nodeRect.left - event.clientX;
-    this.draggingOffsetY = nodeRect.top - event.clientY;
-    
-    // Create a div to hold the dragging element
-    this.draggingElement = document.createElement('div');
-    this.draggingElement.className = 'dragging-node';
-    this.draggingElement.style.position = 'fixed';
-    this.draggingElement.style.zIndex = '10000';
-    this.draggingElement.style.pointerEvents = 'none';
-    this.draggingElement.style.opacity = '0.7';
-    this.draggingElement.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))';
-    
-    // Clone the node's visual representation
-    const clonedNode = this.cloneNodeVisual(this.draggedNode);
-    this.draggingElement.innerHTML = clonedNode;
-    
-    // Position the element
-    this.updateDraggingElement(event);
-    
-    // Add to body
-    document.body.appendChild(this.draggingElement);
-  }
-  
-  /**
-   * Clone the visual representation of a node
-   * @param {Object} node - The node to clone
-   * @return {string} SVG string of the cloned node
-   */
-  cloneNodeVisual(node) {
-    const levelStyle = this.renderer.styleManager.getLevelStyle(node.level);
-    const isTextOnly = levelStyle.nodeType === 'text-only';
-    
-    // Create a minimal SVG with just the node
-    let svg = `<svg width="${node.width + 20}" height="${node.height + 20}" style="overflow: visible;">`;
-    
-    if (!isTextOnly) {
-      // Add the node rectangle
-      svg += `<rect x="10" y="10" width="${node.width}" height="${node.height}"
-              rx="${levelStyle.borderRadius || 5}" ry="${levelStyle.borderRadius || 5}"
-              fill="${levelStyle.backgroundColor || '#4a9eff'}"
-              fill-opacity="${levelStyle.fillOpacity || 0.5}"
-              stroke="${levelStyle.borderColor || '#fff'}"
-              stroke-width="${levelStyle.borderWidth || 1.5}"/>`;
-    }
-    
-    // Add the text
-    const textX = 10 + node.width / 2;
-    const textY = 10 + node.height / 2;
-    const textColor = isTextOnly ? (levelStyle.textColor || '#333') : (levelStyle.textColorBoxed || 'white');
-    
-    svg += `<text x="${textX}" y="${textY}"
-            text-anchor="middle" dominant-baseline="middle"
-            font-family="${levelStyle.fontFamily || 'Arial, sans-serif'}"
-            font-size="${levelStyle.fontSize || 14}"
-            font-weight="${levelStyle.fontWeight || 'normal'}"
-            fill="${textColor}">${this.escapeHtml(node.text)}</text>`;
-    
-    svg += '</svg>';
-    return svg;
-  }
-  
-  /**
-   * Update the position of the dragging element
-   * @param {MouseEvent} event - The mouse event
-   */
-  updateDraggingElement(event) {
-    if (!this.draggingElement) return;
-    
-    const x = event.clientX + this.draggingOffsetX;
-    const y = event.clientY + this.draggingOffsetY;
-    
-    this.draggingElement.style.left = `${x}px`;
-    this.draggingElement.style.top = `${y}px`;
-  }
-  
-  /**
-   * Remove the dragging visual element
-   */
-  removeDraggingElement() {
-    if (this.draggingElement && this.draggingElement.parentNode) {
-      this.draggingElement.parentNode.removeChild(this.draggingElement);
-      this.draggingElement = null;
-    }
-  }
-  
-  /**
-   * Escape HTML special characters
-   * @param {string} text - The text to escape
-   * @return {string} Escaped text
-   */
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 }
 
