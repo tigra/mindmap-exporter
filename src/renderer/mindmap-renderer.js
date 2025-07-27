@@ -38,7 +38,6 @@ class MindmapRenderer {
     this.maxY = -Infinity;
     this.padding = MindmapRenderer.DEFAULT_PADDING;
     this.nodeMap = new Map(); // Store references to nodes by id
-    this.showDropZones = false; // Controls drop zone visibility (default: hidden)
   }
 
   /**
@@ -333,9 +332,6 @@ class MindmapRenderer {
    * @return {string} SVG rect elements for the parent drop zones
    */
   _drawParentDropZone(node, parentChildPadding) {
-    // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
-    const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
-    
     // Top drop zone (red)
     const topZone = this._createRectElement({
       x: node.boundingBox.x,
@@ -344,10 +340,8 @@ class MindmapRenderer {
       height: node.boundingBox.height / 2 + parentChildPadding / 2,
       fill: "#500000",
       stroke: "#450000",
-      fillOpacity: dropZoneOpacity,
-      strokeOpacity: dropZoneOpacity,
-      className: "drop-zone parent-drop-zone-top",
-      'data-node-id': node.id
+      fillOpacity: 0.1,
+      className: "drop-zone parent-drop-zone-top"
     });
     
     // Bottom drop zone (blue)
@@ -358,10 +352,8 @@ class MindmapRenderer {
       height: node.boundingBox.height / 2 + parentChildPadding / 2,
       fill: "#000060",
       stroke: "#000045",
-      fillOpacity: dropZoneOpacity,
-      strokeOpacity: dropZoneOpacity,
-      className: "drop-zone parent-drop-zone-bottom",
-      'data-node-id': node.id
+      fillOpacity: 0.1,
+      className: "drop-zone parent-drop-zone-bottom"
     });
     
     return topZone + bottomZone;
@@ -377,38 +369,16 @@ class MindmapRenderer {
    */
   _drawChildDropZone(node, layout, parentChildPadding) {
     const additionalSpan = node.hasChildren() ? 0 : 300;
-    const levelStyle = this.styleManager.getLevelStyle(node.level);
-    
-    // Get the effective direction from the style manager
-    const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction');
-    
-    // Determine drop zone position based on layout direction
-    let dropZoneX, dropZoneWidth;
-    
-    if (effectiveDirection === 'left') {
-      // For left layouts, drop zone goes to the left of the node
-      dropZoneWidth = layout.parentPadding + additionalSpan;
-      dropZoneX = node.boundingBox.x - dropZoneWidth;
-    } else {
-      // For right layouts (default), drop zone goes to the right of the node
-      dropZoneX = node.boundingBox.x + node.width;
-      dropZoneWidth = layout.parentPadding + additionalSpan;
-    }
-    
-    // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
-    const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
     
     return this._createRectElement({
-      x: dropZoneX,
+      x: node.boundingBox.x + node.width,
       y: node.boundingBox.y - parentChildPadding / 2,
-      width: dropZoneWidth,
+      width: layout.parentPadding + additionalSpan,
       height: node.boundingBox.height + parentChildPadding,
       fill: "#005000",
       stroke: "#004000",
-      fillOpacity: dropZoneOpacity,
-      strokeOpacity: dropZoneOpacity,
-      className: "drop-zone child-drop-zone",
-      'data-node-id': node.id
+      fillOpacity: 0.1,
+      className: "drop-zone child-drop-zone"
     });
   }
 
@@ -423,9 +393,11 @@ class MindmapRenderer {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     const parentChildPadding = node.level > 1 ? this.styleManager.getLevelStyle(node.level - 1).childPadding : 0;
     const layout = levelStyle.getLayout();
-    // Always add drop zones for drag and drop functionality, but adjust visibility
-    svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
-    svg += this._drawChildDropZone(node, layout, parentChildPadding);
+    // Add drop zones if enabled
+    if (this.showDropZones) {
+      svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
+      svg += this._drawChildDropZone(node, layout, parentChildPadding);
+    }
     // Check if bounding box should be displayed based on level style
     const showBoundingBox = this.styleManager.getEffectiveValue(node, 'boundingBox');
     console.log(`Node ${node.id} (${node.text}): show bounding box = ${showBoundingBox}`);
@@ -794,22 +766,19 @@ class MindmapRenderer {
       fillOpacity = MindmapRenderer.DEFAULT_FILL_OPACITY,
       stroke = '#fff', 
       strokeWidth = MindmapRenderer.DEFAULT_BORDER_WIDTH,
-      strokeOpacity = 1.0,
-      filter = 'url(#dropShadow)',
-      'data-node-id': dataNodeId = ''
+      filter = 'url(#dropShadow)'
     } = props;
     
     // Prepare attributes for the generic function
     const attributes = {
       x, y, width, height, rx, ry,
-      fill, fillOpacity, stroke, strokeWidth, strokeOpacity,
+      fill, fillOpacity, stroke, strokeWidth,
       class: className
     };
     
     // Only add optional attributes if they have values
     if (id) attributes.id = id;
     if (filter) attributes.filter = filter;
-    if (dataNodeId) attributes['data-node-id'] = dataNodeId;
     
     return this._createSvgElement('rect', attributes);
   }
@@ -852,7 +821,6 @@ class MindmapRenderer {
         width: node.width,
         height: node.height,
         id: node.id + '_rect',
-        'data-node-id': node.id,
         rx: levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS,
         ry: levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS,
         fill: this.getFillColor(node),
@@ -879,8 +847,7 @@ class MindmapRenderer {
       textAnchor = 'start',
       dominantBaseline = 'middle',
       className = 'node-text',
-      pointerEvents = 'none',
-      'data-node-id': dataNodeId = ''
+      pointerEvents = 'none'
     } = props;
     
     // Prepare attributes for the generic function
@@ -899,9 +866,6 @@ class MindmapRenderer {
     // Only add optional attributes if they have values
     if (dominantBaseline) {
       attributes.dominantBaseline = dominantBaseline;
-    }
-    if (dataNodeId) {
-      attributes['data-node-id'] = dataNodeId;
     }
     
     return this._createSvgElement('text', attributes, this._escapeXml(text));
@@ -1109,7 +1073,6 @@ class MindmapRenderer {
       x: x,
       y: y,
       id: node.id + '_text',
-      'data-node-id': node.id,
       fontFamily: levelStyle.fontFamily || MindmapRenderer.DEFAULT_FONT_FAMILY,
       fontSize: levelStyle.fontSize || MindmapRenderer.DEFAULT_FONT_SIZE,
       fontWeight: levelStyle.fontWeight || MindmapRenderer.DEFAULT_FONT_WEIGHT,
