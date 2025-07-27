@@ -393,10 +393,11 @@ class MindmapRenderer {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     const parentChildPadding = node.level > 1 ? this.styleManager.getLevelStyle(node.level - 1).childPadding : 0;
     const layout = levelStyle.getLayout();
-    // TODO configure / style these thingies:
-//    svg += `<circle r="5" cx="${node.x}" cy="${node.y}" fill="red" />`
-//    svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
-//    svg += this._drawChildDropZone(node, layout, parentChildPadding);
+    // Add drop zones if enabled
+    if (this.showDropZones) {
+      svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
+      svg += this._drawChildDropZone(node, layout, parentChildPadding);
+    }
     // Check if bounding box should be displayed based on level style
     const showBoundingBox = this.styleManager.getEffectiveValue(node, 'boundingBox');
     console.log(`Node ${node.id} (${node.text}): show bounding box = ${showBoundingBox}`);
