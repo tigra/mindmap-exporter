@@ -369,11 +369,28 @@ class MindmapRenderer {
    */
   _drawChildDropZone(node, layout, parentChildPadding) {
     const additionalSpan = node.hasChildren() ? 0 : 300;
+    const levelStyle = this.styleManager.getLevelStyle(node.level);
+    
+    // Get the effective direction from the style manager
+    const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction');
+    
+    // Determine drop zone position based on layout direction
+    let dropZoneX, dropZoneWidth;
+    
+    if (effectiveDirection === 'left') {
+      // For left layouts, drop zone goes to the left of the node
+      dropZoneWidth = layout.parentPadding + additionalSpan;
+      dropZoneX = node.boundingBox.x - dropZoneWidth;
+    } else {
+      // For right layouts (default), drop zone goes to the right of the node
+      dropZoneX = node.boundingBox.x + node.width;
+      dropZoneWidth = layout.parentPadding + additionalSpan;
+    }
     
     return this._createRectElement({
-      x: node.boundingBox.x + node.width,
+      x: dropZoneX,
       y: node.boundingBox.y - parentChildPadding / 2,
-      width: layout.parentPadding + additionalSpan,
+      width: dropZoneWidth,
       height: node.boundingBox.height + parentChildPadding,
       fill: "#005000",
       stroke: "#004000",
