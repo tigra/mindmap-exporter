@@ -508,6 +508,26 @@ class MindmapModel {
       }
     });
   }
+
+  /**
+   * Find the parent node of a given node
+   * @param {MindmapNode} targetNode - The node to find the parent of
+   * @return {MindmapNode|null} The parent node, or null if not found (e.g., if target is root)
+   */
+  findParentNode(targetNode) {
+    if (!targetNode || targetNode.level === 1) {
+      return null; // Root node has no parent
+    }
+
+    // Search through all nodes to find the one that has targetNode as a child
+    for (const node of this.nodeMap.values()) {
+      if (node.children.includes(targetNode)) {
+        return node;
+      }
+    }
+
+    return null;
+  }
 }
 
 // Make the mindmap model and parsing function available globally

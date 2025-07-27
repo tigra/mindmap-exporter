@@ -38,6 +38,7 @@ class MindmapRenderer {
     this.maxY = -Infinity;
     this.padding = MindmapRenderer.DEFAULT_PADDING;
     this.nodeMap = new Map(); // Store references to nodes by id
+    this.showDropZones = false; // Controls drop zone visibility (default: hidden)
   }
 
   /**
@@ -332,6 +333,9 @@ class MindmapRenderer {
    * @return {string} SVG rect elements for the parent drop zones
    */
   _drawParentDropZone(node, parentChildPadding) {
+    // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
+    const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
+    
     // Top drop zone (red)
     const topZone = this._createRectElement({
       x: node.boundingBox.x,
@@ -340,8 +344,10 @@ class MindmapRenderer {
       height: node.boundingBox.height / 2 + parentChildPadding / 2,
       fill: "#500000",
       stroke: "#450000",
-      fillOpacity: 0.1,
-      className: "drop-zone parent-drop-zone-top"
+      fillOpacity: dropZoneOpacity,
+      strokeOpacity: dropZoneOpacity,
+      className: "drop-zone parent-drop-zone-top",
+      'data-node-id': node.id
     });
     
     // Bottom drop zone (blue)
@@ -352,8 +358,10 @@ class MindmapRenderer {
       height: node.boundingBox.height / 2 + parentChildPadding / 2,
       fill: "#000060",
       stroke: "#000045",
-      fillOpacity: 0.1,
-      className: "drop-zone parent-drop-zone-bottom"
+      fillOpacity: dropZoneOpacity,
+      strokeOpacity: dropZoneOpacity,
+      className: "drop-zone parent-drop-zone-bottom",
+      'data-node-id': node.id
     });
     
     return topZone + bottomZone;
@@ -387,6 +395,9 @@ class MindmapRenderer {
       dropZoneWidth = layout.parentPadding + additionalSpan;
     }
     
+    // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
+    const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
+    
     return this._createRectElement({
       x: dropZoneX,
       y: node.boundingBox.y - parentChildPadding / 2,
@@ -394,8 +405,10 @@ class MindmapRenderer {
       height: node.boundingBox.height + parentChildPadding,
       fill: "#005000",
       stroke: "#004000",
-      fillOpacity: 0.1,
-      className: "drop-zone child-drop-zone"
+      fillOpacity: dropZoneOpacity,
+      strokeOpacity: dropZoneOpacity,
+      className: "drop-zone child-drop-zone",
+      'data-node-id': node.id
     });
   }
 
@@ -410,11 +423,9 @@ class MindmapRenderer {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     const parentChildPadding = node.level > 1 ? this.styleManager.getLevelStyle(node.level - 1).childPadding : 0;
     const layout = levelStyle.getLayout();
-    // Add drop zones if enabled
-    if (this.showDropZones) {
-      svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
-      svg += this._drawChildDropZone(node, layout, parentChildPadding);
-    }
+    // Always add drop zones for drag and drop functionality, but adjust visibility
+    svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
+    svg += this._drawChildDropZone(node, layout, parentChildPadding);
     // Check if bounding box should be displayed based on level style
     const showBoundingBox = this.styleManager.getEffectiveValue(node, 'boundingBox');
     console.log(`Node ${node.id} (${node.text}): show bounding box = ${showBoundingBox}`);
@@ -783,19 +794,22 @@ class MindmapRenderer {
       fillOpacity = MindmapRenderer.DEFAULT_FILL_OPACITY,
       stroke = '#fff', 
       strokeWidth = MindmapRenderer.DEFAULT_BORDER_WIDTH,
-      filter = 'url(#dropShadow)'
+      strokeOpacity = 1.0,
+      filter = 'url(#dropShadow)',
+      'data-node-id': dataNodeId = ''
     } = props;
     
     // Prepare attributes for the generic function
     const attributes = {
       x, y, width, height, rx, ry,
-      fill, fillOpacity, stroke, strokeWidth,
+      fill, fillOpacity, stroke, strokeWidth, strokeOpacity,
       class: className
     };
     
     // Only add optional attributes if they have values
     if (id) attributes.id = id;
     if (filter) attributes.filter = filter;
+    if (dataNodeId) attributes['data-node-id'] = dataNodeId;
     
     return this._createSvgElement('rect', attributes);
   }
@@ -838,6 +852,7 @@ class MindmapRenderer {
         width: node.width,
         height: node.height,
         id: node.id + '_rect',
+        'data-node-id': node.id,
         rx: levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS,
         ry: levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS,
         fill: this.getFillColor(node),
@@ -864,7 +879,8 @@ class MindmapRenderer {
       textAnchor = 'start',
       dominantBaseline = 'middle',
       className = 'node-text',
-      pointerEvents = 'none'
+      pointerEvents = 'none',
+      'data-node-id': dataNodeId = ''
     } = props;
     
     // Prepare attributes for the generic function
@@ -883,6 +899,9 @@ class MindmapRenderer {
     // Only add optional attributes if they have values
     if (dominantBaseline) {
       attributes.dominantBaseline = dominantBaseline;
+    }
+    if (dataNodeId) {
+      attributes['data-node-id'] = dataNodeId;
     }
     
     return this._createSvgElement('text', attributes, this._escapeXml(text));
@@ -1090,6 +1109,7 @@ class MindmapRenderer {
       x: x,
       y: y,
       id: node.id + '_text',
+      'data-node-id': node.id,
       fontFamily: levelStyle.fontFamily || MindmapRenderer.DEFAULT_FONT_FAMILY,
       fontSize: levelStyle.fontSize || MindmapRenderer.DEFAULT_FONT_SIZE,
       fontWeight: levelStyle.fontWeight || MindmapRenderer.DEFAULT_FONT_WEIGHT,
