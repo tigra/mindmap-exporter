@@ -2,6 +2,7 @@
 
 import eventBridge from '../utils/event-bridge.js';
 import MindmapStylePresets from '../style/style-presets.js';
+import DragDropManager from './drag-drop-manager.js';
 
 /**
  * Controller for the mindmap application
@@ -21,6 +22,9 @@ class MindmapController {
     this.styleManager = styleManager;
     this.container = container;
 
+    // Initialize drag and drop manager
+    this.dragDropManager = null;
+
     // Register with the event bridge
     eventBridge.initialize(this);
   }
@@ -35,6 +39,31 @@ class MindmapController {
     // Initial render
     this.renderer.render(this.container);
     this.initMindmapContainer();
+
+    // Initialize drag and drop after rendering
+    this.initDragDrop();
+  }
+
+  /**
+   * Re-render the mindmap without re-parsing markdown
+   * Used after drag and drop operations to preserve model changes
+   */
+  rerenderMindmap() {
+    console.log('=== RERENDER MINDMAP DEBUG ===');
+    console.log('About to apply layout to existing model...');
+    
+    // Apply layout to the existing model
+    this.applyLayout();
+    console.log('Layout applied. About to render...');
+
+    // Re-render with the updated model
+    this.renderer.render(this.container);
+    console.log('Rendering complete. About to re-initialize drag and drop...');
+
+    // Re-initialize drag and drop with new DOM elements
+    this.initDragDrop();
+    console.log('Drag and drop re-initialized.');
+    console.log('=== END RERENDER MINDMAP DEBUG ===');
   }
 
   /**
@@ -165,6 +194,26 @@ class MindmapController {
       }
       // If not holding Ctrl, let the default scroll behavior happen
     });
+  }
+
+  /**
+   * Initialize drag and drop functionality
+   */
+  initDragDrop() {
+    // Clean up existing drag drop manager if it exists
+    if (this.dragDropManager) {
+      this.dragDropManager.destroy();
+    }
+
+    // Create new drag drop manager
+    this.dragDropManager = new DragDropManager(
+      this.model,
+      this.renderer,
+      this,
+      this.container
+    );
+
+    console.log('Drag and drop functionality initialized');
   }
 
   /**

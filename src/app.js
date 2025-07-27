@@ -70,6 +70,7 @@ class MindmapApp {
     this.loadingIndicator = document.getElementById(this.options.loadingIndicator);
     this.boundingBoxCheckbox = document.getElementById('enable-bounding-box');
     this.debugRectCheckbox = document.getElementById('enable-debug-rect');
+    this.dropZonesCheckbox = document.getElementById('enable-drop-zones');
     this.outlineEdgeAlignmentSelect = document.getElementById('outline-edge-alignment');
     this.applySettingsBtn = document.getElementById('apply-settings-btn');
     
@@ -178,6 +179,11 @@ class MindmapApp {
     // Get the apply settings button
     this.applySettingsBtn = document.getElementById('apply-settings-btn');
     
+    // Wire up the Apply Settings button
+    if (this.applySettingsBtn) {
+      this.applySettingsBtn.addEventListener('click', this.handleApplySettings.bind(this));
+    }
+    
     if (this.boundingBoxCheckbox) {
       // We'll use the apply settings button instead of immediately applying on checkbox change
       this.boundingBoxCheckbox.addEventListener('change', () => {
@@ -192,6 +198,12 @@ class MindmapApp {
       
       // Initialize the global flag to false by default
       window.showMarkdownDebugRect = false;
+    }
+    
+    if (this.dropZonesCheckbox) {
+      this.dropZonesCheckbox.addEventListener('change', () => {
+        console.log("Drop zones checkbox changed:", this.dropZonesCheckbox.checked);
+      });
     }
     
     if (this.outlineEdgeAlignmentSelect) {
@@ -322,6 +334,12 @@ class MindmapApp {
     if (this.debugRectCheckbox) {
       window.showMarkdownDebugRect = this.debugRectCheckbox.checked;
       console.log('Applied debug rect setting:', window.showMarkdownDebugRect);
+    }
+    
+    // Apply drop zones setting
+    if (this.dropZonesCheckbox) {
+      this.renderer.showDropZones = this.dropZonesCheckbox.checked;
+      console.log('Applied drop zones setting:', this.renderer.showDropZones);
     }
     
     // Apply outline edge alignment setting
