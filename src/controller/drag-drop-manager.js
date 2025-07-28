@@ -33,6 +33,9 @@ class DragDropManager {
     this.draggingOffsetX = 0;
     this.draggingOffsetY = 0;
     
+    // Connection line for visual feedback
+    this.connectionLine = null;
+    
     // Bind methods
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
@@ -201,6 +204,9 @@ class DragDropManager {
       this.currentDropZone = dropZone;
       this.updateDropZoneHighlight();
       this.updateDragCursor();
+    } else if (this.currentDropZone && this.connectionLine) {
+      // Update connection line position even if drop zone hasn't changed
+      this.updateConnectionLine();
     }
   }
   
@@ -234,6 +240,7 @@ class DragDropManager {
     this.draggedNode = null;
     this.currentDropZone = null;
     this.clearDropZoneHighlight();
+    this.removeConnectionLine();
     
     console.log('Ended drag operation');
   }
@@ -411,13 +418,17 @@ class DragDropManager {
    * Update drop zone highlighting
    */
   updateDropZoneHighlight() {
-    // Clear previous highlights
+    // Clear previous highlights and connection line
     this.clearDropZoneHighlight();
+    this.removeConnectionLine();
     
     // Always highlight current drop zone during drag for visual feedback
     if (this.currentDropZone && this.currentDropZone.element) {
       this.currentDropZone.element.style.fillOpacity = '0.3';
       this.currentDropZone.element.style.strokeWidth = '2';
+      
+      // Draw connection line from potential parent to dragged node
+      this.createConnectionLine();
     }
   }
   
@@ -879,6 +890,177 @@ class DragDropManager {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+  
+  /**
+   * Create a connection line from potential parent to dragging visual element
+   */
+  createConnectionLine() {
+    if (!this.currentDropZone || !this.draggedNode || !this.draggingElement) return;
+    
+    const targetNodeId = this.currentDropZone.nodeId;
+    const targetNode = this.model.findNodeById(targetNodeId);
+    if (!targetNode) return;
+    
+    // Get SVG element to add the line to
+    const svgElement = this.container.querySelector('svg');
+    if (!svgElement) return;
+    
+    // Determine the parent node to connect from
+    let fromNode;
+    
+    if (this.currentDropZone.type === 'child') {
+      // For child drop zones, connect from target node to dragging element
+      fromNode = targetNode;
+    } else {
+      // For parent drop zones, connect from the parent of target node to dragging element
+      const targetParent = this.model.findParentNode(targetNode);
+      if (!targetParent) return;
+      fromNode = targetParent;
+    }
+    
+    // Calculate connection points
+    const fromX = fromNode.x + fromNode.width / 2;
+    const fromY = fromNode.y + fromNode.height / 2;
+    
+    // Get the position of the dragging element and convert to SVG coordinates
+    const draggingRect = this.draggingElement.getBoundingClientRect();
+    const svgRect = svgElement.getBoundingClientRect();
+    
+    // Validate that we have valid coordinates
+    if (draggingRect.width === 0 || draggingRect.height === 0) {
+      console.warn('Dragging element has no dimensions, skipping connection line');
+      return;
+    }
+    
+    // Get SVG viewBox to handle coordinate transformations
+    const viewBox = svgElement.getAttribute('viewBox');
+    let scaleX = 1, scaleY = 1, offsetX = 0, offsetY = 0;
+    
+    if (viewBox) {
+      const [vbX, vbY, vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+      scaleX = vbWidth / svgRect.width;
+      scaleY = vbHeight / svgRect.height;
+      offsetX = vbX;
+      offsetY = vbY;
+    }
+    
+    // Convert dragging element screen coordinates to SVG coordinates
+    const dragCenterX = draggingRect.left + draggingRect.width / 2;
+    const dragCenterY = draggingRect.top + draggingRect.height / 2;
+    
+    const toX = (dragCenterX - svgRect.left) * scaleX + offsetX;
+    const toY = (dragCenterY - svgRect.top) * scaleY + offsetY;
+    
+    // Debug coordinates
+    console.log('Connection line coordinates:');
+    console.log(`From: (${fromX}, ${fromY}) - ${fromNode.text}`);
+    console.log(`To: (${toX}, ${toY}) - dragging element`);
+    console.log(`Dragging rect:`, draggingRect);
+    console.log(`SVG rect:`, svgRect);
+    
+    // Validate calculated coordinates
+    if (isNaN(toX) || isNaN(toY) || isNaN(fromX) || isNaN(fromY)) {
+      console.warn('Invalid coordinates calculated, skipping connection line');
+      return;
+    }
+    
+    // Create the line element
+    this.connectionLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    this.connectionLine.setAttribute('x1', fromX);
+    this.connectionLine.setAttribute('y1', fromY);
+    this.connectionLine.setAttribute('x2', toX);
+    this.connectionLine.setAttribute('y2', toY);
+    this.connectionLine.setAttribute('stroke', '#ff6b6b');
+    this.connectionLine.setAttribute('stroke-width', '2');
+    this.connectionLine.setAttribute('stroke-dasharray', '5,5');
+    this.connectionLine.setAttribute('opacity', '0.8');
+    this.connectionLine.setAttribute('pointer-events', 'none');
+    this.connectionLine.setAttribute('class', 'drag-connection-line');
+    
+    // Add to SVG
+    svgElement.appendChild(this.connectionLine);
+  }
+  
+  /**
+   * Update the connection line position to track the dragging element
+   */
+  updateConnectionLine() {
+    if (!this.connectionLine || !this.currentDropZone || !this.draggedNode || !this.draggingElement) return;
+    
+    const targetNodeId = this.currentDropZone.nodeId;
+    const targetNode = this.model.findNodeById(targetNodeId);
+    if (!targetNode) return;
+    
+    // Get SVG element
+    const svgElement = this.container.querySelector('svg');
+    if (!svgElement) return;
+    
+    // Determine the parent node to connect from
+    let fromNode;
+    
+    if (this.currentDropZone.type === 'child') {
+      // For child drop zones, connect from target node to dragging element
+      fromNode = targetNode;
+    } else {
+      // For parent drop zones, connect from the parent of target node to dragging element
+      const targetParent = this.model.findParentNode(targetNode);
+      if (!targetParent) return;
+      fromNode = targetParent;
+    }
+    
+    // Calculate connection points
+    const fromX = fromNode.x + fromNode.width / 2;
+    const fromY = fromNode.y + fromNode.height / 2;
+    
+    // Get the position of the dragging element and convert to SVG coordinates
+    const draggingRect = this.draggingElement.getBoundingClientRect();
+    const svgRect = svgElement.getBoundingClientRect();
+    
+    // Get SVG viewBox to handle coordinate transformations
+    const viewBox = svgElement.getAttribute('viewBox');
+    let scaleX = 1, scaleY = 1, offsetX = 0, offsetY = 0;
+    
+    if (viewBox) {
+      const [vbX, vbY, vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+      scaleX = vbWidth / svgRect.width;
+      scaleY = vbHeight / svgRect.height;
+      offsetX = vbX;
+      offsetY = vbY;
+    }
+    
+    // Convert dragging element screen coordinates to SVG coordinates
+    const dragCenterX = draggingRect.left + draggingRect.width / 2;
+    const dragCenterY = draggingRect.top + draggingRect.height / 2;
+    
+    const toX = (dragCenterX - svgRect.left) * scaleX + offsetX;
+    const toY = (dragCenterY - svgRect.top) * scaleY + offsetY;
+    
+    // Update the line coordinates
+    this.connectionLine.setAttribute('x2', toX);
+    this.connectionLine.setAttribute('y2', toY);
+  }
+  
+  /**
+   * Remove the connection line
+   */
+  removeConnectionLine() {
+    // Remove the tracked connection line
+    if (this.connectionLine && this.connectionLine.parentNode) {
+      this.connectionLine.parentNode.removeChild(this.connectionLine);
+      this.connectionLine = null;
+    }
+    
+    // Also clean up any stray connection lines that might exist
+    const svgElement = this.container.querySelector('svg');
+    if (svgElement) {
+      const strayLines = svgElement.querySelectorAll('.drag-connection-line');
+      strayLines.forEach(line => {
+        if (line.parentNode) {
+          line.parentNode.removeChild(line);
+        }
+      });
+    }
   }
 }
 
