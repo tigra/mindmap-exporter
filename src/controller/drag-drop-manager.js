@@ -214,6 +214,9 @@ class DragDropManager {
     // Remove the dragging visual element
     this.removeDraggingElement();
     
+    // Force cleanup of any remaining dragging elements
+    this.cleanupDraggingElements();
+    
     // Restore cursor
     document.body.style.cursor = this.originalCursor;
     
@@ -297,8 +300,22 @@ class DragDropManager {
     if (!svgElement) return null;
     
     const rect = svgElement.getBoundingClientRect();
-    const svgX = x - rect.left;
-    const svgY = y - rect.top;
+    
+    // Get SVG viewBox to handle coordinate transformations
+    const viewBox = svgElement.getAttribute('viewBox');
+    let scaleX = 1, scaleY = 1, offsetX = 0, offsetY = 0;
+    
+    if (viewBox) {
+      const [vbX, vbY, vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+      scaleX = vbWidth / rect.width;
+      scaleY = vbHeight / rect.height;
+      offsetX = vbX;
+      offsetY = vbY;
+    }
+    
+    // Convert screen coordinates to SVG coordinates with viewBox transformation
+    const svgX = (x - rect.left) * scaleX + offsetX;
+    const svgY = (y - rect.top) * scaleY + offsetY;
     
     // Check each drop zone
     for (const dropZoneElement of this.dropZoneElements) {
@@ -703,6 +720,9 @@ class DragDropManager {
       this.removeDraggingElement();
     }
     
+    // Force cleanup of any stray dragging elements
+    this.cleanupDraggingElements();
+    
     // Get the SVG element and its bounding rect
     const svgElement = this.container.querySelector('svg');
     if (!svgElement) return;
@@ -828,6 +848,22 @@ class DragDropManager {
     if (this.draggingElement && this.draggingElement.parentNode) {
       this.draggingElement.parentNode.removeChild(this.draggingElement);
       this.draggingElement = null;
+    }
+  }
+  
+  /**
+   * Clean up any stray dragging elements from the DOM
+   */
+  cleanupDraggingElements() {
+    const strayElements = document.querySelectorAll('.dragging-node');
+    if (strayElements.length > 0) {
+      console.log(`Cleaning up ${strayElements.length} stray dragging elements`);
+      strayElements.forEach((element, index) => {
+        console.log(`Removing stray element ${index}:`, element.id);
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      });
     }
   }
   
