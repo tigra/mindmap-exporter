@@ -893,6 +893,125 @@ class DragDropManager {
   }
   
   /**
+   * Create a potential connection pattern definition in the SVG defs
+   * @private
+   */
+  createPotentialConnectionPattern() {
+    const svgElement = this.container.querySelector('svg');
+    if (!svgElement) return;
+    
+    // Check if pattern already exists
+    if (svgElement.querySelector('#potentialConnectionPattern')) return;
+    
+    // Find or create defs element
+    let defsElement = svgElement.querySelector('defs');
+    if (!defsElement) {
+      defsElement = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svgElement.insertBefore(defsElement, svgElement.firstChild);
+    }
+    
+    // Create black and white diagonal stripe pattern for potential connections
+    const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+    pattern.setAttribute('id', 'potentialConnectionPattern');
+    pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+    pattern.setAttribute('width', '10');
+    pattern.setAttribute('height', '10');
+    
+    // Create white background rectangle
+    const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bgRect.setAttribute('width', '10');
+    bgRect.setAttribute('height', '10');
+    bgRect.setAttribute('fill', 'white');
+    pattern.appendChild(bgRect);
+    
+    // Create black diagonal stripes
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M0,10 L10,0 M-2,2 L2,-2 M8,12 L12,8');
+    path.setAttribute('stroke', 'black');
+    path.setAttribute('stroke-width', '2');
+    
+    pattern.appendChild(path);
+    
+    // Create black outline pattern for contour
+    const outlinePattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+    outlinePattern.setAttribute('id', 'potentialConnectionOutline');
+    outlinePattern.setAttribute('patternUnits', 'userSpaceOnUse');
+    outlinePattern.setAttribute('width', '1');
+    outlinePattern.setAttribute('height', '1');
+    
+    const outlineRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    outlineRect.setAttribute('width', '1');
+    outlineRect.setAttribute('height', '1');
+    outlineRect.setAttribute('fill', 'black');
+    outlinePattern.appendChild(outlineRect);
+    
+    defsElement.appendChild(pattern);
+    defsElement.appendChild(outlinePattern);
+  }
+  
+  /**
+   * Calculate bezier control points for a connection (from renderer logic)
+   * @private
+   */
+  calculateBezierControlPoints(startPoint, endPoint) {
+    // Assume horizontal layout for drag connections
+    const dx = endPoint.x - startPoint.x;
+    return [
+      startPoint.x + dx * 0.4, startPoint.y,
+      startPoint.x + dx * 0.6, endPoint.y
+    ];
+  }
+  
+  /**
+   * Create a bezier curve path string (from renderer logic)
+   * @private
+   */
+  createBezierCurvePath(startPoint, endPoint) {
+    const [cp1x, cp1y, cp2x, cp2y] = this.calculateBezierControlPoints(startPoint, endPoint);
+    return `M ${startPoint.x} ${startPoint.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endPoint.x} ${endPoint.y}`;
+  }
+  
+  /**
+   * Calculate perpendicular offset points for tapered connection
+   * @private
+   */
+  calculatePerpendicularOffsets(point, width) {
+    const halfWidth = width / 2;
+    // For horizontal connections, offset vertically
+    return [
+      point.x, point.y - halfWidth,  // top point
+      point.x, point.y + halfWidth   // bottom point
+    ];
+  }
+  
+  /**
+   * Create a tapered connection path with pattern fill
+   * @private
+   */
+  createTaperedConnectionPath(startPoint, endPoint, startWidth, endWidth) {
+    // Calculate control points for the centerline curve
+    const [cp1x, cp1y, cp2x, cp2y] = this.calculateBezierControlPoints(startPoint, endPoint);
+    
+    // Calculate perpendicular offsets at start and end points
+    const [startTopX, startTopY, startBottomX, startBottomY] = 
+      this.calculatePerpendicularOffsets(startPoint, startWidth);
+    
+    const [endTopX, endTopY, endBottomX, endBottomY] = 
+      this.calculatePerpendicularOffsets(endPoint, endWidth);
+    
+    // Create the filled path - going clockwise
+    return 'M ' + startTopX + ' ' + startTopY + 
+           ' C ' + (cp1x + (startTopX - startPoint.x)) + ' ' + (cp1y + (startTopY - startPoint.y)) + 
+           ', ' + (cp2x + (endTopX - endPoint.x)) + ' ' + (cp2y + (endTopY - endPoint.y)) + 
+           ', ' + endTopX + ' ' + endTopY + 
+           ' L ' + endBottomX + ' ' + endBottomY + 
+           ' C ' + (cp2x + (endBottomX - endPoint.x)) + ' ' + (cp2y + (endBottomY - endPoint.y)) + 
+           ', ' + (cp1x + (startBottomX - startPoint.x)) + ' ' + (cp1y + (startBottomY - startPoint.y)) + 
+           ', ' + startBottomX + ' ' + startBottomY + 
+           ' Z';
+  }
+
+  /**
    * Create a connection line from potential parent to dragging visual element
    */
   createConnectionLine() {
@@ -906,6 +1025,9 @@ class DragDropManager {
     const svgElement = this.container.querySelector('svg');
     if (!svgElement) return;
     
+    // Create pattern definition if it doesn't exist
+    this.createPotentialConnectionPattern();
+    
     // Determine the parent node to connect from
     let fromNode;
     
@@ -918,10 +1040,6 @@ class DragDropManager {
       if (!targetParent) return;
       fromNode = targetParent;
     }
-    
-    // Calculate connection points
-    const fromX = fromNode.x + fromNode.width / 2;
-    const fromY = fromNode.y + fromNode.height / 2;
     
     // Get the position of the dragging element and convert to SVG coordinates
     const draggingRect = this.draggingElement.getBoundingClientRect();
@@ -952,41 +1070,89 @@ class DragDropManager {
     const toX = (dragCenterX - svgRect.left) * scaleX + offsetX;
     const toY = (dragCenterY - svgRect.top) * scaleY + offsetY;
     
+    // Calculate connection points using renderer's logic
+    const startPoint = { 
+      x: fromNode.x + fromNode.width / 2, 
+      y: fromNode.y + fromNode.height / 2 
+    };
+    const endPoint = { x: toX, y: toY };
+    
     // Debug coordinates
     console.log('Connection line coordinates:');
-    console.log(`From: (${fromX}, ${fromY}) - ${fromNode.text}`);
-    console.log(`To: (${toX}, ${toY}) - dragging element`);
-    console.log(`Dragging rect:`, draggingRect);
-    console.log(`SVG rect:`, svgRect);
+    console.log(`From: (${startPoint.x}, ${startPoint.y}) - ${fromNode.text}`);
+    console.log(`To: (${endPoint.x}, ${endPoint.y}) - dragging element`);
     
     // Validate calculated coordinates
-    if (isNaN(toX) || isNaN(toY) || isNaN(fromX) || isNaN(fromY)) {
+    if (isNaN(toX) || isNaN(toY) || isNaN(startPoint.x) || isNaN(startPoint.y)) {
       console.warn('Invalid coordinates calculated, skipping connection line');
       return;
     }
     
-    // Create the line element
-    this.connectionLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    this.connectionLine.setAttribute('x1', fromX);
-    this.connectionLine.setAttribute('y1', fromY);
-    this.connectionLine.setAttribute('x2', toX);
-    this.connectionLine.setAttribute('y2', toY);
-    this.connectionLine.setAttribute('stroke', '#ff6b6b');
-    this.connectionLine.setAttribute('stroke-width', '2');
-    this.connectionLine.setAttribute('stroke-dasharray', '5,5');
-    this.connectionLine.setAttribute('opacity', '0.8');
-    this.connectionLine.setAttribute('pointer-events', 'none');
-    this.connectionLine.setAttribute('class', 'drag-connection-line');
+    // Get style from the parent node's level for consistent appearance
+    const parentStyle = this.renderer.styleManager.getLevelStyle(fromNode.level);
+    const useTapered = parentStyle.connectionTapered || false;
     
-    // Add to SVG
-    svgElement.appendChild(this.connectionLine);
+    // Create a group to hold both the connection and its outline
+    const connectionGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    connectionGroup.setAttribute('class', 'drag-connection-line');
+    connectionGroup.setAttribute('pointer-events', 'none');
+    
+    if (useTapered) {
+      // Create tapered connection with pattern fill
+      const startWidth = parentStyle.connectionStartWidth || 8;
+      const endWidth = parentStyle.connectionEndWidth || 2;
+      const path = this.createTaperedConnectionPath(startPoint, endPoint, startWidth, endWidth);
+      
+      // Create outline (slightly larger)
+      const outlinePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const outlinePathStr = this.createTaperedConnectionPath(startPoint, endPoint, startWidth + 2, endWidth + 2);
+      outlinePath.setAttribute('d', outlinePathStr);
+      outlinePath.setAttribute('fill', 'url(#potentialConnectionOutline)');
+      outlinePath.setAttribute('opacity', '0.9');
+      connectionGroup.appendChild(outlinePath);
+      
+      // Create main connection
+      this.connectionLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      this.connectionLine.setAttribute('d', path);
+      this.connectionLine.setAttribute('fill', 'url(#potentialConnectionPattern)');
+      this.connectionLine.setAttribute('opacity', '0.8');
+      connectionGroup.appendChild(this.connectionLine);
+    } else {
+      // Create curved stroke connection with pattern
+      const path = this.createBezierCurvePath(startPoint, endPoint);
+      const strokeWidth = parentStyle.connectionWidth || 6;
+      
+      // Create outline (slightly thicker)
+      const outlinePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      outlinePath.setAttribute('d', path);
+      outlinePath.setAttribute('fill', 'none');
+      outlinePath.setAttribute('stroke', 'url(#potentialConnectionOutline)');
+      outlinePath.setAttribute('stroke-width', strokeWidth + 2);
+      outlinePath.setAttribute('opacity', '0.9');
+      connectionGroup.appendChild(outlinePath);
+      
+      // Create main connection
+      this.connectionLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      this.connectionLine.setAttribute('d', path);
+      this.connectionLine.setAttribute('fill', 'none');
+      this.connectionLine.setAttribute('stroke', 'url(#potentialConnectionPattern)');
+      this.connectionLine.setAttribute('stroke-width', strokeWidth);
+      this.connectionLine.setAttribute('opacity', '0.8');
+      connectionGroup.appendChild(this.connectionLine);
+    }
+    
+    // Add the group to SVG
+    svgElement.appendChild(connectionGroup);
+    
+    // Store reference to the group for updates
+    this.connectionGroup = connectionGroup;
   }
   
   /**
    * Update the connection line position to track the dragging element
    */
   updateConnectionLine() {
-    if (!this.connectionLine || !this.currentDropZone || !this.draggedNode || !this.draggingElement) return;
+    if (!this.connectionLine || !this.connectionGroup || !this.currentDropZone || !this.draggedNode || !this.draggingElement) return;
     
     const targetNodeId = this.currentDropZone.nodeId;
     const targetNode = this.model.findNodeById(targetNodeId);
@@ -1008,10 +1174,6 @@ class DragDropManager {
       if (!targetParent) return;
       fromNode = targetParent;
     }
-    
-    // Calculate connection points
-    const fromX = fromNode.x + fromNode.width / 2;
-    const fromY = fromNode.y + fromNode.height / 2;
     
     // Get the position of the dragging element and convert to SVG coordinates
     const draggingRect = this.draggingElement.getBoundingClientRect();
@@ -1036,18 +1198,56 @@ class DragDropManager {
     const toX = (dragCenterX - svgRect.left) * scaleX + offsetX;
     const toY = (dragCenterY - svgRect.top) * scaleY + offsetY;
     
-    // Update the line coordinates
-    this.connectionLine.setAttribute('x2', toX);
-    this.connectionLine.setAttribute('y2', toY);
+    // Calculate connection points using renderer's logic
+    const startPoint = { 
+      x: fromNode.x + fromNode.width / 2, 
+      y: fromNode.y + fromNode.height / 2 
+    };
+    const endPoint = { x: toX, y: toY };
+    
+    // Get style from the parent node's level for consistent appearance
+    const parentStyle = this.renderer.styleManager.getLevelStyle(fromNode.level);
+    const useTapered = parentStyle.connectionTapered || false;
+    
+    // Update both outline and main connection paths
+    if (useTapered) {
+      // Update tapered connection paths
+      const startWidth = parentStyle.connectionStartWidth || 8;
+      const endWidth = parentStyle.connectionEndWidth || 2;
+      const mainPath = this.createTaperedConnectionPath(startPoint, endPoint, startWidth, endWidth);
+      const outlinePath = this.createTaperedConnectionPath(startPoint, endPoint, startWidth + 2, endWidth + 2);
+      
+      // Update outline path (first child)
+      const outlineElement = this.connectionGroup.children[0];
+      if (outlineElement) {
+        outlineElement.setAttribute('d', outlinePath);
+      }
+      
+      // Update main path (second child)
+      this.connectionLine.setAttribute('d', mainPath);
+    } else {
+      // Update curved connection paths
+      const newPath = this.createBezierCurvePath(startPoint, endPoint);
+      
+      // Update outline path (first child)
+      const outlineElement = this.connectionGroup.children[0];
+      if (outlineElement) {
+        outlineElement.setAttribute('d', newPath);
+      }
+      
+      // Update main path (second child)
+      this.connectionLine.setAttribute('d', newPath);
+    }
   }
   
   /**
    * Remove the connection line
    */
   removeConnectionLine() {
-    // Remove the tracked connection line
-    if (this.connectionLine && this.connectionLine.parentNode) {
-      this.connectionLine.parentNode.removeChild(this.connectionLine);
+    // Remove the tracked connection group
+    if (this.connectionGroup && this.connectionGroup.parentNode) {
+      this.connectionGroup.parentNode.removeChild(this.connectionGroup);
+      this.connectionGroup = null;
       this.connectionLine = null;
     }
     
