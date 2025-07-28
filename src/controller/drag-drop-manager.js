@@ -414,7 +414,7 @@ class DragDropManager {
     // Clear previous highlights
     this.clearDropZoneHighlight();
     
-    // Highlight current drop zone
+    // Always highlight current drop zone during drag for visual feedback
     if (this.currentDropZone && this.currentDropZone.element) {
       this.currentDropZone.element.style.fillOpacity = '0.3';
       this.currentDropZone.element.style.strokeWidth = '2';
@@ -425,8 +425,11 @@ class DragDropManager {
    * Clear drop zone highlighting
    */
   clearDropZoneHighlight() {
+    // Respect the renderer's showDropZones setting
+    const baseOpacity = this.renderer.showDropZones ? '0.1' : '0.0';
+    
     for (const element of this.dropZoneElements) {
-      element.style.fillOpacity = '0.1';
+      element.style.fillOpacity = baseOpacity;
       element.style.strokeWidth = '1';
     }
   }
