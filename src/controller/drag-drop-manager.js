@@ -214,6 +214,9 @@ class DragDropManager {
     // Remove the dragging visual element
     this.removeDraggingElement();
     
+    // Force cleanup of any remaining dragging elements
+    this.cleanupDraggingElements();
+    
     // Restore cursor
     document.body.style.cursor = this.originalCursor;
     
@@ -297,8 +300,22 @@ class DragDropManager {
     if (!svgElement) return null;
     
     const rect = svgElement.getBoundingClientRect();
-    const svgX = x - rect.left;
-    const svgY = y - rect.top;
+    
+    // Get SVG viewBox to handle coordinate transformations
+    const viewBox = svgElement.getAttribute('viewBox');
+    let scaleX = 1, scaleY = 1, offsetX = 0, offsetY = 0;
+    
+    if (viewBox) {
+      const [vbX, vbY, vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+      scaleX = vbWidth / rect.width;
+      scaleY = vbHeight / rect.height;
+      offsetX = vbX;
+      offsetY = vbY;
+    }
+    
+    // Convert screen coordinates to SVG coordinates with viewBox transformation
+    const svgX = (x - rect.left) * scaleX + offsetX;
+    const svgY = (y - rect.top) * scaleY + offsetY;
     
     // Check each drop zone
     for (const dropZoneElement of this.dropZoneElements) {
@@ -397,7 +414,7 @@ class DragDropManager {
     // Clear previous highlights
     this.clearDropZoneHighlight();
     
-    // Highlight current drop zone
+    // Always highlight current drop zone during drag for visual feedback
     if (this.currentDropZone && this.currentDropZone.element) {
       this.currentDropZone.element.style.fillOpacity = '0.3';
       this.currentDropZone.element.style.strokeWidth = '2';
@@ -408,8 +425,11 @@ class DragDropManager {
    * Clear drop zone highlighting
    */
   clearDropZoneHighlight() {
+    // Respect the renderer's showDropZones setting
+    const baseOpacity = this.renderer.showDropZones ? '0.1' : '0.0';
+    
     for (const element of this.dropZoneElements) {
-      element.style.fillOpacity = '0.1';
+      element.style.fillOpacity = baseOpacity;
       element.style.strokeWidth = '1';
     }
   }
@@ -698,24 +718,56 @@ class DragDropManager {
    * @param {MouseEvent} event - The mouse event
    */
   createDraggingElement(event) {
-    // Find the original node element
-    const nodeElement = document.querySelector(`[data-node-id="${this.draggedNode.id}"]`);
-    if (!nodeElement) return;
+    // Remove any existing dragging element first
+    if (this.draggingElement) {
+      this.removeDraggingElement();
+    }
+    
+    // Force cleanup of any stray dragging elements
+    this.cleanupDraggingElements();
     
     // Get the SVG element and its bounding rect
     const svgElement = this.container.querySelector('svg');
     if (!svgElement) return;
     
+    // Find the node's rect element (the actual shape)
+    const nodeRectElement = document.getElementById(`${this.draggedNode.id}_rect`);
+    if (!nodeRectElement) {
+      // Fallback to any element with data-node-id
+      const nodeElement = document.querySelector(`[data-node-id="${this.draggedNode.id}"]`);
+      if (!nodeElement) return;
+    }
+    
     const svgRect = svgElement.getBoundingClientRect();
-    const nodeRect = nodeElement.getBoundingClientRect();
+    
+    // Get the actual node position from the model
+    const nodeX = this.draggedNode.x;
+    const nodeY = this.draggedNode.y;
+    
+    // Get SVG viewBox to handle coordinate transformations
+    const viewBox = svgElement.getAttribute('viewBox');
+    let scaleX = 1, scaleY = 1, offsetX = 0, offsetY = 0;
+    
+    if (viewBox) {
+      const [vbX, vbY, vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+      scaleX = svgRect.width / vbWidth;
+      scaleY = svgRect.height / vbHeight;
+      offsetX = -vbX * scaleX;
+      offsetY = -vbY * scaleY;
+    }
+    
+    // Convert SVG coordinates to screen coordinates
+    const screenX = svgRect.left + offsetX + (nodeX * scaleX);
+    const screenY = svgRect.top + offsetY + (nodeY * scaleY);
     
     // Calculate offset from mouse to node position
-    this.draggingOffsetX = nodeRect.left - event.clientX;
-    this.draggingOffsetY = nodeRect.top - event.clientY;
+    this.draggingOffsetX = screenX - event.clientX;
+    this.draggingOffsetY = screenY - event.clientY;
     
     // Create a div to hold the dragging element
     this.draggingElement = document.createElement('div');
     this.draggingElement.className = 'dragging-node';
+    this.draggingElement.id = 'dragging-node-visual'; // Add unique ID
     this.draggingElement.style.position = 'fixed';
     this.draggingElement.style.zIndex = '10000';
     this.draggingElement.style.pointerEvents = 'none';
@@ -731,6 +783,13 @@ class DragDropManager {
     
     // Add to body
     document.body.appendChild(this.draggingElement);
+    
+    // Debug: Check how many dragging elements exist
+    const draggingElements = document.querySelectorAll('.dragging-node');
+    console.log(`Number of dragging elements after creation: ${draggingElements.length}`);
+    
+    // Debug: Check the content
+    console.log('Dragging element HTML:', this.draggingElement.outerHTML.substring(0, 200) + '...');
   }
   
   /**
@@ -792,6 +851,22 @@ class DragDropManager {
     if (this.draggingElement && this.draggingElement.parentNode) {
       this.draggingElement.parentNode.removeChild(this.draggingElement);
       this.draggingElement = null;
+    }
+  }
+  
+  /**
+   * Clean up any stray dragging elements from the DOM
+   */
+  cleanupDraggingElements() {
+    const strayElements = document.querySelectorAll('.dragging-node');
+    if (strayElements.length > 0) {
+      console.log(`Cleaning up ${strayElements.length} stray dragging elements`);
+      strayElements.forEach((element, index) => {
+        console.log(`Removing stray element ${index}:`, element.id);
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      });
     }
   }
   
