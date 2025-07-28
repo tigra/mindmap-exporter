@@ -456,6 +456,12 @@ class DragDropManager {
       return;
     }
     
+    // Clear direction override if the dragged node has one
+    if (this.draggedNode.configOverrides && this.draggedNode.configOverrides.direction) {
+      console.log(`Clearing direction override '${this.draggedNode.configOverrides.direction}' from dragged node: ${this.draggedNode.text}`);
+      this.draggedNode.clearOverride('direction');
+    }
+    
     console.log(`=== PERFORM DROP DEBUG ===`);
     console.log('Current drop zone:', this.currentDropZone);
     
