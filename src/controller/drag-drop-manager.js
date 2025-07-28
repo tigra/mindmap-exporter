@@ -1070,17 +1070,56 @@ class DragDropManager {
     const toX = (dragCenterX - svgRect.left) * scaleX + offsetX;
     const toY = (dragCenterY - svgRect.top) * scaleY + offsetY;
     
-    // Calculate connection points using renderer's logic
-    const startPoint = { 
-      x: fromNode.x + fromNode.width / 2, 
-      y: fromNode.y + fromNode.height / 2 
-    };
-    const endPoint = { x: toX, y: toY };
+    // Calculate proper connection points using layout logic
+    let startPoint, endPoint;
     
-    // Debug coordinates
-    console.log('Connection line coordinates:');
-    console.log(`From: (${startPoint.x}, ${startPoint.y}) - ${fromNode.text}`);
-    console.log(`To: (${endPoint.x}, ${endPoint.y}) - dragging element`);
+    try {
+      const fromLevelStyle = this.renderer.styleManager.getLevelStyle(fromNode.level);
+      const fromNodeLayout = fromLevelStyle.getLayout();
+      const draggedLevelStyle = this.renderer.styleManager.getLevelStyle(this.draggedNode.level);
+      const draggedNodeLayout = draggedLevelStyle.getLayout();
+      
+      console.log('Layout objects:', { fromNodeLayout, draggedNodeLayout });
+      
+      // Get proper parent connection point
+      const startConnectionPoint = fromNodeLayout.getParentConnectionPoint(fromNode, fromLevelStyle, this.draggedNode);
+      console.log('Start connection point:', startConnectionPoint);
+      
+      // Create a temporary node object for the dragged element to get child connection point
+      const tempDraggedNode = {
+        x: toX - this.draggedNode.width / 2,
+        y: toY - this.draggedNode.height / 2,
+        width: this.draggedNode.width,
+        height: this.draggedNode.height,
+        level: this.draggedNode.level
+      };
+      console.log('Temp dragged node:', tempDraggedNode);
+      
+      // Get proper child connection point
+      const endConnectionPoint = draggedNodeLayout.getChildConnectionPoint(tempDraggedNode, draggedLevelStyle);
+      console.log('End connection point:', endConnectionPoint);
+      
+      startPoint = { x: startConnectionPoint.x, y: startConnectionPoint.y };
+      endPoint = { x: endConnectionPoint.x, y: endConnectionPoint.y };
+      
+      // Debug coordinates
+      console.log('Connection line coordinates:');
+      console.log(`From: (${startPoint.x}, ${startPoint.y}) - ${fromNode.text} (${startConnectionPoint.direction})`);
+      console.log(`To: (${endPoint.x}, ${endPoint.y}) - dragging element (${endConnectionPoint.direction})`);
+    } catch (error) {
+      console.error('Error getting connection points, falling back to center points:', error);
+      // Fallback to center points
+      startPoint = { 
+        x: fromNode.x + fromNode.width / 2, 
+        y: fromNode.y + fromNode.height / 2 
+      };
+      endPoint = { x: toX, y: toY };
+      
+      // Debug coordinates
+      console.log('Connection line coordinates (fallback):');
+      console.log(`From: (${startPoint.x}, ${startPoint.y}) - ${fromNode.text} (center)`);
+      console.log(`To: (${endPoint.x}, ${endPoint.y}) - dragging element (center)`);
+    }
     
     // Validate calculated coordinates
     if (isNaN(toX) || isNaN(toY) || isNaN(startPoint.x) || isNaN(startPoint.y)) {
@@ -1198,12 +1237,41 @@ class DragDropManager {
     const toX = (dragCenterX - svgRect.left) * scaleX + offsetX;
     const toY = (dragCenterY - svgRect.top) * scaleY + offsetY;
     
-    // Calculate connection points using renderer's logic
-    const startPoint = { 
-      x: fromNode.x + fromNode.width / 2, 
-      y: fromNode.y + fromNode.height / 2 
-    };
-    const endPoint = { x: toX, y: toY };
+    // Calculate proper connection points using layout logic
+    let startPoint, endPoint;
+    
+    try {
+      const fromLevelStyle = this.renderer.styleManager.getLevelStyle(fromNode.level);
+      const fromNodeLayout = fromLevelStyle.getLayout();
+      const draggedLevelStyle = this.renderer.styleManager.getLevelStyle(this.draggedNode.level);
+      const draggedNodeLayout = draggedLevelStyle.getLayout();
+      
+      // Get proper parent connection point
+      const startConnectionPoint = fromNodeLayout.getParentConnectionPoint(fromNode, fromLevelStyle, this.draggedNode);
+      
+      // Create a temporary node object for the dragged element to get child connection point
+      const tempDraggedNode = {
+        x: toX - this.draggedNode.width / 2,
+        y: toY - this.draggedNode.height / 2,
+        width: this.draggedNode.width,
+        height: this.draggedNode.height,
+        level: this.draggedNode.level
+      };
+      
+      // Get proper child connection point
+      const endConnectionPoint = draggedNodeLayout.getChildConnectionPoint(tempDraggedNode, draggedLevelStyle);
+      
+      startPoint = { x: startConnectionPoint.x, y: startConnectionPoint.y };
+      endPoint = { x: endConnectionPoint.x, y: endConnectionPoint.y };
+    } catch (error) {
+      console.error('Error getting connection points in updateConnectionLine, falling back to center points:', error);
+      // Fallback to center points
+      startPoint = { 
+        x: fromNode.x + fromNode.width / 2, 
+        y: fromNode.y + fromNode.height / 2 
+      };
+      endPoint = { x: toX, y: toY };
+    }
     
     // Get style from the parent node's level for consistent appearance
     const parentStyle = this.renderer.styleManager.getLevelStyle(fromNode.level);
