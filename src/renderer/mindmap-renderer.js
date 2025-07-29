@@ -444,11 +444,12 @@ class MindmapRenderer {
 
     // Draw the node based on its nodeType
     if (levelStyle.nodeType === 'text-only') {
-      // For text-only nodes, draw just the text
+      // For text-only nodes, draw an invisible shape for drag-drop functionality
+      svg += this._drawNodeShape(node, true);  // true = invisible
       svg += await this._drawNodeText(node, false);
     } else {
       // For box nodes, draw both shape and text
-      svg += this._drawNodeShape(node);
+      svg += this._drawNodeShape(node, false); // false = visible
       svg += await this._drawNodeText(node, true);
     }
 
@@ -841,9 +842,10 @@ class MindmapRenderer {
    * Draw the shape for a node
    * @private
    * @param {Object} node - The node to draw shape for
+   * @param {boolean} invisible - Whether to make the shape invisible (for text-only nodes)
    * @return {string} SVG rect element for the node shape
    */
-  _drawNodeShape(node) {
+  _drawNodeShape(node, invisible = false) {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     
     return this._createRectElement({
@@ -855,10 +857,11 @@ class MindmapRenderer {
         'data-node-id': node.id,
         rx: levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS,
         ry: levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS,
-        fill: this.getFillColor(node),
-        fillOpacity: levelStyle.fillOpacity || MindmapRenderer.DEFAULT_FILL_OPACITY,
-        stroke: levelStyle.borderColor || '#fff',
-        strokeWidth: levelStyle.borderWidth || MindmapRenderer.DEFAULT_BORDER_WIDTH
+        fill: invisible ? 'transparent' : this.getFillColor(node),
+        fillOpacity: invisible ? 0 : (levelStyle.fillOpacity || MindmapRenderer.DEFAULT_FILL_OPACITY),
+        stroke: invisible ? 'transparent' : (levelStyle.borderColor || '#fff'),
+        strokeWidth: invisible ? 0 : (levelStyle.borderWidth || MindmapRenderer.DEFAULT_BORDER_WIDTH),
+        filter: invisible ? 'none' : 'url(#dropShadow)'
     });
   }
 
