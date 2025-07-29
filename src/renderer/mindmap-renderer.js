@@ -442,16 +442,10 @@ class MindmapRenderer {
       }
     }
 
-    // Draw the node based on its nodeType
-    if (levelStyle.nodeType === 'text-only') {
-      // For text-only nodes, draw an invisible shape for drag-drop functionality
-      svg += this._drawNodeShape(node, true);  // true = invisible
-      svg += await this._drawNodeText(node, false);
-    } else {
-      // For box nodes, draw both shape and text
-      svg += this._drawNodeShape(node, false); // false = visible
-      svg += await this._drawNodeText(node, true);
-    }
+    // Draw node shape and text (shape visibility depends on nodeType)
+    const invisible = levelStyle.nodeType === 'text-only';
+    svg += this._drawNodeShape(node, invisible);
+    svg += await this._drawNodeText(node, true);
 
     // Add collapsible indicator if node has children
     if (node.hasChildren()) {
