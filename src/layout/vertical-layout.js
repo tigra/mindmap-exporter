@@ -461,8 +461,8 @@ class VerticalLayout extends Layout {
       // For down layouts, drop zone goes below the node
       dropZoneY = node.y + node.height;
     } else {
-      // For up layouts, drop zone goes above the node
-      dropZoneY = node.boundingBox.y - parentChildPadding / 2;
+      // For up layouts, drop zone goes above the node (between node and children)
+      dropZoneY = node.y - parentPadding;
     }
     
     return {
