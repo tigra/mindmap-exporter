@@ -336,12 +336,12 @@ class MindmapRenderer {
     // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
     const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
     
-    // Top drop zone (red)
+    // Top drop zone (red) - extends from top of bounding box to middle of node
     const topZone = this._createRectElement({
-      x: node.boundingBox.x,
+      x: node.x,
       y: node.boundingBox.y - parentChildPadding/2,
       width: node.width,
-      height: node.boundingBox.height / 2 + parentChildPadding / 2,
+      height: (node.y + node.height / 2) - node.boundingBox.y + parentChildPadding / 2,
       fill: "#500000",
       stroke: "#450000",
       fillOpacity: dropZoneOpacity,
@@ -350,12 +350,12 @@ class MindmapRenderer {
       'data-node-id': node.id
     });
     
-    // Bottom drop zone (blue)
+    // Bottom drop zone (blue) - extends from middle of node to bottom of bounding box
     const bottomZone = this._createRectElement({
-      x: node.boundingBox.x,
-      y: node.boundingBox.y + node.boundingBox.height / 2,
+      x: node.x,
+      y: node.y + node.height / 2,
       width: node.width,
-      height: node.boundingBox.height / 2 + parentChildPadding / 2,
+      height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentChildPadding / 2,
       fill: "#000060",
       stroke: "#000045",
       fillOpacity: dropZoneOpacity,
@@ -388,10 +388,10 @@ class MindmapRenderer {
     if (effectiveDirection === 'left') {
       // For left layouts, drop zone goes to the left of the node
       dropZoneWidth = layout.parentPadding + additionalSpan;
-      dropZoneX = node.boundingBox.x - dropZoneWidth;
+      dropZoneX = node.x - dropZoneWidth;
     } else {
       // For right layouts (default), drop zone goes to the right of the node
-      dropZoneX = node.boundingBox.x + node.width;
+      dropZoneX = node.x + node.width;
       dropZoneWidth = layout.parentPadding + additionalSpan;
     }
     
@@ -442,15 +442,10 @@ class MindmapRenderer {
       }
     }
 
-    // Draw the node based on its nodeType
-    if (levelStyle.nodeType === 'text-only') {
-      // For text-only nodes, draw just the text
-      svg += await this._drawNodeText(node, false);
-    } else {
-      // For box nodes, draw both shape and text
-      svg += this._drawNodeShape(node);
-      svg += await this._drawNodeText(node, true);
-    }
+    // Draw node shape and text (shape visibility depends on nodeType)
+    const invisible = levelStyle.nodeType === 'text-only';
+    svg += this._drawNodeShape(node, invisible);
+    svg += await this._drawNodeText(node, true);
 
     // Add collapsible indicator if node has children
     if (node.hasChildren()) {
@@ -841,9 +836,10 @@ class MindmapRenderer {
    * Draw the shape for a node
    * @private
    * @param {Object} node - The node to draw shape for
+   * @param {boolean} invisible - Whether to make the shape invisible (for text-only nodes)
    * @return {string} SVG rect element for the node shape
    */
-  _drawNodeShape(node) {
+  _drawNodeShape(node, invisible = false) {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     
     return this._createRectElement({
@@ -855,10 +851,11 @@ class MindmapRenderer {
         'data-node-id': node.id,
         rx: levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS,
         ry: levelStyle.borderRadius || MindmapRenderer.DEFAULT_BORDER_RADIUS,
-        fill: this.getFillColor(node),
-        fillOpacity: levelStyle.fillOpacity || MindmapRenderer.DEFAULT_FILL_OPACITY,
-        stroke: levelStyle.borderColor || '#fff',
-        strokeWidth: levelStyle.borderWidth || MindmapRenderer.DEFAULT_BORDER_WIDTH
+        fill: invisible ? 'transparent' : this.getFillColor(node),
+        fillOpacity: invisible ? 0 : (levelStyle.fillOpacity || MindmapRenderer.DEFAULT_FILL_OPACITY),
+        stroke: invisible ? 'transparent' : (levelStyle.borderColor || '#fff'),
+        strokeWidth: invisible ? 0 : (levelStyle.borderWidth || MindmapRenderer.DEFAULT_BORDER_WIDTH),
+        filter: invisible ? 'none' : 'url(#dropShadow)'
     });
   }
 
