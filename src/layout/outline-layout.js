@@ -456,6 +456,51 @@ class OutlineLayout extends Layout {
       return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
     }
   }
+
+  /**
+   * Get parent drop zone dimensions for outline layout (split vertically)
+   * @param {MindmapNode} node - The node to get drop zones for
+   * @param {number} parentChildPadding - Padding between parent and child nodes
+   * @return {Object} Object with topZone and bottomZone rectangles
+   */
+  getParentDropZones(node, parentChildPadding) {
+    // For outline layouts, split vertically (top and bottom) since children go below the parent
+    // Top zone extends from top of bounding box to middle of node
+    const topZone = {
+      x: node.x,
+      y: node.boundingBox.y - parentChildPadding/2,
+      width: node.width,
+      height: (node.y + node.height / 2) - node.boundingBox.y + parentChildPadding / 2
+    };
+    
+    // Bottom zone extends from middle of node to bottom of bounding box
+    const bottomZone = {
+      x: node.x,
+      y: node.y + node.height / 2,
+      width: node.width,
+      height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentChildPadding / 2
+    };
+    
+    return { topZone, bottomZone };
+  }
+
+  /**
+   * Get child drop zone dimensions for outline layout
+   * @param {MindmapNode} node - The node to get drop zone for
+   * @param {number} parentPadding - Parent padding from style
+   * @param {number} parentChildPadding - Padding between parent and child nodes
+   * @return {Object} Rectangle for the child drop zone
+   */
+  getChildDropZone(node, parentPadding, parentChildPadding) {
+    // For outline layouts, child drop zone goes below the node in the column
+    // spanning the width of the node (not the bounding box like other layouts)
+    return {
+      x: node.x,
+      y: node.y + node.height,
+      width: node.width,
+      height: parentPadding
+    };
+  }
 }
 
 // For backward compatibility

@@ -382,6 +382,39 @@ class HorizontalLayout extends Layout {
       return new ConnectionPoint(node.x + node.width, node.y + node.height / 2, 'right');
     }
   }
+
+  /**
+   * Get child drop zone dimensions for horizontal layout
+   * @param {MindmapNode} node - The node to get drop zone for
+   * @param {number} parentPadding - Parent padding from style
+   * @param {number} parentChildPadding - Padding between parent and child nodes
+   * @return {Object} Rectangle for the child drop zone
+   */
+  getChildDropZone(node, parentPadding, parentChildPadding) {
+    const additionalSpan = node.hasChildren() ? 0 : 300;
+    const effectiveDirection = node.styleManager?.getEffectiveValue(node, 'direction') || this.direction;
+    
+    // For horizontal layouts, child drop zones extend vertically
+    // and are positioned to the left or right of the node
+    let dropZoneX, dropZoneWidth;
+    
+    if (effectiveDirection === 'left') {
+      // For left layouts, drop zone goes to the left of the node
+      dropZoneWidth = parentPadding + additionalSpan;
+      dropZoneX = node.x - dropZoneWidth;
+    } else {
+      // For right layouts (default), drop zone goes to the right of the node
+      dropZoneX = node.x + node.width;
+      dropZoneWidth = parentPadding + additionalSpan;
+    }
+    
+    return {
+      x: dropZoneX,
+      y: node.boundingBox.y - parentChildPadding / 2,
+      width: dropZoneWidth,
+      height: node.boundingBox.height + parentChildPadding
+    };
+  }
 }
 
 // For backward compatibility

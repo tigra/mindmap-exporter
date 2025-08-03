@@ -328,6 +328,51 @@ class ColumnBasedLayout extends Layout {
   }
   
   /**
+   * Get parent drop zone dimensions for column-based layout (split horizontally)
+   * @param {MindmapNode} node - The node to get drop zones for
+   * @param {number} parentChildPadding - Padding between parent and child nodes
+   * @return {Object} Object with topZone and bottomZone rectangles (names kept for compatibility)
+   */
+  getParentDropZones(node, parentChildPadding) {
+    // For column-based layouts, split horizontally at the middle of the node
+    // Left zone (called topZone for compatibility) extends from left boundary of bounding box to middle of node
+    const topZone = {
+      x: node.boundingBox.x - parentChildPadding/2,
+      y: node.y,
+      width: (node.x + node.width / 2) - node.boundingBox.x + parentChildPadding / 2,
+      height: node.height
+    };
+    
+    // Right zone (called bottomZone for compatibility) extends from middle of node to right boundary of bounding box
+    const bottomZone = {
+      x: node.x + node.width / 2,
+      y: node.y,
+      width: (node.boundingBox.x + node.boundingBox.width) - (node.x + node.width / 2) + parentChildPadding / 2,
+      height: node.height
+    };
+    
+    return { topZone, bottomZone };
+  }
+
+  /**
+   * Get child drop zone dimensions for column-based layout
+   * @param {MindmapNode} node - The node to get drop zone for
+   * @param {number} parentPadding - Parent padding from style
+   * @param {number} parentChildPadding - Padding between parent and child nodes
+   * @return {Object} Rectangle for the child drop zone
+   */
+  getChildDropZone(node, parentPadding, parentChildPadding) {
+    // For column-based layouts, child drop zone goes below the node
+    // and spans the full width of the bounding box
+    return {
+      x: node.boundingBox.x - parentChildPadding / 2,
+      y: node.y + node.height,
+      width: node.boundingBox.width + parentChildPadding,
+      height: parentPadding
+    };
+  }
+
+  /**
    * Create debug elements for the node to visualize column alignment
    * @param {Node} node - The node to add debug elements to
    */

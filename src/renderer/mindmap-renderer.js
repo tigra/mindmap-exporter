@@ -329,19 +329,23 @@ class MindmapRenderer {
    * Draw parent drop zone (split into two parts)
    * @private
    * @param {Object} node - The node to draw drop zone for
+   * @param {Object} layout - The layout object for this node
    * @param {number} parentChildPadding - Padding between parent and child nodes
    * @return {string} SVG rect elements for the parent drop zones
    */
-  _drawParentDropZone(node, parentChildPadding) {
+  _drawParentDropZone(node, layout, parentChildPadding) {
     // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
     const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
     
-    // Top drop zone (red) - extends from top of bounding box to middle of node
-    const topZone = this._createRectElement({
-      x: node.x,
-      y: node.boundingBox.y - parentChildPadding/2,
-      width: node.width,
-      height: (node.y + node.height / 2) - node.boundingBox.y + parentChildPadding / 2,
+    // Get drop zones from the layout
+    const { topZone, bottomZone } = layout.getParentDropZones(node, parentChildPadding);
+    
+    // Top drop zone (red)
+    const topZoneElement = this._createRectElement({
+      x: topZone.x,
+      y: topZone.y,
+      width: topZone.width,
+      height: topZone.height,
       fill: "#500000",
       stroke: "#450000",
       fillOpacity: dropZoneOpacity,
@@ -350,12 +354,12 @@ class MindmapRenderer {
       'data-node-id': node.id
     });
     
-    // Bottom drop zone (blue) - extends from middle of node to bottom of bounding box
-    const bottomZone = this._createRectElement({
-      x: node.x,
-      y: node.y + node.height / 2,
-      width: node.width,
-      height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentChildPadding / 2,
+    // Bottom drop zone (blue)
+    const bottomZoneElement = this._createRectElement({
+      x: bottomZone.x,
+      y: bottomZone.y,
+      width: bottomZone.width,
+      height: bottomZone.height,
       fill: "#000060",
       stroke: "#000045",
       fillOpacity: dropZoneOpacity,
@@ -364,7 +368,7 @@ class MindmapRenderer {
       'data-node-id': node.id
     });
     
-    return topZone + bottomZone;
+    return topZoneElement + bottomZoneElement;
   }
 
   /**
@@ -372,37 +376,22 @@ class MindmapRenderer {
    * @private
    * @param {Object} node - The node to draw drop zone for
    * @param {Object} layout - The layout object
+   * @param {number} parentPadding - Parent padding from style
    * @param {number} parentChildPadding - Padding between parent and child nodes
    * @return {string} SVG rect element for the child drop zone
    */
-  _drawChildDropZone(node, layout, parentChildPadding) {
-    const additionalSpan = node.hasChildren() ? 0 : 300;
-    const levelStyle = this.styleManager.getLevelStyle(node.level);
-    
-    // Get the effective direction from the style manager
-    const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction');
-    
-    // Determine drop zone position based on layout direction
-    let dropZoneX, dropZoneWidth;
-    
-    if (effectiveDirection === 'left') {
-      // For left layouts, drop zone goes to the left of the node
-      dropZoneWidth = layout.parentPadding + additionalSpan;
-      dropZoneX = node.x - dropZoneWidth;
-    } else {
-      // For right layouts (default), drop zone goes to the right of the node
-      dropZoneX = node.x + node.width;
-      dropZoneWidth = layout.parentPadding + additionalSpan;
-    }
-    
+  _drawChildDropZone(node, layout, parentPadding, parentChildPadding) {
     // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
     const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
     
+    // Get drop zone from the layout
+    const dropZone = layout.getChildDropZone(node, parentPadding, parentChildPadding);
+    
     return this._createRectElement({
-      x: dropZoneX,
-      y: node.boundingBox.y - parentChildPadding / 2,
-      width: dropZoneWidth,
-      height: node.boundingBox.height + parentChildPadding,
+      x: dropZone.x,
+      y: dropZone.y,
+      width: dropZone.width,
+      height: dropZone.height,
       fill: "#005000",
       stroke: "#004000",
       fillOpacity: dropZoneOpacity,
@@ -424,8 +413,8 @@ class MindmapRenderer {
     const parentChildPadding = node.level > 1 ? this.styleManager.getLevelStyle(node.level - 1).childPadding : 0;
     const layout = levelStyle.getLayout();
     // Always add drop zones for drag and drop functionality, but adjust visibility
-    svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
-    svg += this._drawChildDropZone(node, layout, parentChildPadding);
+    svg += this._drawParentDropZone(node, layout, parentChildPadding ? parentChildPadding : 0);
+    svg += this._drawChildDropZone(node, layout, levelStyle.parentPadding, parentChildPadding);
     // Check if bounding box should be displayed based on level style
     const showBoundingBox = this.styleManager.getEffectiveValue(node, 'boundingBox');
     console.log(`Node ${node.id} (${node.text}): show bounding box = ${showBoundingBox}`);

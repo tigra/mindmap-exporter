@@ -205,6 +205,45 @@ class Layout {
   getChildConnectionPoint(node, levelStyle) {
     throw new Error('Method getChildConnectionPoint must be implemented by subclasses');
   }
+
+  /**
+   * Get parent drop zone dimensions (for dropping as a child of this node)
+   * Returns two zones: topZone and bottomZone (names kept for compatibility)
+   * @param {MindmapNode} node - The node to get drop zones for
+   * @param {number} parentChildPadding - Padding between parent and child nodes
+   * @return {Object} Object with topZone and bottomZone rectangles
+   */
+  getParentDropZones(node, parentChildPadding) {
+    // Default implementation: split vertically at the middle of the node
+    // Top zone extends from bounding box top to middle of node
+    const topZone = {
+      x: node.x,
+      y: node.boundingBox.y - parentChildPadding/2,
+      width: node.width,
+      height: (node.y + node.height / 2) - node.boundingBox.y + parentChildPadding / 2
+    };
+    
+    // Bottom zone extends from middle of node to bounding box bottom
+    const bottomZone = {
+      x: node.x,
+      y: node.y + node.height / 2,
+      width: node.width,
+      height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentChildPadding / 2
+    };
+    
+    return { topZone, bottomZone };
+  }
+
+  /**
+   * Get child drop zone dimensions (for dropping as a sibling of this node)
+   * @param {MindmapNode} node - The node to get drop zone for
+   * @param {number} parentPadding - Parent padding from style
+   * @param {number} parentChildPadding - Padding between parent and child nodes
+   * @return {Object} Rectangle for the child drop zone
+   */
+  getChildDropZone(node, parentPadding, parentChildPadding) {
+    throw new Error('Method getChildDropZone must be implemented by subclasses');
+  }
 }
 
 // For backward compatibility
