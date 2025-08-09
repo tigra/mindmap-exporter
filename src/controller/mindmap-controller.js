@@ -712,6 +712,32 @@ logPropertyInheritanceChain(node, property) {
     const url = URL.createObjectURL(svgBlob);
     img.src = url;
   }
+
+  /**
+   * Export the current mindmap as a Markdown file
+   * @param {string} filename - The filename for the exported markdown file
+   */
+  exportToMarkdown(filename) {
+    const markdownContent = this.model.toMarkdown();
+    
+    if (!markdownContent) {
+      console.warn('No mindmap content available for markdown export');
+      return;
+    }
+
+    // Create blob and trigger download
+    const blob = new Blob([markdownContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'mindmap.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    console.log('Markdown exported successfully');
+  }
 }
 
 // For backward compatibility

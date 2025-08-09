@@ -657,17 +657,37 @@ class MindmapApp {
    * Handle export button click
    */
   handleExport() {
-    if (!this.exportFormat || !this.container) return;
+    if (!this.exportFormat) return;
 
     const format = this.exportFormat.value;
-    const svgContent = this.container.dataset.svgContent;
 
+    // For markdown export, we don't need SVG content, just the model
+    if (format === 'markdown') {
+      if (!this.model.getRoot()) {
+        console.warn('No mindmap model to export. Generate one first.');
+        return;
+      }
+      
+      // Extract filename from root node text
+      const rootNode = this.model.getRoot();
+      const fileName = rootNode && rootNode.text ?
+        rootNode.text.replace(/[^\w\s]/g, '').replace(/\s+/g, '_').toLowerCase() :
+        'mindmap';
+
+      this.controller.exportToMarkdown(fileName + '.md');
+      return;
+    }
+
+    // For SVG/PNG exports, we need the container and SVG content
+    if (!this.container) return;
+    
+    const svgContent = this.container.dataset.svgContent;
     if (!svgContent) {
       console.warn('No mindmap to export. Generate one first.');
       return;
     }
 
-    // Extract filename from root node text
+    // Extract filename from root node text for SVG/PNG
     const rootTextMatch = svgContent.match(/<text[^>]*>([^<]+)<\/text>/);
     const fileName = rootTextMatch ?
       rootTextMatch[1].replace(/[^\w\s]/g, '').replace(/\s+/g, '_').toLowerCase() :
