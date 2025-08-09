@@ -448,9 +448,11 @@ class MindmapRenderer {
         svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0, parentLayout, parentNode);
     }
     
-    // Child drop zones are now integrated into parent drop zones for better precision
-    // This allows users to precisely specify the order of dropped nodes among children
-    // svg += this._drawChildDropZone(node, layout, parentChildPadding);
+    // Child drop zones are needed for leaf nodes and collapsed nodes to accept new children
+    // For non-leaf nodes (that are not collapsed), child zones are integrated into parent zones for precision
+    if (!node.hasChildren() || node.collapsed) {
+        svg += this._drawChildDropZone(node, layout, parentChildPadding);
+    }
     // Check if bounding box should be displayed based on level style
     const showBoundingBox = this.styleManager.getEffectiveValue(node, 'boundingBox');
     console.log(`Node ${node.id} (${node.text}, level=${node.level}): show bounding box = ${showBoundingBox}`);
