@@ -423,12 +423,17 @@ class MindmapRenderer {
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     const parentChildPadding = node.level > 1 ? this.styleManager.getLevelStyle(node.level - 1).childPadding : 0;
     const layout = levelStyle.getLayout();
-    // Always add drop zones for drag and drop functionality, but adjust visibility
-    svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
+
+    // Skip parent drop zone for root node (level 1 - first H1) since it represents the visual root
+    if (node.level > 1) {
+        svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
+    }
+    
+    // Always add child drop zones for drag and drop functionality
     svg += this._drawChildDropZone(node, layout, parentChildPadding);
     // Check if bounding box should be displayed based on level style
     const showBoundingBox = this.styleManager.getEffectiveValue(node, 'boundingBox');
-    console.log(`Node ${node.id} (${node.text}): show bounding box = ${showBoundingBox}`);
+    console.log(`Node ${node.id} (${node.text}, level=${node.level}): show bounding box = ${showBoundingBox}`);
     if (showBoundingBox) {
        svg += this._drawBoundingBox(node);
     }
