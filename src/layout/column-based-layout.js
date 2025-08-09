@@ -447,16 +447,27 @@ class ColumnBasedLayout extends Layout {
       isLeftColumn = node.x < parentNode.x;
     }
     
+    // Calculate the midpoint between parent's left and right edges to divide space equally
+    const parentCenterX = parentNode.x + (parentNode.width / 2);
+    
     let dropZoneX, dropZoneWidth;
     
     if (isLeftColumn) {
-      // Node is in LEFT column - extend RIGHT towards parent
+      // Node is in LEFT column - extend RIGHT towards parent center (not full padding)
+      // Stop at the midpoint to avoid overlap with right column drop zones
       dropZoneX = node.x;
-      dropZoneWidth = node.width + parentPadding;
+      const maxRightEdge = parentCenterX;
+      const naturalRightEdge = node.x + node.width + parentPadding;
+      const actualRightEdge = Math.min(maxRightEdge, naturalRightEdge);
+      dropZoneWidth = actualRightEdge - dropZoneX;
     } else {
-      // Node is in RIGHT column - extend LEFT towards parent  
-      dropZoneWidth = node.width + parentPadding;
-      dropZoneX = node.x - parentPadding;
+      // Node is in RIGHT column - extend LEFT towards parent center (not full padding)
+      // Stop at the midpoint to avoid overlap with left column drop zones  
+      const maxLeftEdge = parentCenterX;
+      const naturalLeftEdge = node.x - parentPadding;
+      const actualLeftEdge = Math.max(maxLeftEdge, naturalLeftEdge);
+      dropZoneX = actualLeftEdge;
+      dropZoneWidth = (node.x + node.width) - dropZoneX;
     }
     
     return { x: dropZoneX, width: dropZoneWidth };
