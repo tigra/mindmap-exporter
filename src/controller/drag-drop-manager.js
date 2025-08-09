@@ -385,6 +385,22 @@ class DragDropManager {
         nodeId: nodeId,
         element: element
       };
+    } else if (className.includes('parent-drop-zone-left')) {
+      const nodeId = this.findNodeIdForDropZone(element, bounds);
+      return {
+        type: 'parent',
+        position: 'before',
+        nodeId: nodeId,
+        element: element
+      };
+    } else if (className.includes('parent-drop-zone-right')) {
+      const nodeId = this.findNodeIdForDropZone(element, bounds);
+      return {
+        type: 'parent',
+        position: 'after',
+        nodeId: nodeId,
+        element: element
+      };
     }
     
     return null;

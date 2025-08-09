@@ -415,6 +415,58 @@ class VerticalLayout extends Layout {
     
     return connectionPoint;
   }
+
+  /**
+   * Override drop zone dimensions for vertical layouts
+   * In vertical layouts, children are arranged horizontally (siblings side-by-side)
+   * Drop zones should be vertical bands (left/right) for sibling reordering
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @return {Object} Object with {x, width, y, height} for vertical bands
+   */
+  getParentDropZoneDimensions(node, parentNode, parentPadding) {
+    if (!parentNode) {
+      // No parent, use default behavior
+      return super.getParentDropZoneDimensions(node, parentNode, parentPadding);
+    }
+    
+    // For vertical layouts, create vertical bands (left/right) since siblings are arranged horizontally
+    // We need to extend vertically into the connection area between parent and child
+    
+    // Simply use spatial relationship to determine connection area
+    // If parent is above child, extend upward; if parent is below child, extend downward
+    const isParentAbove = parentNode.y + parentNode.height <= node.y;
+    const isParentBelow = parentNode.y >= node.y + node.height;
+    
+    let dropZoneY, dropZoneHeight;
+    
+    if (isParentAbove) {
+      // Parent is above child - extend from parent bottom to child bottom
+      dropZoneY = parentNode.y + parentNode.height;
+      dropZoneHeight = (node.y + node.height) - dropZoneY;
+    } else if (isParentBelow) {
+      // Parent is below child - extend from child top to parent top  
+      dropZoneY = node.y;
+      dropZoneHeight = parentNode.y - node.y;
+    } else {
+      // Parent and child overlap - use minimal extension around node
+      dropZoneY = node.y - parentPadding / 2;
+      dropZoneHeight = node.height + parentPadding;
+    }
+    
+    // Ensure non-negative dimensions
+    dropZoneHeight = Math.max(dropZoneHeight, node.height);
+    
+    // Return full dimensions for vertical bands
+    // The renderer will create left/right drop zones using these dimensions
+    return { 
+      x: node.x, 
+      width: node.width, 
+      y: dropZoneY, 
+      height: dropZoneHeight 
+    };
+  }
 }
 
 // For backward compatibility
