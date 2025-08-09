@@ -423,6 +423,55 @@ class ColumnBasedLayout extends Layout {
       content: node.text
     });
   }
+  /**
+   * Override drop zone dimensions for column-based layouts
+   * In column layouts, nodes can be positioned to left or right of parent
+   * Drop zones should always extend towards the parent (inward)
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @return {Object} Object with {x, width} for the drop zone dimensions
+   */
+  getParentDropZoneDimensions(node, parentNode, parentPadding) {
+    if (!parentNode) {
+      // No parent, use default behavior
+      return super.getParentDropZoneDimensions(node, parentNode, parentPadding);
+    }
+    
+    // Check if node has a direction override (used by TaprootLayout and ClassicMindmap)
+    let isLeftColumn = false;
+    if (node.configOverrides && node.configOverrides.direction) {
+      isLeftColumn = node.configOverrides.direction === 'left';
+    } else {
+      // Fallback: determine by position relative to parent
+      isLeftColumn = node.x < parentNode.x;
+    }
+    
+    // Calculate the midpoint between parent's left and right edges to divide space equally
+    const parentCenterX = parentNode.x + (parentNode.width / 2);
+    
+    let dropZoneX, dropZoneWidth;
+    
+    if (isLeftColumn) {
+      // Node is in LEFT column - extend RIGHT towards parent center (not full padding)
+      // Stop at the midpoint to avoid overlap with right column drop zones
+      dropZoneX = node.x;
+      const maxRightEdge = parentCenterX;
+      const naturalRightEdge = node.x + node.width + parentPadding;
+      const actualRightEdge = Math.min(maxRightEdge, naturalRightEdge);
+      dropZoneWidth = actualRightEdge - dropZoneX;
+    } else {
+      // Node is in RIGHT column - extend LEFT towards parent center (not full padding)
+      // Stop at the midpoint to avoid overlap with left column drop zones  
+      const maxLeftEdge = parentCenterX;
+      const naturalLeftEdge = node.x - parentPadding;
+      const actualLeftEdge = Math.max(maxLeftEdge, naturalLeftEdge);
+      dropZoneX = actualLeftEdge;
+      dropZoneWidth = (node.x + node.width) - dropZoneX;
+    }
+    
+    return { x: dropZoneX, width: dropZoneWidth };
+  }
 }
 
 export default ColumnBasedLayout;
