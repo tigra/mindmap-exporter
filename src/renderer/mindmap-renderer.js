@@ -338,25 +338,16 @@ class MindmapRenderer {
     // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
     const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
     
-    // Get the effective direction for the node
-    const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction');
+    // Get drop zone dimensions from the layout
+    // This allows each layout type to define its own drop zone positioning logic
+    const dropZoneDimensions = parentLayout.getParentDropZoneDimensions(
+      node, 
+      parentNode, 
+      parentLayout.parentPadding
+    );
     
-    // Calculate drop zone dimensions
-    // The drop zones should extend towards the parent (into the connection area)
-    let dropZoneX, dropZoneWidth;
-    
-    // Determine actual position relative to parent
-    const isLeftOfParent = parentNode && node.x < parentNode.x;
-    
-    if (isLeftOfParent || effectiveDirection === 'left') {
-      // Node is to the left of parent - extend RIGHT towards parent
-      dropZoneX = node.x;
-      dropZoneWidth = node.width + parentLayout.parentPadding;
-    } else {
-      // Node is to the right of parent (or default) - extend LEFT towards parent
-      dropZoneWidth = node.width + parentLayout.parentPadding;
-      dropZoneX = node.x - parentLayout.parentPadding;
-    }
+    const dropZoneX = dropZoneDimensions.x;
+    const dropZoneWidth = dropZoneDimensions.width;
     
     // Top drop zone (red) - extends from top of bounding box to middle of node
     // Now extends horizontally to include child drop zone area

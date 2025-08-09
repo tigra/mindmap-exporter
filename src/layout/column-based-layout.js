@@ -423,6 +423,44 @@ class ColumnBasedLayout extends Layout {
       content: node.text
     });
   }
+  /**
+   * Override drop zone dimensions for column-based layouts
+   * In column layouts, nodes can be positioned to left or right of parent
+   * Drop zones should always extend towards the parent (inward)
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @return {Object} Object with {x, width} for the drop zone dimensions
+   */
+  getParentDropZoneDimensions(node, parentNode, parentPadding) {
+    if (!parentNode) {
+      // No parent, use default behavior
+      return super.getParentDropZoneDimensions(node, parentNode, parentPadding);
+    }
+    
+    // Check if node has a direction override (used by TaprootLayout and ClassicMindmap)
+    let isLeftColumn = false;
+    if (node.configOverrides && node.configOverrides.direction) {
+      isLeftColumn = node.configOverrides.direction === 'left';
+    } else {
+      // Fallback: determine by position relative to parent
+      isLeftColumn = node.x < parentNode.x;
+    }
+    
+    let dropZoneX, dropZoneWidth;
+    
+    if (isLeftColumn) {
+      // Node is in LEFT column - extend RIGHT towards parent
+      dropZoneX = node.x;
+      dropZoneWidth = node.width + parentPadding;
+    } else {
+      // Node is in RIGHT column - extend LEFT towards parent  
+      dropZoneWidth = node.width + parentPadding;
+      dropZoneX = node.x - parentPadding;
+    }
+    
+    return { x: dropZoneX, width: dropZoneWidth };
+  }
 }
 
 export default ColumnBasedLayout;

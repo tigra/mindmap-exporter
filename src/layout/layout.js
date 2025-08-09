@@ -205,6 +205,36 @@ class Layout {
   getChildConnectionPoint(node, levelStyle) {
     throw new Error('Method getChildConnectionPoint must be implemented by subclasses');
   }
+
+  /**
+   * Get the dimensions for parent drop zones
+   * Drop zones should extend into the connection area for precise node ordering
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node (null for root)
+   * @param {number} parentPadding - The padding between parent and children
+   * @return {Object} Object with {x, width} for the drop zone dimensions
+   */
+  getParentDropZoneDimensions(node, parentNode, parentPadding) {
+    // Default implementation: extend towards parent into connection area
+    
+    // Determine if node is to the left or right of parent
+    const isLeftOfParent = parentNode && node.x < parentNode.x;
+    
+    // Calculate drop zone dimensions based on position relative to parent
+    let dropZoneX, dropZoneWidth;
+    
+    if (isLeftOfParent) {
+      // Node is to the left of parent - extend RIGHT towards parent
+      dropZoneX = node.x;
+      dropZoneWidth = node.width + parentPadding;
+    } else {
+      // Node is to the right of parent (or default) - extend LEFT towards parent
+      dropZoneWidth = node.width + parentPadding;
+      dropZoneX = node.x - parentPadding;
+    }
+    
+    return { x: dropZoneX, width: dropZoneWidth };
+  }
 }
 
 // For backward compatibility
