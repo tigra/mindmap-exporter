@@ -435,9 +435,10 @@ class MindmapRenderer {
     // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
     const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
     
-    // Check if this is a vertical layout by examining the layout type
+    // Check layout type to determine drop zone orientation
     const layoutType = this.styleManager.getEffectiveValue(node, 'layoutType');
     const isVerticalLayout = layoutType === 'vertical';
+    const isOutlineLayout = layoutType === 'outline';
     
     if (isVerticalLayout) {
       // For vertical layouts, child drop zones extend vertically (up/down)
@@ -459,6 +460,33 @@ class MindmapRenderer {
         y: dropZoneY,
         width: node.boundingBox.width + parentChildPadding,
         height: dropZoneHeight,
+        fill: "#005000",
+        stroke: "#004000",
+        fillOpacity: dropZoneOpacity,
+        strokeOpacity: dropZoneOpacity,
+        className: "drop-zone child-drop-zone",
+        'data-node-id': node.id
+      });
+    } else if (isOutlineLayout) {
+      // For outline layouts, child drop zones extend horizontally toward/away from parent
+      const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction') || 'right';
+      let dropZoneX, dropZoneWidth;
+      
+      if (effectiveDirection === 'left') {
+        // For left outline layouts, child drop zone extends leftward from the node
+        dropZoneWidth = layout.parentPadding + additionalSpan;
+        dropZoneX = node.x - dropZoneWidth;
+      } else {
+        // For right outline layouts (default), child drop zone extends rightward from the node
+        dropZoneX = node.x + node.width;
+        dropZoneWidth = layout.parentPadding + additionalSpan;
+      }
+      
+      return this._createRectElement({
+        x: dropZoneX,
+        y: node.boundingBox.y - parentChildPadding / 2,
+        width: dropZoneWidth,
+        height: node.boundingBox.height + parentChildPadding,
         fill: "#005000",
         stroke: "#004000",
         fillOpacity: dropZoneOpacity,

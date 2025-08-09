@@ -456,6 +456,50 @@ class OutlineLayout extends Layout {
       return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
     }
   }
+
+  /**
+   * Override drop zone dimensions for outline layouts
+   * In outline layouts, children are arranged vertically (siblings stacked)
+   * Drop zones should be horizontal bands (top/bottom) for sibling reordering
+   * but extend horizontally into connection area
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @return {Object} Object with {x, width} for horizontal bands
+   */
+  getParentDropZoneDimensions(node, parentNode, parentPadding) {
+    if (!parentNode) {
+      // No parent, use default behavior
+      return super.getParentDropZoneDimensions(node, parentNode, parentPadding);
+    }
+    
+    // For outline layouts, children are arranged vertically, so use horizontal bands
+    // But extend into connection area between parent and child column
+    
+    // Get layout direction to determine connection area
+    const effectiveDirection = node.configOverrides?.direction || 'right';
+    
+    let dropZoneX, dropZoneWidth;
+    
+    if (effectiveDirection === 'left') {
+      // Children are to the left of parent - extend from child right edge toward parent
+      const connectionAreaStart = node.x + node.width;
+      const connectionAreaEnd = parentNode.x;
+      dropZoneX = connectionAreaStart;
+      dropZoneWidth = Math.max(node.width, connectionAreaEnd - connectionAreaStart);
+    } else {
+      // Children are to the right of parent - extend from parent right edge toward child
+      const connectionAreaStart = parentNode.x + parentNode.width;
+      const connectionAreaEnd = node.x + node.width;
+      dropZoneX = Math.min(connectionAreaStart, node.x);
+      dropZoneWidth = Math.max(node.width, connectionAreaEnd - dropZoneX);
+    }
+    
+    // Ensure drop zone covers at least the node width and is properly bounded
+    dropZoneWidth = Math.max(dropZoneWidth, node.width);
+    
+    return { x: dropZoneX, width: dropZoneWidth };
+  }
 }
 
 // For backward compatibility
