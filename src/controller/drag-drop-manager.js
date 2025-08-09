@@ -542,6 +542,12 @@ class DragDropManager {
     console.log(`Dragged node: "${draggedNode.text}" (level ${draggedNode.level})`);
     console.log(`Target node: "${targetNode.text}" (level ${targetNode.level})`);
     
+    // If the target node is collapsed, expand it so the user can see the dropped child
+    if (targetNode.collapsed) {
+      console.log(`Target node "${targetNode.text}" is collapsed - expanding to show dropped child`);
+      targetNode.collapsed = false;
+    }
+    
     // Remove from current parent
     const currentParent = this.model.findParentNode(draggedNode);
     console.log(`Current parent: ${currentParent ? `"${currentParent.text}"` : 'null'}`);
