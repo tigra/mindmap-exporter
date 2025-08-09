@@ -330,17 +330,40 @@ class MindmapRenderer {
    * @private
    * @param {Object} node - The node to draw drop zone for
    * @param {number} parentChildPadding - Padding between parent and child nodes
+   * @param {Object} parentLayout - The parent's layout object (for connection area calculation)
+   * @param {Object} parentNode - The parent node
    * @return {string} SVG rect elements for the parent drop zones
    */
-  _drawParentDropZone(node, parentChildPadding) {
+  _drawParentDropZone(node, parentChildPadding, parentLayout, parentNode) {
     // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
     const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
     
+    // Get the effective direction for the node
+    const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction');
+    
+    // Calculate drop zone dimensions
+    // The drop zones should extend towards the parent (into the connection area)
+    let dropZoneX, dropZoneWidth;
+    
+    // Determine actual position relative to parent
+    const isLeftOfParent = parentNode && node.x < parentNode.x;
+    
+    if (isLeftOfParent || effectiveDirection === 'left') {
+      // Node is to the left of parent - extend RIGHT towards parent
+      dropZoneX = node.x;
+      dropZoneWidth = node.width + parentLayout.parentPadding;
+    } else {
+      // Node is to the right of parent (or default) - extend LEFT towards parent
+      dropZoneWidth = node.width + parentLayout.parentPadding;
+      dropZoneX = node.x - parentLayout.parentPadding;
+    }
+    
     // Top drop zone (red) - extends from top of bounding box to middle of node
+    // Now extends horizontally to include child drop zone area
     const topZone = this._createRectElement({
-      x: node.x,
+      x: dropZoneX,
       y: node.boundingBox.y - parentChildPadding/2,
-      width: node.width,
+      width: dropZoneWidth,
       height: (node.y + node.height / 2) - node.boundingBox.y + parentChildPadding / 2,
       fill: "#500000",
       stroke: "#450000",
@@ -351,10 +374,11 @@ class MindmapRenderer {
     });
     
     // Bottom drop zone (blue) - extends from middle of node to bottom of bounding box
+    // Now extends horizontally to include child drop zone area
     const bottomZone = this._createRectElement({
-      x: node.x,
+      x: dropZoneX,
       y: node.y + node.height / 2,
-      width: node.width,
+      width: dropZoneWidth,
       height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentChildPadding / 2,
       fill: "#000060",
       stroke: "#000045",
@@ -416,21 +440,26 @@ class MindmapRenderer {
    * Recursively draw a node and its children
    * @private
    * @param {Object} node - The node to draw
+   * @param {Object} parentNode - The parent node (null for root)
    * @return {Promise<string>} Promise that resolves to SVG elements for the node and its children
    */
-  async _drawNodeRecursive(node) {
+  async _drawNodeRecursive(node, parentNode = null) {
     let svg = '';
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     const parentChildPadding = node.level > 1 ? this.styleManager.getLevelStyle(node.level - 1).childPadding : 0;
     const layout = levelStyle.getLayout();
 
     // Skip parent drop zone for root node (level 1 - first H1) since it represents the visual root
-    if (node.level > 1) {
-        svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0);
+    if (node.level > 1 && parentNode) {
+        // Get parent's layout for calculating the child drop zone extension
+        const parentLevelStyle = this.styleManager.getLevelStyle(parentNode.level);
+        const parentLayout = parentLevelStyle.getLayout();
+        svg += this._drawParentDropZone(node, parentChildPadding ? parentChildPadding : 0, parentLayout, parentNode);
     }
     
-    // Always add child drop zones for drag and drop functionality
-    svg += this._drawChildDropZone(node, layout, parentChildPadding);
+    // Child drop zones are now integrated into parent drop zones for better precision
+    // This allows users to precisely specify the order of dropped nodes among children
+    // svg += this._drawChildDropZone(node, layout, parentChildPadding);
     // Check if bounding box should be displayed based on level style
     const showBoundingBox = this.styleManager.getEffectiveValue(node, 'boundingBox');
     console.log(`Node ${node.id} (${node.text}, level=${node.level}): show bounding box = ${showBoundingBox}`);
@@ -442,8 +471,8 @@ class MindmapRenderer {
       for (let i = 0; i < node.children.length; i++) {
         const child = node.children[i];
         svg += this._drawConnection(node, child);
-        // Recursively draw child nodes
-        svg += await this._drawNodeRecursive(child);
+        // Recursively draw child nodes, passing current node as parent
+        svg += await this._drawNodeRecursive(child, node);
       }
     }
 
