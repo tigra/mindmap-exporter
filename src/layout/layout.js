@@ -212,10 +212,10 @@ class Layout {
    * @param {Object} node - The node to get drop zone dimensions for
    * @param {Object} parentNode - The parent node (null for root)
    * @param {number} parentPadding - The padding between parent and children
-   * @return {Object} Object with {x, width} for the drop zone dimensions
+   * @return {Object} Object with {x, width} for horizontal bands or {x, width, y, height} for vertical bands
    */
   getParentDropZoneDimensions(node, parentNode, parentPadding) {
-    // Default implementation: extend towards parent into connection area
+    // Default implementation: extend towards parent into connection area (horizontal bands)
     
     // Determine if node is to the left or right of parent
     const isLeftOfParent = parentNode && node.x < parentNode.x;
@@ -233,6 +233,7 @@ class Layout {
       dropZoneX = node.x - parentPadding;
     }
     
+    // Default returns only x/width for horizontal bands (renderer calculates y/height)
     return { x: dropZoneX, width: dropZoneWidth };
   }
 }

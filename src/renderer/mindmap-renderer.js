@@ -346,40 +346,78 @@ class MindmapRenderer {
       parentLayout.parentPadding
     );
     
-    const dropZoneX = dropZoneDimensions.x;
-    const dropZoneWidth = dropZoneDimensions.width;
+    // Check if layout returned full dimensions (indicating vertical bands) or just x/width (horizontal bands)
+    const isVerticalBands = dropZoneDimensions.y !== undefined && dropZoneDimensions.height !== undefined;
     
-    // Top drop zone (red) - extends from top of bounding box to middle of node
-    // Now extends horizontally to include child drop zone area
-    const topZone = this._createRectElement({
-      x: dropZoneX,
-      y: node.boundingBox.y - parentChildPadding/2,
-      width: dropZoneWidth,
-      height: (node.y + node.height / 2) - node.boundingBox.y + parentChildPadding / 2,
-      fill: "#500000",
-      stroke: "#450000",
-      fillOpacity: dropZoneOpacity,
-      strokeOpacity: dropZoneOpacity,
-      className: "drop-zone parent-drop-zone-top",
-      'data-node-id': node.id
-    });
-    
-    // Bottom drop zone (blue) - extends from middle of node to bottom of bounding box
-    // Now extends horizontally to include child drop zone area
-    const bottomZone = this._createRectElement({
-      x: dropZoneX,
-      y: node.y + node.height / 2,
-      width: dropZoneWidth,
-      height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentChildPadding / 2,
-      fill: "#000060",
-      stroke: "#000045",
-      fillOpacity: dropZoneOpacity,
-      strokeOpacity: dropZoneOpacity,
-      className: "drop-zone parent-drop-zone-bottom",
-      'data-node-id': node.id
-    });
-    
-    return topZone + bottomZone;
+    if (isVerticalBands) {
+      // Vertical bands for vertical layouts (left/right drop zones)
+      const dropZoneY = dropZoneDimensions.y;
+      const dropZoneHeight = dropZoneDimensions.height;
+      
+      // Left drop zone (red) - extends from left of bounding box to middle of node
+      const leftZone = this._createRectElement({
+        x: node.boundingBox.x - parentChildPadding/2,
+        y: dropZoneY,
+        width: (node.x + node.width / 2) - node.boundingBox.x + parentChildPadding / 2,
+        height: dropZoneHeight,
+        fill: "#500000",
+        stroke: "#450000",
+        fillOpacity: dropZoneOpacity,
+        strokeOpacity: dropZoneOpacity,
+        className: "drop-zone parent-drop-zone-left",
+        'data-node-id': node.id
+      });
+      
+      // Right drop zone (blue) - extends from middle of node to right of bounding box  
+      const rightZone = this._createRectElement({
+        x: node.x + node.width / 2,
+        y: dropZoneY,
+        width: (node.boundingBox.x + node.boundingBox.width) - (node.x + node.width / 2) + parentChildPadding / 2,
+        height: dropZoneHeight,
+        fill: "#000060",
+        stroke: "#000045",
+        fillOpacity: dropZoneOpacity,
+        strokeOpacity: dropZoneOpacity,
+        className: "drop-zone parent-drop-zone-right",
+        'data-node-id': node.id
+      });
+      
+      return leftZone + rightZone;
+    } else {
+      // Horizontal bands for horizontal/column layouts (top/bottom drop zones)
+      const dropZoneX = dropZoneDimensions.x;
+      const dropZoneWidth = dropZoneDimensions.width;
+      
+      // Top drop zone (red) - extends from top of bounding box to middle of node
+      const topZone = this._createRectElement({
+        x: dropZoneX,
+        y: node.boundingBox.y - parentChildPadding/2,
+        width: dropZoneWidth,
+        height: (node.y + node.height / 2) - node.boundingBox.y + parentChildPadding / 2,
+        fill: "#500000",
+        stroke: "#450000",
+        fillOpacity: dropZoneOpacity,
+        strokeOpacity: dropZoneOpacity,
+        className: "drop-zone parent-drop-zone-top",
+        'data-node-id': node.id
+      });
+      
+      // Bottom drop zone (blue) - extends from middle of node to bottom of bounding box
+      const bottomZone = this._createRectElement({
+        x: dropZoneX,
+        y: node.y + node.height / 2,
+        width: dropZoneWidth,
+        height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentChildPadding / 2,
+        fill: "#000060",
+        stroke: "#000045",
+        fillOpacity: dropZoneOpacity,
+        strokeOpacity: dropZoneOpacity,
+        className: "drop-zone parent-drop-zone-bottom",
+        'data-node-id': node.id
+      });
+      
+      return topZone + bottomZone;
+    }
   }
 
   /**
@@ -394,37 +432,68 @@ class MindmapRenderer {
     const additionalSpan = node.hasChildren() ? 0 : 300;
     const levelStyle = this.styleManager.getLevelStyle(node.level);
     
-    // Get the effective direction from the style manager
-    const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction');
-    
-    // Determine drop zone position based on layout direction
-    let dropZoneX, dropZoneWidth;
-    
-    if (effectiveDirection === 'left') {
-      // For left layouts, drop zone goes to the left of the node
-      dropZoneWidth = layout.parentPadding + additionalSpan;
-      dropZoneX = node.x - dropZoneWidth;
-    } else {
-      // For right layouts (default), drop zone goes to the right of the node
-      dropZoneX = node.x + node.width;
-      dropZoneWidth = layout.parentPadding + additionalSpan;
-    }
-    
     // Determine opacity based on showDropZones setting - transparent if disabled, visible if enabled
     const dropZoneOpacity = this.showDropZones ? 0.1 : 0.0;
     
-    return this._createRectElement({
-      x: dropZoneX,
-      y: node.boundingBox.y - parentChildPadding / 2,
-      width: dropZoneWidth,
-      height: node.boundingBox.height + parentChildPadding,
-      fill: "#005000",
-      stroke: "#004000",
-      fillOpacity: dropZoneOpacity,
-      strokeOpacity: dropZoneOpacity,
-      className: "drop-zone child-drop-zone",
-      'data-node-id': node.id
-    });
+    // Check if this is a vertical layout by examining the layout type
+    const layoutType = this.styleManager.getEffectiveValue(node, 'layoutType');
+    const isVerticalLayout = layoutType === 'vertical';
+    
+    if (isVerticalLayout) {
+      // For vertical layouts, child drop zones extend vertically (up/down)
+      const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction') || 'down';
+      let dropZoneY, dropZoneHeight;
+      
+      if (effectiveDirection === 'up') {
+        // For up direction, child drop zone extends upward from the node
+        dropZoneHeight = layout.parentPadding + additionalSpan;
+        dropZoneY = node.y - dropZoneHeight;
+      } else {
+        // For down direction (default), child drop zone extends downward from the node
+        dropZoneY = node.y + node.height;
+        dropZoneHeight = layout.parentPadding + additionalSpan;
+      }
+      
+      return this._createRectElement({
+        x: node.boundingBox.x - parentChildPadding / 2,
+        y: dropZoneY,
+        width: node.boundingBox.width + parentChildPadding,
+        height: dropZoneHeight,
+        fill: "#005000",
+        stroke: "#004000",
+        fillOpacity: dropZoneOpacity,
+        strokeOpacity: dropZoneOpacity,
+        className: "drop-zone child-drop-zone",
+        'data-node-id': node.id
+      });
+    } else {
+      // For horizontal/column layouts, child drop zones extend horizontally (left/right)
+      const effectiveDirection = this.styleManager.getEffectiveValue(node, 'direction');
+      let dropZoneX, dropZoneWidth;
+      
+      if (effectiveDirection === 'left') {
+        // For left layouts, drop zone goes to the left of the node
+        dropZoneWidth = layout.parentPadding + additionalSpan;
+        dropZoneX = node.x - dropZoneWidth;
+      } else {
+        // For right layouts (default), drop zone goes to the right of the node
+        dropZoneX = node.x + node.width;
+        dropZoneWidth = layout.parentPadding + additionalSpan;
+      }
+      
+      return this._createRectElement({
+        x: dropZoneX,
+        y: node.boundingBox.y - parentChildPadding / 2,
+        width: dropZoneWidth,
+        height: node.boundingBox.height + parentChildPadding,
+        fill: "#005000",
+        stroke: "#004000",
+        fillOpacity: dropZoneOpacity,
+        strokeOpacity: dropZoneOpacity,
+        className: "drop-zone child-drop-zone",
+        'data-node-id': node.id
+      });
+    }
   }
 
   /**
