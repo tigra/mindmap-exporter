@@ -195,6 +195,46 @@ class HorizontalLayout extends Layout {
   }
 
   /**
+   * Navigate from current node based on keyboard input
+   * @param {Object} currentNode - The currently selected node
+   * @param {string} key - The arrow key pressed
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {Object|null} The target node to navigate to
+   */
+  navigateByKey(currentNode, key, styleManager) {
+    console.log(`HorizontalLayout.navigateByKey: Processing key "${key}" for node "${currentNode.text}"`);
+    
+    const direction = styleManager.getEffectiveValue(currentNode, 'direction') || this.direction;
+    const isRightLayout = direction === 'right' || direction === null;
+    const parentKey = isRightLayout ? 'ArrowLeft' : 'ArrowRight';
+    const childKey = isRightLayout ? 'ArrowRight' : 'ArrowLeft';
+    
+    console.log(`HorizontalLayout.navigateByKey: direction="${direction}", isRightLayout=${isRightLayout}, parentKey="${parentKey}", childKey="${childKey}"`);
+    
+    // Navigate to parent
+    if (key === parentKey && currentNode.parent) {
+      console.log(`HorizontalLayout.navigateByKey: Key matches parent direction, navigating to parent "${currentNode.parent.text}"`);
+      return currentNode.parent;
+    }
+    
+    // Navigate to first visible child
+    if (key === childKey && !currentNode.collapsed && currentNode.children.length > 0) {
+      console.log(`HorizontalLayout.navigateByKey: Key matches child direction, navigating to first child "${currentNode.children[0].text}"`);
+      return currentNode.children[0];
+    }
+    
+    // Navigate to siblings
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      const siblingDirection = key === 'ArrowUp' ? 'prev' : 'next';
+      console.log(`HorizontalLayout.navigateByKey: Vertical key, looking for ${siblingDirection} sibling`);
+      return this.findSibling(currentNode, siblingDirection);
+    }
+    
+    console.log(`HorizontalLayout.navigateByKey: No navigation rule matched, returning null`);
+    return null;
+  }
+
+  /**
    * Apply horizontal layout to a node and its children
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate

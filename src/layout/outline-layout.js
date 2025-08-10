@@ -282,6 +282,86 @@ class OutlineLayout extends Layout {
   }
 
   /**
+   * Navigate from current node based on keyboard input
+   * @param {Object} currentNode - The currently selected node
+   * @param {string} key - The arrow key pressed
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {Object|null} The target node to navigate to
+   */
+  navigateByKey(currentNode, key, styleManager) {
+    console.log(`OutlineLayout.navigateByKey: Processing key "${key}" for node "${currentNode.text}"`);
+    
+    const direction = styleManager.getEffectiveValue(currentNode, 'direction') || this.direction;
+    const isRightLayout = direction === 'right';
+    
+    console.log(`OutlineLayout.navigateByKey: direction="${direction}", isRightLayout=${isRightLayout}`);
+    
+    // In outline layout, all children are below parent
+    // Up navigates to parent, Down to children
+    // Left/Right navigate between siblings
+    
+    // Navigate to parent
+    if (key === 'ArrowUp' && currentNode.parent) {
+      // Check if parent is also in the same vertical column
+      const parentY = currentNode.parent.y + currentNode.parent.height;
+      console.log(`OutlineLayout.navigateByKey: Checking parent navigation, parentY=${parentY}, currentY=${currentNode.y}`);
+      if (parentY < currentNode.y) {
+        console.log(`OutlineLayout.navigateByKey: Navigating to parent "${currentNode.parent.text}"`);
+        return currentNode.parent;
+      }
+    }
+    
+    // Navigate to first visible child
+    if (key === 'ArrowDown' && !currentNode.collapsed && currentNode.children.length > 0) {
+      console.log(`OutlineLayout.navigateByKey: Navigating to first child "${currentNode.children[0].text}"`);
+      return currentNode.children[0];
+    }
+    
+    // Navigate to siblings
+    if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      console.log(`OutlineLayout.navigateByKey: Horizontal navigation between siblings`);
+      // In outline layout, siblings are stacked vertically
+      // But we can still navigate between them with left/right
+      const sibling = this.findSibling(currentNode, key === 'ArrowLeft' ? 'prev' : 'next');
+      if (sibling) {
+        console.log(`OutlineLayout.navigateByKey: Found horizontal sibling: "${sibling.text}"`);
+        return sibling;
+      }
+    }
+    
+    // Alternative: Use up/down for sibling navigation in outline
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      console.log(`OutlineLayout.navigateByKey: Vertical sibling navigation`);
+      const siblings = this.getSiblings(currentNode);
+      if (siblings.length > 0) {
+        const allSiblings = currentNode.parent ? currentNode.parent.children : [currentNode];
+        const currentIndex = allSiblings.indexOf(currentNode);
+        console.log(`OutlineLayout.navigateByKey: Current sibling index: ${currentIndex} of ${allSiblings.length}`);
+        
+        if (key === 'ArrowUp' && currentIndex > 0) {
+          const targetNode = allSiblings[currentIndex - 1];
+          console.log(`OutlineLayout.navigateByKey: Moving up to sibling "${targetNode.text}"`);
+          return targetNode;
+        }
+        if (key === 'ArrowDown' && currentIndex < allSiblings.length - 1) {
+          const targetNode = allSiblings[currentIndex + 1];
+          console.log(`OutlineLayout.navigateByKey: Moving down to sibling "${targetNode.text}"`);
+          return targetNode;
+        }
+        
+        // If we can't go to a sibling, try parent (for up)
+        if (key === 'ArrowUp' && currentIndex === 0 && currentNode.parent) {
+          console.log(`OutlineLayout.navigateByKey: At first sibling, moving to parent "${currentNode.parent.text}"`);
+          return currentNode.parent;
+        }
+      }
+    }
+    
+    console.log(`OutlineLayout.navigateByKey: No navigation rule matched, returning null`);
+    return null;
+  }
+
+  /**
    * Apply outline layout to a node and its children
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate

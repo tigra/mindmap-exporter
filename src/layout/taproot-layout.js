@@ -19,6 +19,121 @@ class TapRootLayout extends ColumnBasedLayout {
   }
 
   /**
+   * Navigate from current node based on keyboard input
+   * @param {Object} currentNode - The currently selected node
+   * @param {string} key - The arrow key pressed
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {Object|null} The target node to navigate to
+   */
+  navigateByKey(currentNode, key, styleManager) {
+    console.log(`TapRootLayout.navigateByKey: Processing key "${key}" for node "${currentNode.text}"`);
+    
+    // In taproot, children are arranged in columns
+    // Up/Down navigates within column
+    // Left/Right navigates between columns
+    
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      console.log(`TapRootLayout.navigateByKey: Vertical navigation - looking for column nodes`);
+      
+      // Find nodes in the same column
+      const columnNodes = this.findNodesInSameColumn(currentNode);
+      if (columnNodes.length > 1) {
+        const currentIndex = columnNodes.indexOf(currentNode);
+        console.log(`TapRootLayout.navigateByKey: Found ${columnNodes.length} nodes in column, current index: ${currentIndex}`);
+        
+        if (key === 'ArrowUp' && currentIndex > 0) {
+          const targetNode = columnNodes[currentIndex - 1];
+          console.log(`TapRootLayout.navigateByKey: Moving up to "${targetNode.text}"`);
+          return targetNode;
+        }
+        if (key === 'ArrowDown' && currentIndex < columnNodes.length - 1) {
+          const targetNode = columnNodes[currentIndex + 1];
+          console.log(`TapRootLayout.navigateByKey: Moving down to "${targetNode.text}"`);
+          return targetNode;
+        }
+      }
+      
+      // If we're at the edge of a column, check for parent
+      if (key === 'ArrowUp' && currentNode.parent) {
+        const parentLayout = styleManager.getEffectiveValue(currentNode.parent, 'layoutType');
+        console.log(`TapRootLayout.navigateByKey: At column edge, parent layout is "${parentLayout}"`);
+        
+        if (parentLayout !== 'taproot') {
+          console.log(`TapRootLayout.navigateByKey: Parent has different layout, navigating to parent "${currentNode.parent.text}"`);
+          return currentNode.parent;
+        }
+      }
+      
+      console.log(`TapRootLayout.navigateByKey: No vertical navigation available`);
+    }
+    
+    if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      console.log(`TapRootLayout.navigateByKey: Horizontal navigation - looking between columns`);
+      
+      // Navigate between columns (siblings with different x positions)
+      const siblings = this.getSiblings(currentNode);
+      if (siblings.length > 0) {
+        const sortedByX = siblings.sort((a, b) => a.x - b.x);
+        const currentIndex = sortedByX.indexOf(currentNode);
+        console.log(`TapRootLayout.navigateByKey: Found ${siblings.length} siblings, current X-sorted index: ${currentIndex}`);
+        
+        if (key === 'ArrowLeft' && currentIndex > 0) {
+          const targetNode = sortedByX[currentIndex - 1];
+          console.log(`TapRootLayout.navigateByKey: Moving left to "${targetNode.text}"`);
+          return targetNode;
+        }
+        if (key === 'ArrowRight' && currentIndex < sortedByX.length - 1) {
+          const targetNode = sortedByX[currentIndex + 1];
+          console.log(`TapRootLayout.navigateByKey: Moving right to "${targetNode.text}"`);
+          return targetNode;
+        }
+      }
+      
+      console.log(`TapRootLayout.navigateByKey: No horizontal navigation available`);
+    }
+    
+    console.log(`TapRootLayout.navigateByKey: No navigation rule matched, returning null`);
+    return null;
+  }
+
+  /**
+   * Find nodes in the same column (for taproot layout)
+   * @param {Object} node - The current node
+   * @returns {Array} Array of nodes in the same column
+   */
+  findNodesInSameColumn(node) {
+    console.log(`TapRootLayout.findNodesInSameColumn: Finding column nodes for "${node.text}"`);
+    
+    if (!node.parent) {
+      console.log(`TapRootLayout.findNodesInSameColumn: No parent, returning single node`);
+      return [node];
+    }
+    
+    const siblings = node.parent.children;
+    const nodeX = node.x + node.width / 2;
+    const tolerance = 30; // Tolerance for "same column"
+    
+    console.log(`TapRootLayout.findNodesInSameColumn: Node centerX=${nodeX}, tolerance=${tolerance}, checking ${siblings.length} siblings`);
+    
+    // Find all siblings in the same column
+    const columnNodes = siblings.filter(sibling => {
+      const siblingX = sibling.x + sibling.width / 2;
+      const distance = Math.abs(siblingX - nodeX);
+      const inColumn = distance < tolerance;
+      console.log(`TapRootLayout.findNodesInSameColumn: "${sibling.text}" centerX=${siblingX}, distance=${distance}, inColumn=${inColumn}`);
+      return inColumn;
+    });
+    
+    console.log(`TapRootLayout.findNodesInSameColumn: Found ${columnNodes.length} nodes in same column`);
+    
+    // Sort by Y position
+    const sortedNodes = columnNodes.sort((a, b) => a.y - b.y);
+    console.log(`TapRootLayout.findNodesInSameColumn: Y-sorted order: ${sortedNodes.map(n => `"${n.text}"(${n.y})`).join(', ')}`);
+    
+    return sortedNodes;
+  }
+
+  /**
    * Position children in left and right columns
    * @param {Node} node - The parent node
    * @param {Array} leftChildren - Children in left column 
