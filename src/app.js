@@ -73,6 +73,7 @@ class MindmapApp {
     this.dropZonesCheckbox = document.getElementById('enable-drop-zones');
     this.outlineEdgeAlignmentSelect = document.getElementById('outline-edge-alignment');
     this.applySettingsBtn = document.getElementById('apply-settings-btn');
+    this.autosaveMarkdownCheckbox = document.getElementById('autosave-markdown');
     
     // YAML editor elements
     this.styleYamlEditor = document.getElementById('style-yaml-editor');
@@ -841,6 +842,60 @@ class MindmapApp {
     console.groupEnd();
     
     return this; // Allow method chaining
+  }
+
+  /**
+   * Auto-save mindmap changes back to markdown editor if enabled
+   */
+  autoSaveToMarkdown() {
+    if (!this.autosaveMarkdownCheckbox || !this.autosaveMarkdownCheckbox.checked) {
+      return; // Autosave is disabled
+    }
+
+    if (!this.model.getRoot() || !this.markdownInput) {
+      return; // No model or markdown input available
+    }
+
+    try {
+      // Convert current mindmap structure back to markdown
+      const updatedMarkdown = this.model.toMarkdown();
+      const currentMarkdown = this.markdownInput.value.trim();
+      
+      // Only update if there's a meaningful difference (ignoring whitespace differences)
+      if (updatedMarkdown && updatedMarkdown.trim() !== currentMarkdown) {
+        console.log('Auto-saving mindmap changes to markdown editor');
+        console.log('Previous length:', currentMarkdown.length, 'New length:', updatedMarkdown.length);
+        
+        this.markdownInput.value = updatedMarkdown;
+        
+        // Show brief status message
+        this.showStatusMessage('Markdown auto-saved', 'success');
+      }
+    } catch (error) {
+      console.error('Error during auto-save to markdown:', error);
+      this.showStatusMessage('Auto-save failed', 'error');
+    }
+  }
+
+  /**
+   * Show a status message to the user
+   * @param {string} message - The message to show
+   * @param {string} type - The type of message ('success', 'error', 'info')
+   */
+  showStatusMessage(message, type = 'info') {
+    const statusElement = document.getElementById('status-message');
+    if (!statusElement) return;
+
+    statusElement.textContent = message;
+    statusElement.className = `status-${type}`;
+    statusElement.style.display = 'block';
+
+    // Hide message after 2 seconds
+    setTimeout(() => {
+      statusElement.style.display = 'none';
+      statusElement.textContent = '';
+      statusElement.className = '';
+    }, 2000);
   }
 
   /**

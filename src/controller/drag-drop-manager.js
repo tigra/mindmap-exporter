@@ -516,6 +516,13 @@ class DragDropManager {
     // Re-render the mindmap without re-parsing markdown
     this.controller.rerenderMindmap();
     
+    // Trigger autosave if enabled (through global app reference)
+    if (typeof window !== 'undefined' && window.mindmapApp && window.mindmapApp.autoSaveToMarkdown) {
+      setTimeout(() => {
+        window.mindmapApp.autoSaveToMarkdown();
+      }, 100); // Small delay to ensure re-render is complete
+    }
+    
     console.log('=== END PERFORM DROP DEBUG ===');
   }
   
