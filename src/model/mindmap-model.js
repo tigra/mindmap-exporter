@@ -528,6 +528,62 @@ class MindmapModel {
 
     return null;
   }
+
+  /**
+   * Convert the node structure back to markdown
+   * @param {MindmapNode} node - The root node to convert (optional, defaults to this.rootNode)
+   * @return {string} The markdown representation of the node structure
+   */
+  toMarkdown(node = null) {
+    const startNode = node || this.rootNode;
+    if (!startNode) {
+      return '';
+    }
+
+    const lines = [];
+    this._nodeToMarkdown(startNode, lines, 0);
+    return lines.join('\n');
+  }
+
+  /**
+   * Recursively convert a node and its children to markdown lines
+   * @private
+   * @param {MindmapNode} node - The node to convert
+   * @param {Array<string>} lines - Array to collect markdown lines
+   * @param {number} depth - Current depth for indentation (0-based)
+   */
+  _nodeToMarkdown(node, lines, depth) {
+    if (!node) return;
+
+    if (node.level === 1 && depth === 0) {
+      // Root node becomes a top-level heading
+      lines.push(`# ${node.text}`);
+    } else if (node.level >= 1 && node.level <= 6) {
+      // Convert levels to headings
+      const headingMarker = '#'.repeat(node.level);
+      lines.push(`${headingMarker} ${node.text}`);
+    } else {
+      // For deeper levels or list items, use bullet points with proper indentation
+      const indent = '  '.repeat(depth);
+      lines.push(`${indent}- ${node.text}`);
+    }
+
+    // Process children
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        if (node.level >= 1 && node.level <= 6 && child.level > 6) {
+          // If parent is a heading but child would be deeper than h6, use list format
+          this._nodeToMarkdown(child, lines, 0);
+        } else if (node.level >= 1 && node.level <= 6) {
+          // Both parent and child are heading levels
+          this._nodeToMarkdown(child, lines, 0);
+        } else {
+          // Parent is a list item, child should be indented list item
+          this._nodeToMarkdown(child, lines, depth + 1);
+        }
+      }
+    }
+  }
 }
 
 // Make the mindmap model and parsing function available globally

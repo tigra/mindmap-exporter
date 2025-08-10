@@ -533,3 +533,32 @@ body.resizing .preview {
 .yaml-load-btn:hover {
     background-color: #1976d2;
 }
+
+/* Status messages */
+#status-message {
+    display: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 8px 0;
+    transition: opacity 0.3s ease;
+}
+
+.status-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-info {
+    background-color: #cce7ff;
+    color: #004085;
+    border: 1px solid #99d6ff;
+}
