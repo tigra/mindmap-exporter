@@ -340,84 +340,53 @@ class MindmapRenderer {
     
     // Get drop zone dimensions from the layout
     // This allows each layout type to define its own drop zone positioning logic
-    const dropZoneDimensions = parentLayout.getParentDropZoneDimensions(
+    // Get the node's level style to pass to the layout method
+    const nodeLevelStyle = this.styleManager.getLevelStyle(node.level);
+    
+    // Get dimensions for both drop zones from the layout
+    const topDropZone = parentLayout.getParentDropZoneTop(
       node, 
       parentNode, 
-      parentLayout.parentPadding
+      parentLayout.parentPadding,
+      nodeLevelStyle
     );
     
-    // Check if layout returned full dimensions (indicating vertical bands) or just x/width (horizontal bands)
-    const isVerticalBands = dropZoneDimensions.y !== undefined && dropZoneDimensions.height !== undefined;
+    const bottomDropZone = parentLayout.getParentDropZoneBottom(
+      node, 
+      parentNode, 
+      parentLayout.parentPadding,
+      nodeLevelStyle
+    );
     
-    if (isVerticalBands) {
-      // Vertical bands for vertical layouts (left/right drop zones)
-      const dropZoneY = dropZoneDimensions.y;
-      const dropZoneHeight = dropZoneDimensions.height;
-      
-      // Left drop zone (red) - extends from left of bounding box to middle of node
-      const leftZone = this._createRectElement({
-        x: node.boundingBox.x - parentChildPadding/2,
-        y: dropZoneY,
-        width: (node.x + node.width / 2) - node.boundingBox.x + parentChildPadding / 2,
-        height: dropZoneHeight,
-        fill: "#500000",
-        stroke: "#450000",
-        fillOpacity: dropZoneOpacity,
-        strokeOpacity: dropZoneOpacity,
-        className: "drop-zone parent-drop-zone-left",
-        'data-node-id': node.id
-      });
-      
-      // Right drop zone (blue) - extends from middle of node to right of bounding box  
-      const rightZone = this._createRectElement({
-        x: node.x + node.width / 2,
-        y: dropZoneY,
-        width: (node.boundingBox.x + node.boundingBox.width) - (node.x + node.width / 2) + parentChildPadding / 2,
-        height: dropZoneHeight,
-        fill: "#000060",
-        stroke: "#000045",
-        fillOpacity: dropZoneOpacity,
-        strokeOpacity: dropZoneOpacity,
-        className: "drop-zone parent-drop-zone-right",
-        'data-node-id': node.id
-      });
-      
-      return leftZone + rightZone;
-    } else {
-      // Horizontal bands for horizontal/column layouts (top/bottom drop zones)
-      const dropZoneX = dropZoneDimensions.x;
-      const dropZoneWidth = dropZoneDimensions.width;
-      
-      // Top drop zone (red) - extends from top of bounding box to middle of node
-      const topZone = this._createRectElement({
-        x: dropZoneX,
-        y: node.boundingBox.y - parentChildPadding/2,
-        width: dropZoneWidth,
-        height: (node.y + node.height / 2) - node.boundingBox.y + parentChildPadding / 2,
-        fill: "#500000",
-        stroke: "#450000",
-        fillOpacity: dropZoneOpacity,
-        strokeOpacity: dropZoneOpacity,
-        className: "drop-zone parent-drop-zone-top",
-        'data-node-id': node.id
-      });
-      
-      // Bottom drop zone (blue) - extends from middle of node to bottom of bounding box
-      const bottomZone = this._createRectElement({
-        x: dropZoneX,
-        y: node.y + node.height / 2,
-        width: dropZoneWidth,
-        height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentChildPadding / 2,
-        fill: "#000060",
-        stroke: "#000045",
-        fillOpacity: dropZoneOpacity,
-        strokeOpacity: dropZoneOpacity,
-        className: "drop-zone parent-drop-zone-bottom",
-        'data-node-id': node.id
-      });
-      
-      return topZone + bottomZone;
-    }
+    // Create the top/left drop zone (red)
+    const topZone = this._createRectElement({
+      x: topDropZone.x,
+      y: topDropZone.y,
+      width: topDropZone.width,
+      height: topDropZone.height,
+      fill: "#500000",
+      stroke: "#450000",
+      fillOpacity: dropZoneOpacity,
+      strokeOpacity: dropZoneOpacity,
+      className: "drop-zone parent-drop-zone-top",
+      'data-node-id': node.id
+    });
+    
+    // Create the bottom/right drop zone (blue)
+    const bottomZone = this._createRectElement({
+      x: bottomDropZone.x,
+      y: bottomDropZone.y,
+      width: bottomDropZone.width,
+      height: bottomDropZone.height,
+      fill: "#000060",
+      stroke: "#000045",
+      fillOpacity: dropZoneOpacity,
+      strokeOpacity: dropZoneOpacity,
+      className: "drop-zone parent-drop-zone-bottom",
+      'data-node-id': node.id
+    });
+    
+    return topZone + bottomZone;
   }
 
   /**

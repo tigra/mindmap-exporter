@@ -207,20 +207,19 @@ class Layout {
   }
 
   /**
-   * Get the dimensions for parent drop zones
-   * Drop zones should extend into the connection area for precise node ordering
+   * Get the dimensions for the top parent drop zone (or left for vertical layouts)
    * @param {Object} node - The node to get drop zone dimensions for
    * @param {Object} parentNode - The parent node (null for root)
    * @param {number} parentPadding - The padding between parent and children
-   * @return {Object} Object with {x, width} for horizontal bands or {x, width, y, height} for vertical bands
+   * @param {Object} levelStyle - The level style for accessing style manager (optional)
+   * @return {Object} Object with {x, y, width, height} for the complete drop zone rectangle
    */
-  getParentDropZoneDimensions(node, parentNode, parentPadding) {
-    // Default implementation: extend towards parent into connection area (horizontal bands)
+  getParentDropZoneTop(node, parentNode, parentPadding, levelStyle = null) {
+    // Default implementation for horizontal layouts (top drop zone)
     
     // Determine if node is to the left or right of parent
     const isLeftOfParent = parentNode && node.x < parentNode.x;
     
-    // Calculate drop zone dimensions based on position relative to parent
     let dropZoneX, dropZoneWidth;
     
     if (isLeftOfParent) {
@@ -233,8 +232,48 @@ class Layout {
       dropZoneX = node.x - parentPadding;
     }
     
-    // Default returns only x/width for horizontal bands (renderer calculates y/height)
-    return { x: dropZoneX, width: dropZoneWidth };
+    // Top drop zone extends from top of bounding box to middle of node
+    return {
+      x: dropZoneX,
+      y: node.boundingBox.y - parentPadding/2,
+      width: dropZoneWidth,
+      height: (node.y + node.height / 2) - node.boundingBox.y + parentPadding / 2
+    };
+  }
+
+  /**
+   * Get the dimensions for the bottom parent drop zone (or right for vertical layouts)
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node (null for root)
+   * @param {number} parentPadding - The padding between parent and children
+   * @param {Object} levelStyle - The level style for accessing style manager (optional)
+   * @return {Object} Object with {x, y, width, height} for the complete drop zone rectangle
+   */
+  getParentDropZoneBottom(node, parentNode, parentPadding, levelStyle = null) {
+    // Default implementation for horizontal layouts (bottom drop zone)
+    
+    // Determine if node is to the left or right of parent
+    const isLeftOfParent = parentNode && node.x < parentNode.x;
+    
+    let dropZoneX, dropZoneWidth;
+    
+    if (isLeftOfParent) {
+      // Node is to the left of parent - extend RIGHT towards parent
+      dropZoneX = node.x;
+      dropZoneWidth = node.width + parentPadding;
+    } else {
+      // Node is to the right of parent (or default) - extend LEFT towards parent
+      dropZoneWidth = node.width + parentPadding;
+      dropZoneX = node.x - parentPadding;
+    }
+    
+    // Bottom drop zone extends from middle of node to bottom of bounding box
+    return {
+      x: dropZoneX,
+      y: node.y + node.height / 2,
+      width: dropZoneWidth,
+      height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentPadding / 2
+    };
   }
 }
 
