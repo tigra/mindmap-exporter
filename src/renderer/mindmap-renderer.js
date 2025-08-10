@@ -1494,18 +1494,30 @@ class MindmapRenderer {
    * @private
    * @param {string} nodeId - The node ID
    * @param {string} elementType - The element type (rect, text, indicator)
-   * @param {string} eventAction - The action to trigger (toggle, debug)
+   * @param {string} eventAction - The action to trigger (toggle, debug, select)
    * @param {boolean} useDoubleClick - Whether to use dblclick instead of click
+   * @param {boolean} requireCtrl - Whether to require ctrl key to be pressed
    */
-  _attachNodeEventHandler(nodeId, elementType, eventAction, useDoubleClick = false) {
+  _attachNodeEventHandler(nodeId, elementType, eventAction, useDoubleClick = false, requireCtrl = false) {
     const eventType = useDoubleClick ? 'dblclick' : 'click';
     const elementId = `${nodeId}_${elementType}`;
     
     this._attachEventHandler(elementId, eventType, (event) => {
-      // For debug action, prevent propagation only if not ctrl-click
-      if (eventAction === 'debug' && !event.ctrlKey) {
+      // Check if ctrl key requirement is met
+      if (requireCtrl && !event.ctrlKey) {
+        return;
+      }
+      
+      // Check if ctrl key should NOT be pressed (for normal selection)
+      if (!requireCtrl && eventAction === 'select' && event.ctrlKey) {
+        return;
+      }
+
+      // Prevent event propagation for debug actions
+      if (eventAction === 'debug') {
         event.stopPropagation();
       }
+      
       eventBridge.handleNodeEvent(nodeId, eventAction);
     });
   }
@@ -1515,12 +1527,14 @@ class MindmapRenderer {
    */
   attachEventHandlers() {
     this.nodeMap.forEach((node, nodeId) => {
-      // Rect element: double-click for toggle, single-click for debug
+      // Rect element: single-click for select, double-click for toggle, ctrl+click for debug
+      this._attachNodeEventHandler(nodeId, 'rect', 'select');
       this._attachNodeEventHandler(nodeId, 'rect', 'toggle', true);
-      this._attachNodeEventHandler(nodeId, 'rect', 'debug');
+      this._attachNodeEventHandler(nodeId, 'rect', 'debug', false, true); // ctrl+click
       
-      // Text element: single-click for debug
-      this._attachNodeEventHandler(nodeId, 'text', 'debug');
+      // Text element: single-click for select, ctrl+click for debug
+      this._attachNodeEventHandler(nodeId, 'text', 'select');
+      this._attachNodeEventHandler(nodeId, 'text', 'debug', false, true); // ctrl+click
       
       // Indicator element: single-click for toggle
       this._attachNodeEventHandler(nodeId, 'indicator', 'toggle');
@@ -1533,6 +1547,42 @@ class MindmapRenderer {
    */
   getNodeMap() {
     return this.nodeMap;
+  }
+
+  /**
+   * Update the visual selection indicator
+   * @param {string|null} selectedNodeId - The ID of the selected node or null to clear
+   */
+  updateSelectionIndicator(selectedNodeId) {
+    // Remove any existing selection indicator
+    const existingIndicator = document.getElementById('selection-indicator');
+    if (existingIndicator) {
+      existingIndicator.remove();
+    }
+
+    if (!selectedNodeId) return;
+
+    const node = this.nodeMap.get(selectedNodeId);
+    if (!node) return;
+
+    // Create a dashed rectangle around the selected node
+    const svg = document.querySelector('svg');
+    if (!svg) return;
+
+    const indicator = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    indicator.setAttribute('id', 'selection-indicator');
+    indicator.setAttribute('x', node.x - 3);
+    indicator.setAttribute('y', node.y - 3);
+    indicator.setAttribute('width', node.width + 6);
+    indicator.setAttribute('height', node.height + 6);
+    indicator.setAttribute('fill', 'none');
+    indicator.setAttribute('stroke', '#007acc');
+    indicator.setAttribute('stroke-width', '2');
+    indicator.setAttribute('stroke-dasharray', '5,3');
+    indicator.setAttribute('pointer-events', 'none');
+
+    // Add the indicator to the SVG
+    svg.appendChild(indicator);
   }
 }
 

@@ -25,6 +25,9 @@ class MindmapController {
     // Initialize drag and drop manager
     this.dragDropManager = null;
 
+    // Selected node state
+    this.selectedNodeId = null;
+
     // Register with the event bridge
     eventBridge.initialize(this);
   }
@@ -42,6 +45,9 @@ class MindmapController {
 
     // Initialize drag and drop after rendering
     this.initDragDrop();
+
+    // Initialize keyboard navigation
+    this.initKeyboardNavigation();
   }
 
   /**
@@ -235,6 +241,10 @@ handleNodeEvent(nodeId, eventType) {
   else if (eventType === 'debug') {
     // Output node and its properties to console for debugging
     this.debugNodeProperties(nodeId);
+  }
+  else if (eventType === 'select') {
+    // Select the node
+    this.selectNode(nodeId);
   }
 }
 
@@ -737,6 +747,176 @@ logPropertyInheritanceChain(node, property) {
     URL.revokeObjectURL(url);
 
     console.log('Markdown exported successfully');
+  }
+
+  /**
+   * Select a node
+   * @param {string} nodeId - The ID of the node to select
+   */
+  selectNode(nodeId) {
+    if (this.selectedNodeId === nodeId) return;
+    
+    this.selectedNodeId = nodeId;
+    this.updateSelectionVisual();
+  }
+
+  /**
+   * Clear the current selection
+   */
+  clearSelection() {
+    this.selectedNodeId = null;
+    this.updateSelectionVisual();
+  }
+
+  /**
+   * Get the currently selected node
+   * @returns {Object|null} The selected node or null if none selected
+   */
+  getSelectedNode() {
+    if (!this.selectedNodeId) return null;
+    return this.model.findNodeById(this.selectedNodeId);
+  }
+
+  /**
+   * Update the visual selection indicator
+   */
+  updateSelectionVisual() {
+    this.renderer.updateSelectionIndicator(this.selectedNodeId);
+  }
+
+  /**
+   * Initialize keyboard navigation
+   */
+  initKeyboardNavigation() {
+    document.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        this.handleArrowKeyNavigation(e.key);
+      }
+    });
+  }
+
+  /**
+   * Handle arrow key navigation
+   * @param {string} key - The arrow key pressed
+   */
+  handleArrowKeyNavigation(key) {
+    const currentNode = this.getSelectedNode();
+    if (!currentNode) {
+      // If no node is selected, select the root node
+      const rootNode = this.model.getRoot();
+      if (rootNode) {
+        this.selectNode(rootNode.id);
+      }
+      return;
+    }
+
+    const targetNode = this.findNodeInDirection(currentNode, key);
+    if (targetNode) {
+      this.selectNode(targetNode.id);
+    }
+  }
+
+  /**
+   * Find the nearest node in the specified direction
+   * @param {Object} currentNode - The current node
+   * @param {string} direction - The direction key (ArrowUp, ArrowDown, etc.)
+   * @returns {Object|null} The target node or null if none found
+   */
+  findNodeInDirection(currentNode, direction) {
+    const allNodes = this.getAllNodes();
+    const currentCenter = {
+      x: currentNode.x + currentNode.width / 2,
+      y: currentNode.y + currentNode.height / 2
+    };
+
+    let bestNode = null;
+    let bestDistance = Infinity;
+
+    for (const node of allNodes) {
+      if (node.id === currentNode.id) continue;
+
+      const nodeCenter = {
+        x: node.x + node.width / 2,
+        y: node.y + node.height / 2
+      };
+
+      // Check if the node is in the correct direction
+      const isInDirection = this.isNodeInDirection(currentCenter, nodeCenter, direction);
+      if (!isInDirection) continue;
+
+      const distance = this.calculateDistance(currentCenter, nodeCenter);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestNode = node;
+      }
+    }
+
+    return bestNode;
+  }
+
+  /**
+   * Check if a node is in the specified direction from the current position
+   * @param {Object} current - Current position {x, y}
+   * @param {Object} target - Target position {x, y}
+   * @param {string} direction - The direction key
+   * @returns {boolean} True if the target is in the specified direction
+   */
+  isNodeInDirection(current, target, direction) {
+    const threshold = 30; // Tolerance for "same line" navigation
+
+    switch (direction) {
+      case 'ArrowUp':
+        return target.y < current.y - threshold;
+      case 'ArrowDown':
+        return target.y > current.y + threshold;
+      case 'ArrowLeft':
+        return target.x < current.x - threshold;
+      case 'ArrowRight':
+        return target.x > current.x + threshold;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Calculate distance between two points
+   * @param {Object} point1 - First point {x, y}
+   * @param {Object} point2 - Second point {x, y}
+   * @returns {number} The distance
+   */
+  calculateDistance(point1, point2) {
+    const dx = point1.x - point2.x;
+    const dy = point1.y - point2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /**
+   * Get all visible nodes in the mindmap
+   * @returns {Array} Array of all nodes
+   */
+  getAllNodes() {
+    const nodes = [];
+    this.collectNodesRecursive(this.model.getRoot(), nodes);
+    return nodes;
+  }
+
+  /**
+   * Recursively collect all visible nodes
+   * @param {Object} node - The current node
+   * @param {Array} nodes - Array to collect nodes into
+   */
+  collectNodesRecursive(node, nodes) {
+    if (!node) return;
+    
+    nodes.push(node);
+    
+    // Only collect children if the node is not collapsed
+    if (!node.collapsed) {
+      for (const child of node.children) {
+        this.collectNodesRecursive(child, nodes);
+      }
+    }
   }
 }
 
