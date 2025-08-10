@@ -13,6 +13,7 @@ class MindmapModel {
   constructor() {
     this.rootNode = new MindmapNode();
     this.nodeMap = new Map(); // Map of node ID to node instance
+    this.selectedNode = null; // Currently selected node
   }
 
   /**

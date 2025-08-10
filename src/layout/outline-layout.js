@@ -456,6 +456,120 @@ class OutlineLayout extends Layout {
       return new ConnectionPoint(node.x, node.y + node.height / 2, 'left');
     }
   }
+
+  /**
+   * Override top parent drop zone for outline layouts
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @param {Object} levelStyle - The level style for accessing style manager
+   * @return {Object} Object with {x, y, width, height} for the complete drop zone rectangle
+   */
+  getParentDropZoneTop(node, parentNode, parentPadding, levelStyle = null) {
+    if (!parentNode) {
+      // No parent, use default behavior
+      return super.getParentDropZoneTop(node, parentNode, parentPadding, levelStyle);
+    }
+    
+    // For top zone, always use full width positioning (no narrow bands)
+    const effectiveDirection = node.configOverrides?.direction || 'right';
+    
+    let dropZoneX, dropZoneWidth;
+    
+    if (effectiveDirection === 'left') {
+      // Children are to the left of parent - extend from child right edge toward parent
+      const connectionAreaStart = node.x + node.width;
+      const connectionAreaEnd = parentNode.x;
+      dropZoneX = connectionAreaStart;
+      dropZoneWidth = Math.min(node.width, connectionAreaEnd - connectionAreaStart);
+    } else {
+      // Children are to the right of parent - extend from parent right edge toward child
+      const connectionAreaStart = parentNode.x + parentNode.width;
+      const connectionAreaEnd = node.x + node.width;
+      dropZoneX = Math.min(connectionAreaStart, node.x);
+      dropZoneWidth = Math.max(node.width, connectionAreaEnd - dropZoneX);
+    }
+    
+    // Top drop zone extends from top of bounding box to middle of node
+    return {
+      x: dropZoneX,
+      y: node.boundingBox.y - parentPadding/2,
+      width: dropZoneWidth,
+      height: (node.y + node.height / 2) - node.boundingBox.y + parentPadding / 2
+    };
+  }
+
+  /**
+   * Override bottom parent drop zone for outline layouts
+   * For near edge alignment, this creates the narrow drop zone at the child's edge
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @param {Object} levelStyle - The level style for accessing style manager
+   * @return {Object} Object with {x, y, width, height} for the complete drop zone rectangle
+   */
+  getParentDropZoneBottom(node, parentNode, parentPadding, levelStyle = null) {
+    if (!parentNode) {
+      // No parent, use default behavior
+      return super.getParentDropZoneBottom(node, parentNode, parentPadding, levelStyle);
+    }
+    
+    // Get the style manager to check edge alignment
+    const styleManager = levelStyle && levelStyle.styleManager ? 
+      levelStyle.styleManager : 
+      (this.style && this.style.styleManager ? this.style.styleManager : null);
+    
+    // Check if we're in near edge alignment mode ('start') vs far edge alignment ('end')
+    const edgeAlignment = styleManager && styleManager.getGlobalConfig ? 
+      styleManager.getGlobalConfig('outlineEdgeAlignment', 'start') : 
+      'start';
+    
+    const isNearEdgeAlignment = edgeAlignment === 'start';
+    // const effectiveDirection = node.configOverrides?.direction || 'right';
+    const effectiveDirection = levelStyle.styleManager.getEffectiveValue(node, 'direction') || this.direction;
+    
+    let bottomDropZoneX, bottomDropZoneWidth;
+    
+    if (isNearEdgeAlignment) {
+      // Near edge alignment: narrow bands at child's near edge
+      const effectiveHorizontalShift = styleManager && styleManager.getEffectiveValue ? 
+        styleManager.getEffectiveValue(node, 'horizontalShift') || this.horizontalShift :
+        this.horizontalShift;
+      
+      if (effectiveDirection === 'left') {
+        // Left direction: narrow band at child's right edge
+        bottomDropZoneX = node.x + node.width;
+        bottomDropZoneWidth = effectiveHorizontalShift;
+      } else {
+        // Right direction: narrow band at child's left edge  
+        bottomDropZoneX = node.x;
+        bottomDropZoneWidth = effectiveHorizontalShift;
+      }
+    } else {
+      // Far edge alignment: use full extension logic
+      if (effectiveDirection === 'left') {
+        // Extend from child right edge toward parent
+        const connectionAreaStart = node.x + node.width;
+        const connectionAreaEnd = parentNode.x;
+        bottomDropZoneX = connectionAreaStart;
+        bottomDropZoneWidth = Math.max(node.width, connectionAreaEnd - connectionAreaStart);
+      } else {
+        // Extend from parent right edge toward child
+        const connectionAreaStart = parentNode.x + parentNode.width;
+        const connectionAreaEnd = node.x + node.width;
+        bottomDropZoneX = Math.min(connectionAreaStart, node.x);
+        bottomDropZoneWidth = Math.max(node.width, connectionAreaEnd - bottomDropZoneX);
+      }
+    }
+    
+    // Bottom drop zone extends from middle of node to bottom of bounding box
+    return {
+      x: bottomDropZoneX,
+      y: node.y + node.height / 2,
+      width: bottomDropZoneWidth,
+      height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentPadding / 2
+    };
+  }
 }
 
 // For backward compatibility

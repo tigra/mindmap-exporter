@@ -432,12 +432,67 @@ class ColumnBasedLayout extends Layout {
    * @param {number} parentPadding - The padding between parent and children
    * @return {Object} Object with {x, width} for the drop zone dimensions
    */
-  getParentDropZoneDimensions(node, parentNode, parentPadding) {
+  /**
+   * Override top parent drop zone for column-based layouts
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @param {Object} levelStyle - The level style for accessing style manager (optional)
+   * @return {Object} Object with {x, y, width, height} for the complete drop zone rectangle
+   */
+  getParentDropZoneTop(node, parentNode, parentPadding, levelStyle = null) {
     if (!parentNode) {
       // No parent, use default behavior
-      return super.getParentDropZoneDimensions(node, parentNode, parentPadding);
+      return super.getParentDropZoneTop(node, parentNode, parentPadding, levelStyle);
     }
     
+    // Get common dimensions with intersection prevention
+    const dimensions = this._getColumnDropZoneDimensions(node, parentNode, parentPadding);
+    
+    // Top drop zone extends from top of bounding box to middle of node
+    return {
+      x: dimensions.dropZoneX,
+      y: node.boundingBox.y - parentPadding/2,
+      width: dimensions.dropZoneWidth,
+      height: (node.y + node.height / 2) - node.boundingBox.y + parentPadding / 2
+    };
+  }
+
+  /**
+   * Override bottom parent drop zone for column-based layouts
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @param {Object} levelStyle - The level style for accessing style manager (optional)
+   * @return {Object} Object with {x, y, width, height} for the complete drop zone rectangle
+   */
+  getParentDropZoneBottom(node, parentNode, parentPadding, levelStyle = null) {
+    if (!parentNode) {
+      // No parent, use default behavior
+      return super.getParentDropZoneBottom(node, parentNode, parentPadding, levelStyle);
+    }
+    
+    // Get common dimensions with intersection prevention
+    const dimensions = this._getColumnDropZoneDimensions(node, parentNode, parentPadding);
+    
+    // Bottom drop zone extends from middle of node to bottom of bounding box
+    return {
+      x: dimensions.dropZoneX,
+      y: node.y + node.height / 2,
+      width: dimensions.dropZoneWidth,
+      height: (node.boundingBox.y + node.boundingBox.height) - (node.y + node.height / 2) + parentPadding / 2
+    };
+  }
+
+  /**
+   * Helper method to get drop zone dimensions with intersection prevention for column-based layouts
+   * @param {Object} node - The node to get drop zone dimensions for
+   * @param {Object} parentNode - The parent node
+   * @param {number} parentPadding - The padding between parent and children
+   * @return {Object} Object with dropZoneX and dropZoneWidth
+   * @private
+   */
+  _getColumnDropZoneDimensions(node, parentNode, parentPadding) {
     // Check if node has a direction override (used by TaprootLayout and ClassicMindmap)
     let isLeftColumn = false;
     if (node.configOverrides && node.configOverrides.direction) {
@@ -470,7 +525,7 @@ class ColumnBasedLayout extends Layout {
       dropZoneWidth = (node.x + node.width) - dropZoneX;
     }
     
-    return { x: dropZoneX, width: dropZoneWidth };
+    return { dropZoneX, dropZoneWidth };
   }
 }
 
