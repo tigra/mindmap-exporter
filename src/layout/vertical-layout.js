@@ -283,6 +283,33 @@ class VerticalLayout extends Layout {
   }
 
   /**
+   * Check if the key press should expand a collapsed node instead of navigating
+   * @param {string} key - The arrow key pressed
+   * @param {Object} currentNode - The currently selected node
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {boolean} True if the node should be expanded, false otherwise
+   */
+  shouldExpandOnKey(key, currentNode, styleManager) {
+    console.log(`VerticalLayout.shouldExpandOnKey: Checking key "${key}" for node "${currentNode.text}"`);
+    
+    // Only expand if node is collapsed and has children
+    if (!currentNode.collapsed || !currentNode.children || currentNode.children.length === 0) {
+      console.log(`VerticalLayout.shouldExpandOnKey: Node not collapsed or has no children, returning false`);
+      return false;
+    }
+    
+    // Determine layout direction
+    const direction = styleManager.getEffectiveValue(currentNode, 'direction') || this.direction;
+    const isDownLayout = direction === 'down' || direction === null;
+    const childKey = isDownLayout ? 'ArrowDown' : 'ArrowUp';
+    
+    const shouldExpand = key === childKey;
+    console.log(`VerticalLayout.shouldExpandOnKey: direction="${direction}", childKey="${childKey}", shouldExpand=${shouldExpand}`);
+    
+    return shouldExpand;
+  }
+
+  /**
    * Apply vertical layout to a node and its children
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate

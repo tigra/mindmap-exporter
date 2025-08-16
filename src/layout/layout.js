@@ -24,6 +24,20 @@ class Layout {
   }
 
   /**
+   * Check if the key press should expand a collapsed node instead of navigating
+   * @param {string} key - The arrow key pressed ('ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight')
+   * @param {Object} currentNode - The currently selected node
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {boolean} True if the node should be expanded, false otherwise
+   */
+  shouldExpandOnKey(key, currentNode, styleManager) {
+    console.log(`Layout.shouldExpandOnKey: Default implementation for ${this.constructor.name}`);
+    // Default implementation: no expansion behavior
+    // Subclasses should override this method to provide layout-specific expansion
+    return false;
+  }
+
+  /**
    * Helper: Find sibling node
    * @param {Object} node - The current node
    * @param {string} direction - 'prev' or 'next'

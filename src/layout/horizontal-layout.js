@@ -247,6 +247,33 @@ class HorizontalLayout extends Layout {
   }
 
   /**
+   * Check if the key press should expand a collapsed node instead of navigating
+   * @param {string} key - The arrow key pressed
+   * @param {Object} currentNode - The currently selected node
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {boolean} True if the node should be expanded, false otherwise
+   */
+  shouldExpandOnKey(key, currentNode, styleManager) {
+    console.log(`HorizontalLayout.shouldExpandOnKey: Checking key "${key}" for node "${currentNode.text}"`);
+    
+    // Only expand if node is collapsed and has children
+    if (!currentNode.collapsed || !currentNode.children || currentNode.children.length === 0) {
+      console.log(`HorizontalLayout.shouldExpandOnKey: Node not collapsed or has no children, returning false`);
+      return false;
+    }
+    
+    // Determine layout direction
+    const direction = styleManager.getEffectiveValue(currentNode, 'direction') || this.direction;
+    const isRightLayout = direction === 'right' || direction === null;
+    const childKey = isRightLayout ? 'ArrowRight' : 'ArrowLeft';
+    
+    const shouldExpand = key === childKey;
+    console.log(`HorizontalLayout.shouldExpandOnKey: direction="${direction}", childKey="${childKey}", shouldExpand=${shouldExpand}`);
+    
+    return shouldExpand;
+  }
+
+  /**
    * Find the child node closest vertically to the current node in the specified direction
    * @param {Object} currentNode - The parent node
    * @param {string} direction - 'right' or 'left'

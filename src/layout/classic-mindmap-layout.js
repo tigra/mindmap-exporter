@@ -103,6 +103,30 @@ class ClassicMindmapLayout extends ColumnBasedLayout {
   }
 
   /**
+   * Check if the key press should expand a collapsed node instead of navigating
+   * @param {string} key - The arrow key pressed
+   * @param {Object} currentNode - The currently selected node
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {boolean} True if the node should be expanded, false otherwise
+   */
+  shouldExpandOnKey(key, currentNode, styleManager) {
+    console.log(`ClassicMindmapLayout.shouldExpandOnKey: Checking key "${key}" for node "${currentNode.text}"`);
+    
+    // Only expand if node is collapsed and has children
+    if (!currentNode.collapsed || !currentNode.children || currentNode.children.length === 0) {
+      console.log(`ClassicMindmapLayout.shouldExpandOnKey: Node not collapsed or has no children, returning false`);
+      return false;
+    }
+    
+    // In classic layout, children can be on both left and right sides
+    // So both left and right arrows should expand collapsed nodes
+    const shouldExpand = key === 'ArrowLeft' || key === 'ArrowRight';
+    console.log(`ClassicMindmapLayout.shouldExpandOnKey: shouldExpand=${shouldExpand}`);
+    
+    return shouldExpand;
+  }
+
+  /**
    * Get column positioning configuration for ClassicMindmapLayout
    * @param {Node} node - The parent node
    * @param {Object} nodeSize - The parent node size
