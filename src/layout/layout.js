@@ -9,6 +9,63 @@ import { markdownToSvg, markdownToSvgSync } from '../utils/markdown-to-svg.js';
  */
 class Layout {
   /**
+   * Navigate from current node based on keyboard input
+   * @param {Object} currentNode - The currently selected node
+   * @param {string} key - The arrow key pressed ('ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight')
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {Object|null} The target node to navigate to, or null if no navigation applies
+   */
+  navigateByKey(currentNode, key, styleManager) {
+    console.log(`Layout.navigateByKey: Default implementation called for ${this.constructor.name}`);
+    // Default implementation returns null, letting spatial navigation take over
+    // Subclasses should override this method to provide layout-specific navigation
+    console.log(`Layout.navigateByKey: Returning null (subclasses should override)`);
+    return null;
+  }
+
+  /**
+   * Helper: Find sibling node
+   * @param {Object} node - The current node
+   * @param {string} direction - 'prev' or 'next'
+   * @returns {Object|null} The sibling node or null
+   */
+  findSibling(node, direction) {
+    console.log(`Layout.findSibling: Looking for ${direction} sibling of "${node.text}"`);
+    
+    if (!node.parent) {
+      console.log(`Layout.findSibling: No parent found, returning null`);
+      return null;
+    }
+    
+    const siblings = node.parent.children;
+    const currentIndex = siblings.indexOf(node);
+    console.log(`Layout.findSibling: Current node is at index ${currentIndex} of ${siblings.length} siblings`);
+    
+    if (direction === 'prev' && currentIndex > 0) {
+      const sibling = siblings[currentIndex - 1];
+      console.log(`Layout.findSibling: Found previous sibling: "${sibling.text}"`);
+      return sibling;
+    }
+    if (direction === 'next' && currentIndex < siblings.length - 1) {
+      const sibling = siblings[currentIndex + 1];
+      console.log(`Layout.findSibling: Found next sibling: "${sibling.text}"`);
+      return sibling;
+    }
+    
+    console.log(`Layout.findSibling: No ${direction} sibling available, returning null`);
+    return null;
+  }
+
+  /**
+   * Helper: Get all siblings of a node
+   * @param {Object} node - The current node
+   * @returns {Array} Array of sibling nodes
+   */
+  getSiblings(node) {
+    if (!node.parent) return [];
+    return node.parent.children.filter(child => child.id !== node.id);
+  }
+  /**
    * Calculate own dimensions of a node based on text and level style
    * @param {string} text - The text content of the node
    * @param {Object} levelStyle - The style for this node's level

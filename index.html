@@ -79,8 +79,24 @@
                     <label for="enable-debug-rect">Show debug rectangles around markdown</label>
                 </div>
                 <div class="form-group checkbox-group">
+                    <input type="checkbox" id="enable-drag-drop" name="enable-drag-drop" checked>
+                    <label for="enable-drag-drop">Enable drag and drop for nodes</label>
+                </div>
+                <div class="form-group checkbox-group">
                     <input type="checkbox" id="enable-drop-zones" name="enable-drop-zones">
                     <label for="enable-drop-zones">Show drop zones for drag and drop</label>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="enable-navigation-override" name="enable-navigation-override">
+                    <label for="enable-navigation-override">Enable custom keyboard navigation (drag arrows to set connections)</label>
+                </div>
+                
+                <div class="form-group">
+                    <button id="export-navigation-data-btn" type="button">Export Navigation Test Data</button>
+                </div>
+                
+                <div class="form-group">
+                    <button id="run-navigation-tests-btn" type="button">Run Automated Navigation Tests</button>
                 </div>
                 
                 <!-- Layout-specific settings container -->

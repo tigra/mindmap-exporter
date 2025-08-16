@@ -23,6 +23,86 @@ class ClassicMindmapLayout extends ColumnBasedLayout {
   }
 
   /**
+   * Navigate from current node based on keyboard input
+   * @param {Object} currentNode - The currently selected node
+   * @param {string} key - The arrow key pressed
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {Object|null} The target node to navigate to
+   */
+  navigateByKey(currentNode, key, styleManager) {
+    console.log(`ClassicMindmapLayout.navigateByKey: Processing key "${key}" for node "${currentNode.text}"`);
+    
+    // Classic layout has children on both sides
+    // Use spatial navigation but prioritize parent/child relationships
+    
+    if (currentNode.parent) {
+      const parentCenter = currentNode.parent.x + currentNode.parent.width / 2;
+      const currentCenter = currentNode.x + currentNode.width / 2;
+      const isOnLeft = currentCenter < parentCenter;
+      
+      console.log(`ClassicMindmapLayout.navigateByKey: Node is ${isOnLeft ? 'left' : 'right'} of parent`);
+      
+      // Navigate to parent
+      if ((isOnLeft && key === 'ArrowRight') || (!isOnLeft && key === 'ArrowLeft')) {
+        console.log(`ClassicMindmapLayout.navigateByKey: Moving toward parent "${currentNode.parent.text}"`);
+        return currentNode.parent;
+      }
+    }
+    
+    // Navigate to children
+    if (!currentNode.collapsed && currentNode.children.length > 0) {
+      if (key === 'ArrowLeft') {
+        console.log(`ClassicMindmapLayout.navigateByKey: Looking for left children`);
+        // Find leftmost child
+        const leftChildren = currentNode.children.filter(c => 
+          c.x + c.width / 2 < currentNode.x + currentNode.width / 2
+        );
+        if (leftChildren.length > 0) {
+          console.log(`ClassicMindmapLayout.navigateByKey: Found ${leftChildren.length} left children, selecting first: "${leftChildren[0].text}"`);
+          return leftChildren[0];
+        }
+      }
+      if (key === 'ArrowRight') {
+        console.log(`ClassicMindmapLayout.navigateByKey: Looking for right children`);
+        // Find rightmost child
+        const rightChildren = currentNode.children.filter(c => 
+          c.x + c.width / 2 > currentNode.x + currentNode.width / 2
+        );
+        if (rightChildren.length > 0) {
+          console.log(`ClassicMindmapLayout.navigateByKey: Found ${rightChildren.length} right children, selecting first: "${rightChildren[0].text}"`);
+          return rightChildren[0];
+        }
+      }
+    }
+    
+    // Navigate to siblings
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      console.log(`ClassicMindmapLayout.navigateByKey: Looking for vertical siblings`);
+      const siblings = this.getSiblings(currentNode);
+      if (siblings.length > 0) {
+        // Sort siblings by Y position
+        const sortedByY = siblings.sort((a, b) => a.y - b.y);
+        const currentIndex = sortedByY.indexOf(currentNode);
+        console.log(`ClassicMindmapLayout.navigateByKey: Found ${siblings.length} siblings, current Y-index: ${currentIndex}`);
+        
+        if (key === 'ArrowUp' && currentIndex > 0) {
+          const targetNode = sortedByY[currentIndex - 1];
+          console.log(`ClassicMindmapLayout.navigateByKey: Moving up to "${targetNode.text}"`);
+          return targetNode;
+        }
+        if (key === 'ArrowDown' && currentIndex < sortedByY.length - 1) {
+          const targetNode = sortedByY[currentIndex + 1];
+          console.log(`ClassicMindmapLayout.navigateByKey: Moving down to "${targetNode.text}"`);
+          return targetNode;
+        }
+      }
+    }
+    
+    console.log(`ClassicMindmapLayout.navigateByKey: No navigation rule matched, returning null`);
+    return null;
+  }
+
+  /**
    * Get column positioning configuration for ClassicMindmapLayout
    * @param {Node} node - The parent node
    * @param {Object} nodeSize - The parent node size

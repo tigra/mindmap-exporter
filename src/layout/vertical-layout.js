@@ -203,6 +203,86 @@ class VerticalLayout extends Layout {
   }
 
   /**
+   * Navigate from current node based on keyboard input
+   * @param {Object} currentNode - The currently selected node
+   * @param {string} key - The arrow key pressed
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {Object|null} The target node to navigate to
+   */
+  navigateByKey(currentNode, key, styleManager) {
+    console.log(`VerticalLayout.navigateByKey: Processing key "${key}" for node "${currentNode.text}"`);
+    
+    const direction = styleManager.getEffectiveValue(currentNode, 'direction') || this.direction;
+    const isDownLayout = direction === 'down' || direction === null;
+    const parentKey = isDownLayout ? 'ArrowUp' : 'ArrowDown';
+    const childKey = isDownLayout ? 'ArrowDown' : 'ArrowUp';
+    
+    console.log(`VerticalLayout.navigateByKey: direction="${direction}", isDownLayout=${isDownLayout}, parentKey="${parentKey}", childKey="${childKey}"`);
+    
+    // Navigate to parent
+    if (key === parentKey && currentNode.parent) {
+      console.log(`VerticalLayout.navigateByKey: Key matches parent direction, navigating to parent "${currentNode.parent.text}"`);
+      return currentNode.parent;
+    }
+    
+    // Navigate to first visible child (maintaining horizontal position)
+    if (key === childKey && !currentNode.collapsed && currentNode.children.length > 0) {
+      console.log(`VerticalLayout.navigateByKey: Key matches child direction, finding best positioned child`);
+      const targetX = currentNode.x + currentNode.width / 2;
+      console.log(`VerticalLayout.navigateByKey: Target X position: ${targetX}`);
+      return this.findBestVerticalChild(currentNode, targetX);
+    }
+    
+    // Navigate to siblings
+    if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      const siblingDirection = key === 'ArrowLeft' ? 'prev' : 'next';
+      console.log(`VerticalLayout.navigateByKey: Horizontal key, looking for ${siblingDirection} sibling`);
+      return this.findSibling(currentNode, siblingDirection);
+    }
+    
+    console.log(`VerticalLayout.navigateByKey: No navigation rule matched, returning null`);
+    return null;
+  }
+
+  /**
+   * Find the best child node based on horizontal position
+   * @param {Object} parentNode - The parent node
+   * @param {number} targetX - The target X coordinate
+   * @returns {Object|null} The best child node or null
+   */
+  findBestVerticalChild(parentNode, targetX) {
+    console.log(`VerticalLayout.findBestVerticalChild: Finding best child for targetX=${targetX}`);
+    
+    if (!parentNode.children || parentNode.children.length === 0) {
+      console.log(`VerticalLayout.findBestVerticalChild: No children available`);
+      return null;
+    }
+    
+    console.log(`VerticalLayout.findBestVerticalChild: Evaluating ${parentNode.children.length} children`);
+    
+    // Find child closest to the target X position
+    let bestChild = parentNode.children[0];
+    let bestDistance = Math.abs((bestChild.x + bestChild.width / 2) - targetX);
+    console.log(`VerticalLayout.findBestVerticalChild: Initial best: "${bestChild.text}" (centerX=${bestChild.x + bestChild.width / 2}, distance=${bestDistance})`);
+    
+    for (let i = 1; i < parentNode.children.length; i++) {
+      const child = parentNode.children[i];
+      const childCenterX = child.x + child.width / 2;
+      const distance = Math.abs(childCenterX - targetX);
+      console.log(`VerticalLayout.findBestVerticalChild: Checking "${child.text}" (centerX=${childCenterX}, distance=${distance})`);
+      
+      if (distance < bestDistance) {
+        console.log(`VerticalLayout.findBestVerticalChild: New best child: "${child.text}"`);
+        bestDistance = distance;
+        bestChild = child;
+      }
+    }
+    
+    console.log(`VerticalLayout.findBestVerticalChild: Final selection: "${bestChild.text}" with distance ${bestDistance}`);
+    return bestChild;
+  }
+
+  /**
    * Apply vertical layout to a node and its children
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate

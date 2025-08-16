@@ -3,6 +3,8 @@
 import eventBridge from '../utils/event-bridge.js';
 import MindmapStylePresets from '../style/style-presets.js';
 import DragDropManager from './drag-drop-manager.js';
+import LayoutFactory from '../layout/layout-factory.js';
+import NavigationOverrideManager from '../utils/navigation-override-manager.js';
 
 /**
  * Controller for the mindmap application
@@ -25,8 +27,18 @@ class MindmapController {
     // Initialize drag and drop manager
     this.dragDropManager = null;
 
+    // Initialize navigation override manager
+    this.navigationOverrideManager = null;
+
     // Selected node state
     this.selectedNodeId = null;
+
+    // Track if keyboard navigation is initialized
+    this.keyboardNavigationInitialized = false;
+
+    // Throttle navigation to prevent rapid-fire events
+    this.lastNavigationTime = 0;
+    this.navigationThrottleMs = 150; // Minimum time between navigation actions
 
     // Register with the event bridge
     eventBridge.initialize(this);
@@ -45,6 +57,9 @@ class MindmapController {
 
     // Initialize drag and drop after rendering
     this.initDragDrop();
+
+    // Initialize navigation override manager
+    this.initNavigationOverrideManager();
 
     // Initialize keyboard navigation
     this.initKeyboardNavigation();
@@ -69,6 +84,10 @@ class MindmapController {
     // Re-initialize drag and drop with new DOM elements
     this.initDragDrop();
     console.log('Drag and drop re-initialized.');
+
+    // Re-initialize navigation override manager
+    this.initNavigationOverrideManager();
+    console.log('Navigation override manager re-initialized.');
     console.log('=== END RERENDER MINDMAP DEBUG ===');
   }
 
@@ -220,6 +239,26 @@ class MindmapController {
     );
 
     console.log('Drag and drop functionality initialized');
+  }
+
+  /**
+   * Initialize navigation override manager
+   */
+  initNavigationOverrideManager() {
+    // Clean up existing navigation override manager if it exists
+    if (this.navigationOverrideManager) {
+      this.navigationOverrideManager.destroy();
+    }
+
+    // Create new navigation override manager
+    this.navigationOverrideManager = new NavigationOverrideManager(
+      this.model,
+      this.renderer,
+      this,
+      this.container
+    );
+
+    console.log('Navigation override manager initialized');
   }
 
   /**
@@ -750,6 +789,33 @@ logPropertyInheritanceChain(node, property) {
   }
 
   /**
+   * Export navigation test data
+   * @param {string} filename - The filename for the exported test data
+   */
+  exportNavigationTestData(filename) {
+    if (!this.navigationOverrideManager) {
+      console.warn('Navigation override manager not available');
+      return;
+    }
+
+    const testData = this.navigationOverrideManager.exportNavigationData();
+    const jsonContent = JSON.stringify(testData, null, 2);
+
+    // Create blob and trigger download
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'navigation-test-data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    console.log('Navigation test data exported successfully');
+  }
+
+  /**
    * Select a node
    * @param {string} nodeId - The ID of the node to select
    */
@@ -788,12 +854,24 @@ logPropertyInheritanceChain(node, property) {
    * Initialize keyboard navigation
    */
   initKeyboardNavigation() {
-    document.addEventListener('keydown', (e) => {
+    // Prevent multiple event listeners
+    if (this.keyboardNavigationInitialized) {
+      console.log('Keyboard navigation already initialized, skipping');
+      return;
+    }
+
+    console.log('Initializing keyboard navigation event listener');
+    this.keyboardNavigationHandler = (e) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        console.log(`Key event captured: ${e.key}`);
         e.preventDefault();
+        e.stopPropagation();
         this.handleArrowKeyNavigation(e.key);
       }
-    });
+    };
+
+    document.addEventListener('keydown', this.keyboardNavigationHandler);
+    this.keyboardNavigationInitialized = true;
   }
 
   /**
@@ -801,21 +879,89 @@ logPropertyInheritanceChain(node, property) {
    * @param {string} key - The arrow key pressed
    */
   handleArrowKeyNavigation(key) {
+    // Throttle navigation to prevent rapid-fire events
+    const currentTime = Date.now();
+    if (currentTime - this.lastNavigationTime < this.navigationThrottleMs) {
+      console.log(`Navigation throttled (${currentTime - this.lastNavigationTime}ms since last navigation)`);
+      return;
+    }
+    this.lastNavigationTime = currentTime;
+
+    console.log(`=== NAVIGATION START: ${key} ===`);
+    
     const currentNode = this.getSelectedNode();
     if (!currentNode) {
-      // If no node is selected, select the root node
+      console.log('MindmapController: No node selected, selecting root node');
       const rootNode = this.model.getRoot();
       if (rootNode) {
+        console.log(`MindmapController: Selected root node: ${rootNode.text}`);
         this.selectNode(rootNode.id);
+      } else {
+        console.log('MindmapController: No root node available');
       }
       return;
     }
 
+    console.log(`MindmapController: Starting navigation from "${currentNode.text}" (${currentNode.id})`);
+
+    // Try layout-aware navigation first
+    const layoutTargetNode = this.findNodeByLayoutLogic(currentNode, key);
+    if (layoutTargetNode) {
+      console.log(`MindmapController: Layout-aware navigation succeeded: ${key} -> "${layoutTargetNode.text}"`);
+      this.selectNode(layoutTargetNode.id);
+      console.log(`=== NAVIGATION SUCCESS (layout-aware) ===`);
+      return;
+    }
+
+    console.log('MindmapController: Layout-aware navigation returned null, falling back to spatial navigation');
+
+    // Fall back to spatial navigation
     const targetNode = this.findNodeInDirection(currentNode, key);
     if (targetNode) {
+      console.log(`MindmapController: Spatial navigation succeeded: ${key} -> "${targetNode.text}"`);
       this.selectNode(targetNode.id);
+      console.log(`=== NAVIGATION SUCCESS (spatial) ===`);
+    } else {
+      console.log('MindmapController: Spatial navigation also returned null');
+      console.log(`=== NAVIGATION FAILED ===`);
     }
   }
+
+  /**
+   * Find node using layout-aware logic
+   * @param {Object} currentNode - The current node
+   * @param {string} key - The arrow key pressed
+   * @returns {Object|null} The target node or null if none found
+   */
+  findNodeByLayoutLogic(currentNode, key) {
+    // Get the layout type for the current node
+    const layoutType = this.styleManager.getEffectiveValue(currentNode, 'layoutType');
+    const levelStyle = this.styleManager.getLevelStyle(currentNode.level);
+    
+    console.log(`MindmapController.findNodeByLayoutLogic: layoutType="${layoutType}", level=${currentNode.level}`);
+    
+    // Create the appropriate layout instance
+    const layout = LayoutFactory.createLayout(
+      layoutType,
+      levelStyle.parentPadding,
+      levelStyle.childPadding
+    );
+    
+    console.log(`MindmapController.findNodeByLayoutLogic: Created ${layout.constructor.name} instance`);
+    console.log(`MindmapController.findNodeByLayoutLogic: Delegating to ${layout.constructor.name}.navigateByKey()`);
+    
+    // Delegate navigation to the layout
+    const result = layout.navigateByKey(currentNode, key, this.styleManager);
+    
+    if (result) {
+      console.log(`MindmapController.findNodeByLayoutLogic: ${layout.constructor.name}.navigateByKey() returned "${result.text}"`);
+    } else {
+      console.log(`MindmapController.findNodeByLayoutLogic: ${layout.constructor.name}.navigateByKey() returned null`);
+    }
+    
+    return result;
+  }
+
 
   /**
    * Find the nearest node in the specified direction
@@ -831,7 +977,7 @@ logPropertyInheritanceChain(node, property) {
     };
 
     let bestNode = null;
-    let bestDistance = Infinity;
+    let bestScore = Infinity;
 
     for (const node of allNodes) {
       if (node.id === currentNode.id) continue;
@@ -845,9 +991,10 @@ logPropertyInheritanceChain(node, property) {
       const isInDirection = this.isNodeInDirection(currentCenter, nodeCenter, direction);
       if (!isInDirection) continue;
 
-      const distance = this.calculateDistance(currentCenter, nodeCenter);
-      if (distance < bestDistance) {
-        bestDistance = distance;
+      // Calculate weighted distance that prioritizes alignment
+      const score = this.calculateNavigationScore(currentCenter, nodeCenter, direction);
+      if (score < bestScore) {
+        bestScore = score;
         bestNode = node;
       }
     }
@@ -863,7 +1010,7 @@ logPropertyInheritanceChain(node, property) {
    * @returns {boolean} True if the target is in the specified direction
    */
   isNodeInDirection(current, target, direction) {
-    const threshold = 30; // Tolerance for "same line" navigation
+    const threshold = 10; // Reduced tolerance for more precise navigation
 
     switch (direction) {
       case 'ArrowUp':
@@ -876,6 +1023,34 @@ logPropertyInheritanceChain(node, property) {
         return target.x > current.x + threshold;
       default:
         return false;
+    }
+  }
+
+  /**
+   * Calculate navigation score that prioritizes alignment with direction
+   * @param {Object} current - Current position {x, y}
+   * @param {Object} target - Target position {x, y}
+   * @param {string} direction - The direction key
+   * @returns {number} The navigation score (lower is better)
+   */
+  calculateNavigationScore(current, target, direction) {
+    const dx = Math.abs(target.x - current.x);
+    const dy = Math.abs(target.y - current.y);
+    
+    // Weight factors: primary axis has weight 1, secondary axis has weight 3
+    // This makes nodes aligned with the direction much more attractive
+    switch (direction) {
+      case 'ArrowUp':
+      case 'ArrowDown':
+        // Vertical movement: prioritize nodes with similar X coordinate
+        return Math.sqrt(dy*dy + (dx * dx * 4));
+      case 'ArrowLeft':
+      case 'ArrowRight':
+        // Horizontal movement: prioritize nodes with similar Y coordinate
+        return Math.sqrt(dx * dx + (dy * dy * 4));
+      default:
+        // Fallback to Euclidean distance
+        return Math.sqrt(dx * dx + dy * dy);
     }
   }
 

@@ -195,6 +195,176 @@ class HorizontalLayout extends Layout {
   }
 
   /**
+   * Navigate from current node based on keyboard input
+   * @param {Object} currentNode - The currently selected node
+   * @param {string} key - The arrow key pressed
+   * @param {Object} styleManager - The style manager for getting node styles
+   * @returns {Object|null} The target node to navigate to
+   */
+  navigateByKey(currentNode, key, styleManager) {
+    console.log(`HorizontalLayout.navigateByKey: Processing key "${key}" for node "${currentNode.text}"`);
+    
+    const direction = styleManager.getEffectiveValue(currentNode, 'direction') || this.direction;
+    const isRightLayout = direction === 'right' || direction === null;
+    const parentKey = isRightLayout ? 'ArrowLeft' : 'ArrowRight';
+    const childKey = isRightLayout ? 'ArrowRight' : 'ArrowLeft';
+    
+    console.log(`HorizontalLayout.navigateByKey: direction="${direction}", isRightLayout=${isRightLayout}, parentKey="${parentKey}", childKey="${childKey}"`);
+    
+    // Navigate to parent
+    if (key === parentKey && currentNode.parent) {
+      console.log(`HorizontalLayout.navigateByKey: Key matches parent direction, navigating to parent "${currentNode.parent.text}"`);
+      return currentNode.parent;
+    }
+    
+    // Navigate to child using spatial positioning
+    if (key === childKey && !currentNode.collapsed && currentNode.children.length > 0) {
+      const targetChild = this.findClosestChildInDirection(currentNode, isRightLayout ? 'right' : 'left');
+      if (targetChild) {
+        console.log(`HorizontalLayout.navigateByKey: Found closest child in ${isRightLayout ? 'right' : 'left'} direction: "${targetChild.text}"`);
+        return targetChild;
+      }
+    }
+    
+    // For leaf nodes or when no children found, try spatial navigation to any node
+    if (key === childKey) {
+      const spatialTarget = this.findSpatialNeighborInDirection(currentNode, isRightLayout ? 'right' : 'left');
+      if (spatialTarget) {
+        console.log(`HorizontalLayout.navigateByKey: Found spatial neighbor in ${isRightLayout ? 'right' : 'left'} direction: "${spatialTarget.text}"`);
+        return spatialTarget;
+      }
+    }
+    
+    // Navigate to siblings
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      const siblingDirection = key === 'ArrowUp' ? 'prev' : 'next';
+      console.log(`HorizontalLayout.navigateByKey: Vertical key, looking for ${siblingDirection} sibling`);
+      return this.findSibling(currentNode, siblingDirection);
+    }
+    
+    console.log(`HorizontalLayout.navigateByKey: No navigation rule matched, returning null`);
+    return null;
+  }
+
+  /**
+   * Find the child node closest vertically to the current node in the specified direction
+   * @param {Object} currentNode - The parent node
+   * @param {string} direction - 'right' or 'left'
+   * @returns {Object|null} The closest child node or null
+   */
+  findClosestChildInDirection(currentNode, direction) {
+    if (!currentNode.children || currentNode.children.length === 0) {
+      return null;
+    }
+
+    const parentCenterY = currentNode.y + (currentNode.height / 2);
+    let closestChild = null;
+    let minDistance = Number.MAX_VALUE;
+
+    console.log(`findClosestChildInDirection: Looking for children in ${direction} direction from parent at y=${currentNode.y}, centerY=${parentCenterY}`);
+
+    for (const child of currentNode.children) {
+      // Check if child is positioned in the correct direction relative to parent
+      const isChildInRightDirection = direction === 'right' && child.x > currentNode.x + currentNode.width;
+      const isChildInLeftDirection = direction === 'left' && child.x + child.width < currentNode.x;
+      
+      if (isChildInRightDirection || isChildInLeftDirection) {
+        // Calculate vertical distance from parent center to child center
+        const childCenterY = child.y + (child.height / 2);
+        const verticalDistance = Math.abs(parentCenterY - childCenterY);
+        
+        console.log(`  Child "${child.text}" at y=${child.y}, centerY=${childCenterY}, distance=${verticalDistance}`);
+        
+        if (verticalDistance < minDistance) {
+          minDistance = verticalDistance;
+          closestChild = child;
+        }
+      } else {
+        console.log(`  Child "${child.text}" at x=${child.x} not in ${direction} direction`);
+      }
+    }
+
+    if (closestChild) {
+      console.log(`  Selected closest child: "${closestChild.text}" with distance ${minDistance}`);
+    } else {
+      console.log(`  No children found in ${direction} direction`);
+    }
+
+    return closestChild;
+  }
+
+  /**
+   * Find any node (across the entire tree) closest to the current node in the specified direction
+   * @param {Object} currentNode - The current node
+   * @param {string} direction - 'right' or 'left'
+   * @returns {Object|null} The closest node in the specified direction or null
+   */
+  findSpatialNeighborInDirection(currentNode, direction) {
+    // Get root node to search entire tree
+    let root = currentNode;
+    while (root.parent) {
+      root = root.parent;
+    }
+
+    const currentCenterX = currentNode.x + (currentNode.width / 2);
+    const currentCenterY = currentNode.y + (currentNode.height / 2);
+    
+    let closestNode = null;
+    let minDistance = Number.MAX_VALUE;
+
+    console.log(`findSpatialNeighborInDirection: Looking for nodes in ${direction} direction from current at x=${currentNode.x}, centerX=${currentCenterX}, centerY=${currentCenterY}`);
+
+    // Recursively search all nodes in the tree
+    const searchNodes = (node) => {
+      if (node === currentNode) {
+        return; // Skip self
+      }
+
+      const nodeCenterX = node.x + (node.width / 2);
+      const nodeCenterY = node.y + (node.height / 2);
+
+      // Check if node is positioned in the correct direction
+      const isNodeInRightDirection = direction === 'right' && nodeCenterX > currentCenterX;
+      const isNodeInLeftDirection = direction === 'left' && nodeCenterX < currentCenterX;
+      
+      if (isNodeInRightDirection || isNodeInLeftDirection) {
+        // Calculate combined distance (prioritize horizontal distance, but consider vertical too)
+        const horizontalDistance = Math.abs(nodeCenterX - currentCenterX);
+        const verticalDistance = Math.abs(nodeCenterY - currentCenterY);
+        
+        // Weight horizontal distance more heavily for horizontal navigation
+        const combinedDistance = horizontalDistance + (verticalDistance * 0.3);
+        
+        console.log(`  Node "${node.text}" at centerX=${nodeCenterX}, centerY=${nodeCenterY}, hDist=${horizontalDistance}, vDist=${verticalDistance}, combined=${combinedDistance}`);
+        
+        if (combinedDistance < minDistance) {
+          minDistance = combinedDistance;
+          closestNode = node;
+        }
+      } else {
+        console.log(`  Node "${node.text}" at centerX=${nodeCenterX} not in ${direction} direction`);
+      }
+
+      // Recursively search children
+      if (node.children) {
+        for (const child of node.children) {
+          searchNodes(child);
+        }
+      }
+    };
+
+    searchNodes(root);
+
+    if (closestNode) {
+      console.log(`  Selected closest spatial neighbor: "${closestNode.text}" with distance ${minDistance}`);
+    } else {
+      console.log(`  No spatial neighbors found in ${direction} direction`);
+    }
+
+    return closestNode;
+  }
+
+  /**
    * Apply horizontal layout to a node and its children
    * @param {Node} node - The node to layout
    * @param {number} x - The x coordinate
