@@ -851,6 +851,28 @@ logPropertyInheritanceChain(node, property) {
   }
 
   /**
+   * Expand a collapsed node
+   * @param {Object} node - The node to expand
+   */
+  expandNode(node) {
+    if (node && node.collapsed && node.children && node.children.length > 0) {
+      console.log(`MindmapController.expandNode: Expanding node "${node.text}"`);
+      node.collapsed = false;
+      
+      // Re-apply layout and re-render to show expanded children
+      this.applyLayout();
+      this.renderer.render(this.container);
+      
+      // Update selection visual
+      this.updateSelectionVisual();
+      
+      console.log(`MindmapController.expandNode: Node "${node.text}" expanded successfully`);
+    } else {
+      console.log(`MindmapController.expandNode: Node cannot be expanded (not collapsed, no children, or null)`);
+    }
+  }
+
+  /**
    * Initialize keyboard navigation
    */
   initKeyboardNavigation() {
@@ -903,6 +925,14 @@ logPropertyInheritanceChain(node, property) {
     }
 
     console.log(`MindmapController: Starting navigation from "${currentNode.text}" (${currentNode.id})`);
+
+    // Check if we should expand the node instead of navigating
+    if (this.shouldExpandOnKey(key, currentNode)) {
+      console.log(`MindmapController: Expanding node instead of navigating`);
+      this.expandNode(currentNode);
+      console.log(`=== EXPANSION SUCCESS ===`);
+      return;
+    }
 
     // Try layout-aware navigation first
     const layoutTargetNode = this.findNodeByLayoutLogic(currentNode, key);
@@ -958,6 +988,37 @@ logPropertyInheritanceChain(node, property) {
     } else {
       console.log(`MindmapController.findNodeByLayoutLogic: ${layout.constructor.name}.navigateByKey() returned null`);
     }
+    
+    return result;
+  }
+
+  /**
+   * Check if the key press should expand a collapsed node instead of navigating
+   * @param {string} key - The arrow key pressed
+   * @param {Object} currentNode - The currently selected node
+   * @returns {boolean} True if the node should be expanded, false otherwise
+   */
+  shouldExpandOnKey(key, currentNode) {
+    // Get the layout type for the current node
+    const layoutType = this.styleManager.getEffectiveValue(currentNode, 'layoutType');
+    const levelStyle = this.styleManager.getLevelStyle(currentNode.level);
+    
+    console.log(`MindmapController.shouldExpandOnKey: layoutType="${layoutType}", level=${currentNode.level}`);
+    
+    // Create the appropriate layout instance
+    const layout = LayoutFactory.createLayout(
+      layoutType,
+      levelStyle.parentPadding,
+      levelStyle.childPadding
+    );
+    
+    console.log(`MindmapController.shouldExpandOnKey: Created ${layout.constructor.name} instance`);
+    console.log(`MindmapController.shouldExpandOnKey: Delegating to ${layout.constructor.name}.shouldExpandOnKey()`);
+    
+    // Delegate expansion check to the layout
+    const result = layout.shouldExpandOnKey(key, currentNode, this.styleManager);
+    
+    console.log(`MindmapController.shouldExpandOnKey: ${layout.constructor.name}.shouldExpandOnKey() returned ${result}`);
     
     return result;
   }
