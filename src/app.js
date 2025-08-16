@@ -8,6 +8,7 @@ import MindmapRenderer from './renderer/mindmap-renderer.js';
 import MindmapController from './controller/mindmap-controller.js';
 import YamlParser from './utils/yaml-parser.js';
 import YamlEditor from './utils/yaml-editor.js';
+import NavigationTester from './utils/navigation-tester.js';
 
 //StyleManager = window.StyleManager;
 
@@ -70,7 +71,11 @@ class MindmapApp {
     this.loadingIndicator = document.getElementById(this.options.loadingIndicator);
     this.boundingBoxCheckbox = document.getElementById('enable-bounding-box');
     this.debugRectCheckbox = document.getElementById('enable-debug-rect');
+    this.dragDropCheckbox = document.getElementById('enable-drag-drop');
     this.dropZonesCheckbox = document.getElementById('enable-drop-zones');
+    this.navigationOverrideCheckbox = document.getElementById('enable-navigation-override');
+    this.exportNavigationDataBtn = document.getElementById('export-navigation-data-btn');
+    this.runNavigationTestsBtn = document.getElementById('run-navigation-tests-btn');
     this.outlineEdgeAlignmentSelect = document.getElementById('outline-edge-alignment');
     this.applySettingsBtn = document.getElementById('apply-settings-btn');
     this.autosaveMarkdownCheckbox = document.getElementById('autosave-markdown');
@@ -152,6 +157,9 @@ class MindmapApp {
       this.container
     );
 
+    // Initialize navigation tester
+    this.navigationTester = new NavigationTester(this);
+
     // Attach event listeners
     if (this.generateBtn) {
       this.generateBtn.addEventListener('click', this.handleGenerate);
@@ -201,10 +209,27 @@ class MindmapApp {
       window.showMarkdownDebugRect = false;
     }
     
+    if (this.dragDropCheckbox) {
+      this.dragDropCheckbox.addEventListener('change', () => {
+        console.log("Drag and drop checkbox changed:", this.dragDropCheckbox.checked);
+        if (this.controller && this.controller.dragDropManager) {
+          this.controller.dragDropManager.setEnabled(this.dragDropCheckbox.checked);
+        }
+      });
+    }
+    
     if (this.dropZonesCheckbox) {
       this.dropZonesCheckbox.addEventListener('change', () => {
         console.log("Drop zones checkbox changed:", this.dropZonesCheckbox.checked);
       });
+    }
+    
+    if (this.exportNavigationDataBtn) {
+      this.exportNavigationDataBtn.addEventListener('click', this.handleExportNavigationData.bind(this));
+    }
+    
+    if (this.runNavigationTestsBtn) {
+      this.runNavigationTestsBtn.addEventListener('click', this.handleRunNavigationTests.bind(this));
     }
     
     if (this.outlineEdgeAlignmentSelect) {
@@ -231,6 +256,7 @@ class MindmapApp {
       window.styleManager = this.styleManager;
       window.mindmapRenderer = this.renderer;
       window.mindmapController = this.controller;
+      window.navigationTester = this.navigationTester;
     }
   }
   
@@ -648,10 +674,116 @@ class MindmapApp {
     this.controller.initialize();
     this.loadingIndicator.style.display = 'none';
 
+    // Apply drag-drop checkbox state
+    if (this.dragDropCheckbox && this.controller.dragDropManager) {
+      this.controller.dragDropManager.setEnabled(this.dragDropCheckbox.checked);
+    }
+
     // Enable export button
     if (this.exportBtn) {
       this.exportBtn.disabled = false;
     }
+  }
+
+  /**
+   * Handle export navigation data button click
+   */
+  handleExportNavigationData() {
+    console.log('Export Navigation Data button clicked');
+    
+    if (!this.controller) {
+      console.warn('Controller not available for navigation data export');
+      return;
+    }
+    
+    try {
+      // Generate filename with timestamp
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const filename = `navigation-test-data-${timestamp}.json`;
+      
+      this.controller.exportNavigationTestData(filename);
+      console.log('Navigation test data exported successfully');
+    } catch (error) {
+      console.error('Failed to export navigation test data:', error);
+    }
+  }
+
+  /**
+   * Handle run navigation tests button click
+   */
+  async handleRunNavigationTests() {
+    console.log('Run Navigation Tests button clicked');
+    
+    if (!this.navigationTester) {
+      console.error('NavigationTester not available');
+      return;
+    }
+    
+    try {
+      // Show loading indicator
+      if (this.loadingIndicator) {
+        this.loadingIndicator.textContent = 'Running navigation tests...';
+        this.loadingIndicator.style.display = 'block';
+      }
+      
+      // Disable the button to prevent multiple runs
+      if (this.runNavigationTestsBtn) {
+        this.runNavigationTestsBtn.disabled = true;
+        this.runNavigationTestsBtn.textContent = 'Running Tests...';
+      }
+      
+      console.log('Starting automated navigation tests...');
+      const results = await this.navigationTester.runAllTests();
+      
+      console.log('Navigation tests completed successfully');
+      console.log('Test results:', results);
+      
+      // Show summary in UI
+      this.showTestResultsSummary(results);
+      
+    } catch (error) {
+      console.error('Failed to run navigation tests:', error);
+      alert(`Navigation tests failed: ${error.message}`);
+    } finally {
+      // Hide loading indicator and restore button
+      if (this.loadingIndicator) {
+        this.loadingIndicator.style.display = 'none';
+      }
+      
+      if (this.runNavigationTestsBtn) {
+        this.runNavigationTestsBtn.disabled = false;
+        this.runNavigationTestsBtn.textContent = 'Run Automated Navigation Tests';
+      }
+    }
+  }
+
+  /**
+   * Show test results summary in UI
+   */
+  showTestResultsSummary(results) {
+    let totalPassed = 0;
+    let totalFailed = 0;
+    let totalLayouts = Object.keys(results).length;
+    
+    for (const result of Object.values(results)) {
+      totalPassed += result.passed;
+      totalFailed += result.failed;
+    }
+    
+    const successRate = totalPassed + totalFailed > 0 ? 
+      (totalPassed / (totalPassed + totalFailed) * 100).toFixed(1) : 0;
+    
+    const summary = `
+Navigation Tests Complete!
+📋 Layouts tested: ${totalLayouts}
+✅ Total passed: ${totalPassed}
+❌ Total failed: ${totalFailed}
+📊 Success rate: ${successRate}%
+
+Check console for detailed results and CSV download.`;
+    
+    alert(summary);
   }
 
   /**

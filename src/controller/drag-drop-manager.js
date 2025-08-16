@@ -17,6 +17,9 @@ class DragDropManager {
     this.controller = controller;
     this.container = container;
     
+    // Enable/disable state
+    this.enabled = true;  // Enabled by default
+    
     // Drag state
     this.isDragging = false;
     this.draggedNode = null;
@@ -68,6 +71,34 @@ class DragDropManager {
   }
   
   /**
+   * Enable or disable drag and drop functionality
+   * @param {boolean} enabled - Whether to enable drag and drop
+   */
+  setEnabled(enabled) {
+    console.log(`DragDropManager: Setting enabled to ${enabled}`);
+    this.enabled = enabled;
+    
+    // Cancel any ongoing drag operation
+    if (!enabled && this.isDragging) {
+      this.cancelDrag();
+    }
+    
+    // Update cursor style for all node elements
+    const nodeElements = this.container.querySelectorAll('[data-node-id]');
+    nodeElements.forEach(element => {
+      element.style.cursor = enabled ? 'grab' : 'default';
+    });
+  }
+  
+  /**
+   * Check if drag and drop is enabled
+   * @returns {boolean} Whether drag and drop is enabled
+   */
+  isEnabled() {
+    return this.enabled;
+  }
+  
+  /**
    * Clean up event listeners
    */
   destroy() {
@@ -87,6 +118,9 @@ class DragDropManager {
    * @param {MouseEvent} event - The mouse event
    */
   handleMouseDown(event) {
+    // Check if drag and drop is enabled
+    if (!this.enabled) return;
+    
     // Only handle left mouse button
     if (event.button !== 0) return;
     
@@ -898,6 +932,35 @@ class DragDropManager {
       this.draggingElement.parentNode.removeChild(this.draggingElement);
       this.draggingElement = null;
     }
+  }
+  
+  /**
+   * Cancel an ongoing drag operation
+   */
+  cancelDrag() {
+    if (!this.isDragging) return;
+    
+    console.log('DragDropManager: Cancelling drag operation');
+    
+    // Clean up visual elements
+    this.cleanupDraggingElements();
+    
+    // Restore cursor
+    document.body.style.cursor = this.originalCursor;
+    
+    // Remove dragging classes
+    this.container.classList.remove('dragging', 'drop-zone-hover');
+    document.body.classList.remove('dragging-mindmap', 'drop-zone-hover');
+    
+    // Clear all drop zones
+    this.clearAllDropZones();
+    
+    // Reset drag state
+    this.isDragging = false;
+    this.draggedNode = null;
+    this.currentDropZone = null;
+    this.dragStartX = 0;
+    this.dragStartY = 0;
   }
   
   /**

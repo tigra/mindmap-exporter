@@ -4,6 +4,7 @@ import eventBridge from '../utils/event-bridge.js';
 import MindmapStylePresets from '../style/style-presets.js';
 import DragDropManager from './drag-drop-manager.js';
 import LayoutFactory from '../layout/layout-factory.js';
+import NavigationOverrideManager from '../utils/navigation-override-manager.js';
 
 /**
  * Controller for the mindmap application
@@ -26,8 +27,18 @@ class MindmapController {
     // Initialize drag and drop manager
     this.dragDropManager = null;
 
+    // Initialize navigation override manager
+    this.navigationOverrideManager = null;
+
     // Selected node state
     this.selectedNodeId = null;
+
+    // Track if keyboard navigation is initialized
+    this.keyboardNavigationInitialized = false;
+
+    // Throttle navigation to prevent rapid-fire events
+    this.lastNavigationTime = 0;
+    this.navigationThrottleMs = 150; // Minimum time between navigation actions
 
     // Register with the event bridge
     eventBridge.initialize(this);
@@ -46,6 +57,9 @@ class MindmapController {
 
     // Initialize drag and drop after rendering
     this.initDragDrop();
+
+    // Initialize navigation override manager
+    this.initNavigationOverrideManager();
 
     // Initialize keyboard navigation
     this.initKeyboardNavigation();
@@ -70,6 +84,10 @@ class MindmapController {
     // Re-initialize drag and drop with new DOM elements
     this.initDragDrop();
     console.log('Drag and drop re-initialized.');
+
+    // Re-initialize navigation override manager
+    this.initNavigationOverrideManager();
+    console.log('Navigation override manager re-initialized.');
     console.log('=== END RERENDER MINDMAP DEBUG ===');
   }
 
@@ -221,6 +239,26 @@ class MindmapController {
     );
 
     console.log('Drag and drop functionality initialized');
+  }
+
+  /**
+   * Initialize navigation override manager
+   */
+  initNavigationOverrideManager() {
+    // Clean up existing navigation override manager if it exists
+    if (this.navigationOverrideManager) {
+      this.navigationOverrideManager.destroy();
+    }
+
+    // Create new navigation override manager
+    this.navigationOverrideManager = new NavigationOverrideManager(
+      this.model,
+      this.renderer,
+      this,
+      this.container
+    );
+
+    console.log('Navigation override manager initialized');
   }
 
   /**
@@ -751,6 +789,33 @@ logPropertyInheritanceChain(node, property) {
   }
 
   /**
+   * Export navigation test data
+   * @param {string} filename - The filename for the exported test data
+   */
+  exportNavigationTestData(filename) {
+    if (!this.navigationOverrideManager) {
+      console.warn('Navigation override manager not available');
+      return;
+    }
+
+    const testData = this.navigationOverrideManager.exportNavigationData();
+    const jsonContent = JSON.stringify(testData, null, 2);
+
+    // Create blob and trigger download
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'navigation-test-data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    console.log('Navigation test data exported successfully');
+  }
+
+  /**
    * Select a node
    * @param {string} nodeId - The ID of the node to select
    */
@@ -789,12 +854,24 @@ logPropertyInheritanceChain(node, property) {
    * Initialize keyboard navigation
    */
   initKeyboardNavigation() {
-    document.addEventListener('keydown', (e) => {
+    // Prevent multiple event listeners
+    if (this.keyboardNavigationInitialized) {
+      console.log('Keyboard navigation already initialized, skipping');
+      return;
+    }
+
+    console.log('Initializing keyboard navigation event listener');
+    this.keyboardNavigationHandler = (e) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        console.log(`Key event captured: ${e.key}`);
         e.preventDefault();
+        e.stopPropagation();
         this.handleArrowKeyNavigation(e.key);
       }
-    });
+    };
+
+    document.addEventListener('keydown', this.keyboardNavigationHandler);
+    this.keyboardNavigationInitialized = true;
   }
 
   /**
@@ -802,6 +879,14 @@ logPropertyInheritanceChain(node, property) {
    * @param {string} key - The arrow key pressed
    */
   handleArrowKeyNavigation(key) {
+    // Throttle navigation to prevent rapid-fire events
+    const currentTime = Date.now();
+    if (currentTime - this.lastNavigationTime < this.navigationThrottleMs) {
+      console.log(`Navigation throttled (${currentTime - this.lastNavigationTime}ms since last navigation)`);
+      return;
+    }
+    this.lastNavigationTime = currentTime;
+
     console.log(`=== NAVIGATION START: ${key} ===`);
     
     const currentNode = this.getSelectedNode();

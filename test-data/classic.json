@@ -1,0 +1,459 @@
+{
+  "timestamp": "2025-08-12T23:20:46.773Z",
+  "mindmapTitle": "**Project Planning**<br><img src=https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Farmer_meme_with_apostrophe.jpg/250px-Farmer_meme_with_apostrophe.jpg width=300 height=160></p>",
+  "navigationOverrides": {
+    "node_19bee0a9": {
+      "nodeText": "**Project Planning**<br><img src=https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Farmer_meme_with_apostrophe.jpg/250px-Farmer_meme_with_apostrophe.jpg width=300 height=160></p>",
+      "level": 1,
+      "connections": {
+        "up": null,
+        "down": null,
+        "left": {
+          "id": "node_6960607b",
+          "text": "**Design** <ul><li>one<li>two<li>three</ul>"
+        },
+        "right": {
+          "id": "node_769c3520",
+          "text": "**Testing**: This document analyzes potential issues with the [dom-to-svg](https://github.com/felixfbecker/dom-to-svg/) library that could cause text elements to be missing in `SVG` output. This analysis is relevant for understanding potential rendering issues in the markdown-to-svg integration in our mindmap application."
+        }
+      }
+    },
+    "node_66b0ac91": {
+      "nodeText": "Research",
+      "level": 2,
+      "connections": {
+        "up": null,
+        "down": {
+          "id": "node_6960607b",
+          "text": "**Design** <ul><li>one<li>two<li>three</ul>"
+        },
+        "left": {
+          "id": "node_11ec0a68",
+          "text": "competitive landscape"
+        },
+        "right": {
+          "id": "node_19bee0a9",
+          "text": "**Project Planning**<br><img src=https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Farmer_meme_with_apostrophe.jpg/250px-Farmer_meme_with_apostrophe.jpg width=300 height=160></p>"
+        }
+      }
+    },
+    "node_11ec0a68": {
+      "nodeText": "competitive landscape",
+      "level": 3,
+      "connections": {
+        "up": null,
+        "down": {
+          "id": "node_696cb18e",
+          "text": "Market Analysis"
+        },
+        "left": {
+          "id": "node_34c35160",
+          "text": "existing mindmap apps on the market"
+        },
+        "right": {
+          "id": "node_66b0ac91",
+          "text": "Research"
+        }
+      }
+    },
+    "node_34c35160": {
+      "nodeText": "existing mindmap apps on the market",
+      "level": 4,
+      "connections": {
+        "up": null,
+        "down": {
+          "id": "node_119237a2",
+          "text": "subbullet 2"
+        },
+        "left": null,
+        "right": {
+          "id": "node_11ec0a68",
+          "text": "competitive landscape"
+        }
+      }
+    },
+    "node_119237a2": {
+      "nodeText": "subbullet 2",
+      "level": 4,
+      "connections": {
+        "up": {
+          "id": "node_34c35160",
+          "text": "existing mindmap apps on the market"
+        },
+        "down": {
+          "id": "node_5e49a4e0",
+          "text": "Class Diagram"
+        },
+        "left": null,
+        "right": {
+          "id": "node_11ec0a68",
+          "text": "competitive landscape"
+        }
+      }
+    },
+    "node_696cb18e": {
+      "nodeText": "Market Analysis",
+      "level": 3,
+      "connections": {
+        "up": {
+          "id": "node_11ec0a68",
+          "text": "competitive landscape"
+        },
+        "down": {
+          "id": "node_1ce3220a",
+          "text": "Technical Feasibility"
+        },
+        "left": {
+          "id": "node_1ce3220a",
+          "text": "Technical Feasibility"
+        },
+        "right": {
+          "id": "node_66b0ac91",
+          "text": "Research"
+        }
+      }
+    },
+    "node_1ce3220a": {
+      "nodeText": "Technical Feasibility",
+      "level": 3,
+      "connections": {
+        "up": {
+          "id": "node_696cb18e",
+          "text": "Market Analysis"
+        },
+        "down": {
+          "id": "node_5cefbac9",
+          "text": "UI/UX Design"
+        },
+        "left": null,
+        "right": {
+          "id": "node_66b0ac91",
+          "text": "Research"
+        }
+      }
+    },
+    "node_6960607b": {
+      "nodeText": "**Design** <ul><li>one<li>two<li>three</ul>",
+      "level": 2,
+      "connections": {
+        "up": {
+          "id": "node_66b0ac91",
+          "text": "Research"
+        },
+        "down": {
+          "id": "node_44141d33",
+          "text": "Development"
+        },
+        "left": {
+          "id": "node_5cefbac9",
+          "text": "UI/UX Design"
+        },
+        "right": {
+          "id": "node_19bee0a9",
+          "text": "**Project Planning**<br><img src=https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Farmer_meme_with_apostrophe.jpg/250px-Farmer_meme_with_apostrophe.jpg width=300 height=160></p>"
+        }
+      }
+    },
+    "node_5cefbac9": {
+      "nodeText": "UI/UX Design",
+      "level": 3,
+      "connections": {
+        "up": {
+          "id": "node_1ce3220a",
+          "text": "Technical Feasibility"
+        },
+        "down": {
+          "id": "node_6f12f4be",
+          "text": "System Architecture"
+        },
+        "left": {
+          "id": "node_6f12f4be",
+          "text": "System Architecture"
+        },
+        "right": {
+          "id": "node_6960607b",
+          "text": "**Design** <ul><li>one<li>two<li>three</ul>"
+        }
+      }
+    },
+    "node_6f12f4be": {
+      "nodeText": "System Architecture",
+      "level": 3,
+      "connections": {
+        "up": {
+          "id": "node_5cefbac9",
+          "text": "UI/UX Design"
+        },
+        "down": {
+          "id": "node_751e215e",
+          "text": "Frontend"
+        },
+        "left": {
+          "id": "node_5e49a4e0",
+          "text": "Class Diagram"
+        },
+        "right": {
+          "id": "node_6960607b",
+          "text": "**Design** <ul><li>one<li>two<li>three</ul>"
+        }
+      }
+    },
+    "node_5e49a4e0": {
+      "nodeText": "Class Diagram",
+      "level": 4,
+      "connections": {
+        "up": {
+          "id": "node_119237a2",
+          "text": "subbullet 2"
+        },
+        "down": {
+          "id": "node_5f5237ee",
+          "text": "Deployment Diagram"
+        },
+        "left": null,
+        "right": {
+          "id": "node_6f12f4be",
+          "text": "System Architecture"
+        }
+      }
+    },
+    "node_5f5237ee": {
+      "nodeText": "Deployment Diagram",
+      "level": 4,
+      "connections": {
+        "up": {
+          "id": "node_5e49a4e0",
+          "text": "Class Diagram"
+        },
+        "down": {
+          "id": "node_36fcb684",
+          "text": "markdown parsing"
+        },
+        "left": null,
+        "right": {
+          "id": "node_6f12f4be",
+          "text": "System Architecture"
+        }
+      }
+    },
+    "node_44141d33": {
+      "nodeText": "Development",
+      "level": 2,
+      "connections": {
+        "up": {
+          "id": "node_6960607b",
+          "text": "**Design** <ul><li>one<li>two<li>three</ul>"
+        },
+        "down": null,
+        "left": {
+          "id": "node_751e215e",
+          "text": "Frontend"
+        },
+        "right": {
+          "id": "node_19bee0a9",
+          "text": "**Project Planning**<br><img src=https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Farmer_meme_with_apostrophe.jpg/250px-Farmer_meme_with_apostrophe.jpg width=300 height=160></p>"
+        }
+      }
+    },
+    "node_751e215e": {
+      "nodeText": "Frontend",
+      "level": 3,
+      "connections": {
+        "up": {
+          "id": "node_6f12f4be",
+          "text": "System Architecture"
+        },
+        "down": {
+          "id": "node_28b78d1f",
+          "text": "Backend"
+        },
+        "left": {
+          "id": "node_287e5282",
+          "text": "layout algorithms"
+        },
+        "right": {
+          "id": "node_44141d33",
+          "text": "Development"
+        }
+      }
+    },
+    "node_36fcb684": {
+      "nodeText": "markdown parsing",
+      "level": 4,
+      "connections": {
+        "up": {
+          "id": "node_5f5237ee",
+          "text": "Deployment Diagram"
+        },
+        "down": {
+          "id": "node_287e5282",
+          "text": "layout algorithms"
+        },
+        "left": null,
+        "right": {
+          "id": "node_751e215e",
+          "text": "Frontend"
+        }
+      }
+    },
+    "node_287e5282": {
+      "nodeText": "layout algorithms",
+      "level": 4,
+      "connections": {
+        "up": {
+          "id": "node_36fcb684",
+          "text": "markdown parsing"
+        },
+        "down": {
+          "id": "node_112c602c",
+          "text": "styling"
+        },
+        "left": null,
+        "right": {
+          "id": "node_751e215e",
+          "text": "Frontend"
+        }
+      }
+    },
+    "node_112c602c": {
+      "nodeText": "styling",
+      "level": 4,
+      "connections": {
+        "up": {
+          "id": "node_287e5282",
+          "text": "layout algorithms"
+        },
+        "down": {
+          "id": "node_122f3bd2",
+          "text": "interactivity"
+        },
+        "left": null,
+        "right": {
+          "id": "node_751e215e",
+          "text": "Frontend"
+        }
+      }
+    },
+    "node_122f3bd2": {
+      "nodeText": "interactivity",
+      "level": 4,
+      "connections": {
+        "up": {
+          "id": "node_112c602c",
+          "text": "styling"
+        },
+        "down": {
+          "id": "node_331da4ff",
+          "text": "not needed"
+        },
+        "left": null,
+        "right": {
+          "id": "node_751e215e",
+          "text": "Frontend"
+        }
+      }
+    },
+    "node_28b78d1f": {
+      "nodeText": "Backend",
+      "level": 3,
+      "connections": {
+        "up": {
+          "id": "node_751e215e",
+          "text": "Frontend"
+        },
+        "down": null,
+        "left": {
+          "id": "node_331da4ff",
+          "text": "not needed"
+        },
+        "right": {
+          "id": "node_44141d33",
+          "text": "Development"
+        }
+      }
+    },
+    "node_331da4ff": {
+      "nodeText": "not needed",
+      "level": 4,
+      "connections": {
+        "up": {
+          "id": "node_122f3bd2",
+          "text": "interactivity"
+        },
+        "down": null,
+        "left": null,
+        "right": {
+          "id": "node_28b78d1f",
+          "text": "Backend"
+        }
+      }
+    },
+    "node_769c3520": {
+      "nodeText": "**Testing**: This document analyzes potential issues with the [dom-to-svg](https://github.com/felixfbecker/dom-to-svg/) library that could cause text elements to be missing in `SVG` output. This analysis is relevant for understanding potential rendering issues in the markdown-to-svg integration in our mindmap application.",
+      "level": 2,
+      "connections": {
+        "up": null,
+        "down": null,
+        "left": {
+          "id": "node_19bee0a9",
+          "text": "**Project Planning**<br><img src=https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Farmer_meme_with_apostrophe.jpg/250px-Farmer_meme_with_apostrophe.jpg width=300 height=160></p>"
+        },
+        "right": {
+          "id": "node_585e5e46",
+          "text": "Functional"
+        }
+      }
+    },
+    "node_23a2cef7": {
+      "nodeText": "Regression",
+      "level": 3,
+      "connections": {
+        "up": null,
+        "down": {
+          "id": "node_585e5e46",
+          "text": "Functional"
+        },
+        "left": {
+          "id": "node_769c3520",
+          "text": "**Testing**: This document analyzes potential issues with the [dom-to-svg](https://github.com/felixfbecker/dom-to-svg/) library that could cause text elements to be missing in `SVG` output. This analysis is relevant for understanding potential rendering issues in the markdown-to-svg integration in our mindmap application."
+        },
+        "right": null
+      }
+    },
+    "node_585e5e46": {
+      "nodeText": "Functional",
+      "level": 3,
+      "connections": {
+        "up": {
+          "id": "node_23a2cef7",
+          "text": "Regression"
+        },
+        "down": {
+          "id": "node_5da2c158",
+          "text": "Performance"
+        },
+        "left": {
+          "id": "node_769c3520",
+          "text": "**Testing**: This document analyzes potential issues with the [dom-to-svg](https://github.com/felixfbecker/dom-to-svg/) library that could cause text elements to be missing in `SVG` output. This analysis is relevant for understanding potential rendering issues in the markdown-to-svg integration in our mindmap application."
+        },
+        "right": null
+      }
+    },
+    "node_5da2c158": {
+      "nodeText": "Performance",
+      "level": 3,
+      "connections": {
+        "up": {
+          "id": "node_585e5e46",
+          "text": "Functional"
+        },
+        "down": null,
+        "left": {
+          "id": "node_769c3520",
+          "text": "**Testing**: This document analyzes potential issues with the [dom-to-svg](https://github.com/felixfbecker/dom-to-svg/) library that could cause text elements to be missing in `SVG` output. This analysis is relevant for understanding potential rendering issues in the markdown-to-svg integration in our mindmap application."
+        },
+        "right": null
+      }
+    }
+  }
+}
