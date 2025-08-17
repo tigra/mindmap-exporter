@@ -539,6 +539,9 @@ class MindmapRenderer {
     const invisible = levelStyle.nodeType === 'text-only';
     svg += this._drawNodeShape(node, invisible);
     svg += await this._drawNodeText(node, true);
+    
+    // Add invisible click overlay to capture clicks on text
+    svg += this._drawClickOverlay(node);
 
     // Add collapsible indicator if node has children
     if (node.hasChildren()) {
@@ -926,6 +929,30 @@ class MindmapRenderer {
   }
 
   /**
+   * Draw an invisible click overlay rectangle to capture clicks on the entire node area
+   * @private
+   * @param {Object} node - The node to draw overlay for
+   * @return {string} SVG rect element for the click overlay
+   */
+  _drawClickOverlay(node) {
+    return this._createRectElement({
+      x: node.x,
+      y: node.y,
+      width: node.width,
+      height: node.height,
+      id: node.id + '_overlay',
+      'data-node-id': node.id,
+      fill: 'transparent',
+      fillOpacity: 0,
+      stroke: 'none',
+      strokeWidth: 0,
+      filter: 'none',
+      style: 'cursor: pointer; pointer-events: all;',
+      className: 'node-overlay'
+    });
+  }
+
+  /**
    * Draw the shape for a node
    * @private
    * @param {Object} node - The node to draw shape for
@@ -948,8 +975,8 @@ class MindmapRenderer {
         fillOpacity: invisible ? 0 : (levelStyle.fillOpacity || MindmapRenderer.DEFAULT_FILL_OPACITY),
         stroke: invisible ? 'transparent' : (levelStyle.borderColor || '#fff'),
         strokeWidth: invisible ? 0 : (levelStyle.borderWidth || MindmapRenderer.DEFAULT_BORDER_WIDTH),
-        filter: invisible ? 'none' : 'url(#dropShadow)'
-    });
+        filter: invisible ? 'none' : 'url(#dropShadow)',
+      });
   }
 
   /**
@@ -983,7 +1010,7 @@ class MindmapRenderer {
       fill,
       textAnchor,
       class: className,
-      pointerEvents
+      pointerEvents,
     };
     
     // Only add optional attributes if they have values
@@ -1062,7 +1089,7 @@ class MindmapRenderer {
       fill,
       textAnchor,
       class: className,
-      pointerEvents
+      pointerEvents,
     };
     
     return this._createSvgElement('text', attributes, tspanContent);
@@ -1524,16 +1551,17 @@ class MindmapRenderer {
    */
   attachEventHandlers() {
     this.nodeMap.forEach((node, nodeId) => {
-      // Rect element: single-click for select, double-click for toggle, ctrl+click for debug
+      // Overlay element: captures all clicks on the node area (including text)
+      this._attachNodeEventHandler(nodeId, 'overlay', 'select');
+      this._attachNodeEventHandler(nodeId, 'overlay', 'edit', true); // double-click to edit
+      this._attachNodeEventHandler(nodeId, 'overlay', 'debug', false, true); // ctrl+click
+      
+      // Rect element as fallback (for nodes without overlay or backwards compatibility)
       this._attachNodeEventHandler(nodeId, 'rect', 'select');
-      this._attachNodeEventHandler(nodeId, 'rect', 'toggle', true);
+      this._attachNodeEventHandler(nodeId, 'rect', 'edit', true); // double-click to edit
       this._attachNodeEventHandler(nodeId, 'rect', 'debug', false, true); // ctrl+click
       
-      // Text element: single-click for select, ctrl+click for debug
-      this._attachNodeEventHandler(nodeId, 'text', 'select');
-      this._attachNodeEventHandler(nodeId, 'text', 'debug', false, true); // ctrl+click
-      
-      // Indicator element: single-click for toggle
+      // Indicator element: single-click for toggle (collapse/expand)
       this._attachNodeEventHandler(nodeId, 'indicator', 'toggle');
     });
   }

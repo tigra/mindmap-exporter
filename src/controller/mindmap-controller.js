@@ -285,6 +285,166 @@ handleNodeEvent(nodeId, eventType) {
     // Select the node
     this.selectNode(nodeId);
   }
+  else if (eventType === 'edit') {
+    // Start inline editing of the node
+    this.startNodeEdit(nodeId);
+  }
+}
+
+/**
+ * Start inline editing of a node
+ * @param {string} nodeId - The ID of the node to edit
+ */
+startNodeEdit(nodeId) {
+  const node = this.model.findNodeById(nodeId);
+  if (!node) {
+    console.warn(`Node not found with ID: ${nodeId}`);
+    return;
+  }
+
+  // Store the current editing state
+  this.editingNodeId = nodeId;
+  this.originalText = node.text;
+
+  // Create an inline editor overlaying the entire node
+  this.createInlineEditor(node);
+}
+
+/**
+ * Create an inline markdown editor for a node
+ * @param {Object} node - The node being edited
+ */
+createInlineEditor(node) {
+  // Get the SVG element and its computed style to check for transforms
+  const svg = this.container.querySelector('svg');
+  const svgRect = svg.getBoundingClientRect();
+  const containerRect = this.container.getBoundingClientRect();
+  
+  // Get any SVG transforms (zoom, etc.)
+  const svgStyle = window.getComputedStyle(svg);
+  const transform = svgStyle.transform;
+  let scale = 1;
+  
+  // Parse scale from transform matrix if present
+  if (transform && transform !== 'none') {
+    const matrixMatch = transform.match(/matrix\(([^)]+)\)/);
+    if (matrixMatch) {
+      const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()));
+      scale = values[0]; // First value in matrix is x-scale
+    }
+  }
+  
+  // Calculate node position in viewport coordinates
+  // Node coordinates are in SVG space, need to:
+  // 1. Apply SVG scale transformation
+  // 2. Add SVG's position relative to viewport
+  // 3. Account for container padding (SVG typically has 20px padding)
+  const containerPadding = 20; // SVG padding within container
+  const nodeLeft = (node.x + containerPadding) * scale + svgRect.left;
+  const nodeTop = (node.y + containerPadding) * scale + svgRect.top;
+  
+  console.log(`Editor positioning for "${node.text}":`, {
+    nodeCoords: { x: node.x, y: node.y, width: node.width, height: node.height },
+    svgRect: { left: svgRect.left, top: svgRect.top, width: svgRect.width, height: svgRect.height },
+    containerRect: { left: containerRect.left, top: containerRect.top },
+    scale: scale,
+    containerPadding: containerPadding,
+    finalPosition: { left: nodeLeft, top: nodeTop },
+    finalSize: { width: node.width * scale, height: node.height * scale }
+  });
+  
+  // Create input element
+  const input = document.createElement('textarea');
+  input.id = `node-editor-${node.id}`;
+  input.value = node.text;
+  
+  // Get node style for consistent appearance
+  const levelStyle = this.styleManager.getLevelStyle(node.level);
+  
+  // Style the input to overlay the entire node
+  input.style.position = 'fixed';
+  input.style.left = `${nodeLeft}px`;
+  input.style.top = `${nodeTop}px`;
+  input.style.width = `${Math.max(node.width * scale, 200)}px`;
+  input.style.height = `${Math.max(node.height * scale, 60)}px`;
+  input.style.fontFamily = levelStyle.fontFamily || 'sans-serif';
+  input.style.fontSize = (levelStyle.fontSize || 14) + 'px';
+  input.style.fontWeight = levelStyle.fontWeight || 'normal';
+  input.style.color = '#333'; // Always use dark text for visibility
+  input.style.backgroundColor = 'rgba(255, 255, 255, 0.95)'; // Semi-transparent white background
+  input.style.border = '2px solid #007acc';
+  input.style.borderRadius = '4px';
+  input.style.padding = '8px';
+  input.style.resize = 'both';
+  input.style.zIndex = '1000';
+  input.style.outline = 'none';
+  input.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+
+  // Add event listeners
+  input.addEventListener('keydown', (e) => this.handleEditorKeydown(e, node.id));
+  input.addEventListener('blur', () => this.finishNodeEdit(node.id, true));
+
+  // Add input to document
+  document.body.appendChild(input);
+  
+  // Focus and select all text
+  input.focus();
+  input.select();
+}
+
+/**
+ * Handle keydown events in the editor
+ * @param {KeyboardEvent} event - The keyboard event
+ * @param {string} nodeId - The ID of the node being edited
+ */
+handleEditorKeydown(event, nodeId) {
+  // Always stop propagation to prevent navigation events during editing
+  event.stopPropagation();
+  
+  if (event.key === 'Escape') {
+    // Cancel editing
+    event.preventDefault();
+    this.finishNodeEdit(nodeId, false);
+  } else if (event.key === 'Enter' && !event.shiftKey) {
+    // Save with Enter (allow Shift+Enter for new lines)
+    event.preventDefault();
+    this.finishNodeEdit(nodeId, true);
+  }
+  // Allow other keys (including arrow keys) to work normally in the editor
+}
+
+/**
+ * Finish node editing
+ * @param {string} nodeId - The ID of the node being edited
+ * @param {boolean} save - Whether to save the changes
+ */
+finishNodeEdit(nodeId, save) {
+  const input = document.getElementById(`node-editor-${nodeId}`);
+  if (!input) return;
+
+  const node = this.model.findNodeById(nodeId);
+  if (!node) return;
+
+  if (save && input.value.trim() !== this.originalText) {
+    // Update the node text
+    node.text = input.value.trim();
+    
+    // Reapply layout and re-render
+    this.applyLayout();
+    this.renderer.render(this.container);
+    
+    // Trigger autosave if enabled (same mechanism as drag-and-drop)
+    if (typeof window !== 'undefined' && window.mindmapApp && window.mindmapApp.autoSaveToMarkdown) {
+      setTimeout(() => {
+        window.mindmapApp.autoSaveToMarkdown();
+      }, 100); // Small delay to ensure re-render is complete
+    }
+  }
+
+  // Clean up
+  document.body.removeChild(input);
+  this.editingNodeId = null;
+  this.originalText = null;
 }
 
 /**
@@ -1279,6 +1439,16 @@ logPropertyInheritanceChain(node, property) {
 
     console.log('Initializing keyboard navigation event listener');
     this.keyboardNavigationHandler = (e) => {
+      // Skip navigation if we're currently editing a node
+      if (this.editingNodeId) {
+        // Completely prevent arrow key navigation during editing
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          e.stopPropagation();
+          // Don't prevent default - allow normal cursor movement in editor
+        }
+        return;
+      }
+      
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         console.log(`Key event captured: ${e.key}`);
         e.preventDefault();
