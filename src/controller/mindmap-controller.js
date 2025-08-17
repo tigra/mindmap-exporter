@@ -882,26 +882,58 @@ logPropertyInheritanceChain(node, property) {
   }
 
   /**
-   * Expand a collapsed node and ensure both parent and children are optimally visible
+   * Expand a collapsed node while preserving its screen position and optimizing children visibility
    * @param {Object} node - The node to expand
    */
   async expandNode(node) {
     if (node && node.collapsed && node.children && node.children.length > 0) {
       console.log(`MindmapController.expandNode: Expanding node "${node.text}"`);
       
-      // Store current viewport position to minimize shifts
+      // Store current viewport position and expanded node's position for stability
       const currentScroll = {
         left: this.container.scrollLeft,
         top: this.container.scrollTop
       };
       
+      // Capture the expanded node's current position before layout changes
+      const nodeBeforePosition = {
+        x: node.x,
+        y: node.y
+      };
+      
+      console.log(`MindmapController.expandNode: Node "${node.text}" before expansion at: [${nodeBeforePosition.x}, ${nodeBeforePosition.y}]`);
+      
       node.collapsed = false;
       
-      // Re-apply layout and re-render to show expanded children
+      // Re-apply layout to get new positions after expansion
       this.applyLayout();
+      
+      // Calculate how much the expanded node moved due to layout changes
+      const nodeAfterPosition = {
+        x: node.x,
+        y: node.y
+      };
+      
+      const layoutOffset = {
+        x: nodeBeforePosition.x - nodeAfterPosition.x,
+        y: nodeBeforePosition.y - nodeAfterPosition.y
+      };
+      
+      console.log(`MindmapController.expandNode: Node "${node.text}" after layout at: [${nodeAfterPosition.x}, ${nodeAfterPosition.y}], offset needed: [${layoutOffset.x}, ${layoutOffset.y}]`);
+      
+      // Apply offset to entire tree to keep expanded node in same position
+      if (layoutOffset.x !== 0 || layoutOffset.y !== 0) {
+        const rootNode = this.model.getRoot();
+        if (rootNode) {
+          this.applyOffsetToTree(rootNode, layoutOffset.x, layoutOffset.y);
+          console.log(`MindmapController.expandNode: Applied offset [${layoutOffset.x}, ${layoutOffset.y}] to entire tree`);
+        }
+      }
+      
+      // Render with the offset-adjusted positions
       await this.renderer.render(this.container);
       
-      // Calculate optimal viewport to show parent and children with minimal shift
+      // Now do minimal scroll adjustment to ensure children are also visible
       this.scrollToShowExpandedNodeAndChildren(node, currentScroll);
       
       // Update selection visual after render is complete and new SVG is positioned
@@ -910,7 +942,7 @@ logPropertyInheritanceChain(node, property) {
         this.updateSelectionVisual();
       }, 10);
       
-      console.log(`MindmapController.expandNode: Node "${node.text}" expanded successfully`);
+      console.log(`MindmapController.expandNode: Node "${node.text}" expanded successfully with preserved position`);
     } else {
       console.log(`MindmapController.expandNode: Node cannot be expanded (not collapsed, no children, or null)`);
     }
@@ -1176,6 +1208,33 @@ logPropertyInheritanceChain(node, property) {
       });
     } else {
       console.log(`MindmapController.scrollToShowExpandedNodeAndChildren: No significant scroll needed`);
+    }
+  }
+
+  /**
+   * Apply an offset to an entire tree recursively
+   * @param {Object} node - The root node of the tree/subtree
+   * @param {number} offsetX - X offset to apply
+   * @param {number} offsetY - Y offset to apply
+   */
+  applyOffsetToTree(node, offsetX, offsetY) {
+    if (!node) return;
+    
+    // Apply offset to this node
+    node.x += offsetX;
+    node.y += offsetY;
+    
+    // Update bounding box if it exists
+    if (node.boundingBox) {
+      node.boundingBox.x += offsetX;
+      node.boundingBox.y += offsetY;
+    }
+    
+    // Recursively apply to all children
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(child => {
+        this.applyOffsetToTree(child, offsetX, offsetY);
+      });
     }
   }
 
