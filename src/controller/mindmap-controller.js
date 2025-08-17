@@ -315,14 +315,43 @@ startNodeEdit(nodeId) {
  * @param {Object} node - The node being edited
  */
 createInlineEditor(node) {
-  // Get the SVG container position
-  const svgRect = this.container.querySelector('svg').getBoundingClientRect();
+  // Get the SVG element and its computed style to check for transforms
+  const svg = this.container.querySelector('svg');
+  const svgRect = svg.getBoundingClientRect();
   const containerRect = this.container.getBoundingClientRect();
   
-  // Calculate node position relative to the page
-  // Node coordinates are in SVG space, need to add container offset and padding
-  const nodeLeft = node.x + svgRect.left - containerRect.left + this.container.scrollLeft;
-  const nodeTop = node.y + svgRect.top - containerRect.top + this.container.scrollTop;
+  // Get any SVG transforms (zoom, etc.)
+  const svgStyle = window.getComputedStyle(svg);
+  const transform = svgStyle.transform;
+  let scale = 1;
+  
+  // Parse scale from transform matrix if present
+  if (transform && transform !== 'none') {
+    const matrixMatch = transform.match(/matrix\(([^)]+)\)/);
+    if (matrixMatch) {
+      const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()));
+      scale = values[0]; // First value in matrix is x-scale
+    }
+  }
+  
+  // Calculate node position in viewport coordinates
+  // Node coordinates are in SVG space, need to:
+  // 1. Apply SVG scale transformation
+  // 2. Add SVG's position relative to viewport
+  // 3. Account for container padding (SVG typically has 20px padding)
+  const containerPadding = 20; // SVG padding within container
+  const nodeLeft = (node.x + containerPadding) * scale + svgRect.left;
+  const nodeTop = (node.y + containerPadding) * scale + svgRect.top;
+  
+  console.log(`Editor positioning for "${node.text}":`, {
+    nodeCoords: { x: node.x, y: node.y, width: node.width, height: node.height },
+    svgRect: { left: svgRect.left, top: svgRect.top, width: svgRect.width, height: svgRect.height },
+    containerRect: { left: containerRect.left, top: containerRect.top },
+    scale: scale,
+    containerPadding: containerPadding,
+    finalPosition: { left: nodeLeft, top: nodeTop },
+    finalSize: { width: node.width * scale, height: node.height * scale }
+  });
   
   // Create input element
   const input = document.createElement('textarea');
@@ -333,11 +362,11 @@ createInlineEditor(node) {
   const levelStyle = this.styleManager.getLevelStyle(node.level);
   
   // Style the input to overlay the entire node
-  input.style.position = 'absolute';
-  input.style.left = `${containerRect.left + nodeLeft}px`;
-  input.style.top = `${containerRect.top + nodeTop}px`;
-  input.style.width = `${Math.max(node.width, 200)}px`;
-  input.style.height = `${Math.max(node.height, 60)}px`;
+  input.style.position = 'fixed';
+  input.style.left = `${nodeLeft}px`;
+  input.style.top = `${nodeTop}px`;
+  input.style.width = `${Math.max(node.width * scale, 200)}px`;
+  input.style.height = `${Math.max(node.height * scale, 60)}px`;
   input.style.fontFamily = levelStyle.fontFamily || 'sans-serif';
   input.style.fontSize = (levelStyle.fontSize || 14) + 'px';
   input.style.fontWeight = levelStyle.fontWeight || 'normal';
@@ -369,6 +398,9 @@ createInlineEditor(node) {
  * @param {string} nodeId - The ID of the node being edited
  */
 handleEditorKeydown(event, nodeId) {
+  // Always stop propagation to prevent navigation events during editing
+  event.stopPropagation();
+  
   if (event.key === 'Escape') {
     // Cancel editing
     event.preventDefault();
@@ -378,6 +410,7 @@ handleEditorKeydown(event, nodeId) {
     event.preventDefault();
     this.finishNodeEdit(nodeId, true);
   }
+  // Allow other keys (including arrow keys) to work normally in the editor
 }
 
 /**
@@ -399,6 +432,13 @@ finishNodeEdit(nodeId, save) {
     // Reapply layout and re-render
     this.applyLayout();
     this.renderer.render(this.container);
+    
+    // Trigger autosave if enabled (same mechanism as drag-and-drop)
+    if (typeof window !== 'undefined' && window.mindmapApp && window.mindmapApp.autoSaveToMarkdown) {
+      setTimeout(() => {
+        window.mindmapApp.autoSaveToMarkdown();
+      }, 100); // Small delay to ensure re-render is complete
+    }
   }
 
   // Clean up
@@ -1401,6 +1441,11 @@ logPropertyInheritanceChain(node, property) {
     this.keyboardNavigationHandler = (e) => {
       // Skip navigation if we're currently editing a node
       if (this.editingNodeId) {
+        // Completely prevent arrow key navigation during editing
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          e.stopPropagation();
+          // Don't prevent default - allow normal cursor movement in editor
+        }
         return;
       }
       
