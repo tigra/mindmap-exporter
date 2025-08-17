@@ -882,17 +882,27 @@ logPropertyInheritanceChain(node, property) {
   }
 
   /**
-   * Expand a collapsed node
+   * Expand a collapsed node and ensure both parent and children are optimally visible
    * @param {Object} node - The node to expand
    */
   async expandNode(node) {
     if (node && node.collapsed && node.children && node.children.length > 0) {
       console.log(`MindmapController.expandNode: Expanding node "${node.text}"`);
+      
+      // Store current viewport position to minimize shifts
+      const currentScroll = {
+        left: this.container.scrollLeft,
+        top: this.container.scrollTop
+      };
+      
       node.collapsed = false;
       
       // Re-apply layout and re-render to show expanded children
       this.applyLayout();
       await this.renderer.render(this.container);
+      
+      // Calculate optimal viewport to show parent and children with minimal shift
+      this.scrollToShowExpandedNodeAndChildren(node, currentScroll);
       
       // Update selection visual after render is complete and new SVG is positioned
       // Add small delay to ensure DOM is fully updated
@@ -1041,6 +1051,132 @@ logPropertyInheritanceChain(node, property) {
     console.log(`MindmapController.calculateMinimalScroll: Node "${node.text}" needs scroll from [${container.scrollLeft}, ${container.scrollTop}] to [${newScrollLeft}, ${newScrollTop}] (accounting for UI obstructions)`);
     
     return { scrollLeft: newScrollLeft, scrollTop: newScrollTop };
+  }
+
+  /**
+   * Scroll to show expanded node and its children optimally with minimal viewport shift
+   * @param {Object} expandedNode - The node that was just expanded
+   * @param {Object} currentScroll - Current scroll position {left, top}
+   */
+  scrollToShowExpandedNodeAndChildren(expandedNode, currentScroll) {
+    if (!expandedNode || !expandedNode.children || expandedNode.children.length === 0) {
+      console.log(`MindmapController.scrollToShowExpandedNodeAndChildren: No children to show`);
+      return;
+    }
+
+    console.log(`MindmapController.scrollToShowExpandedNodeAndChildren: Calculating optimal viewport for "${expandedNode.text}" and its children`);
+    
+    // Calculate bounding box that includes the expanded node and its immediate children
+    const nodesToShow = [expandedNode, ...expandedNode.children];
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    
+    nodesToShow.forEach(node => {
+      if (node.x !== undefined && node.y !== undefined) {
+        const nodeLeft = node.x + 20 - 5; // Include container padding and node padding
+        const nodeTop = node.y + 20 - 5;
+        const nodeRight = nodeLeft + (node.width || 0) + 10;
+        const nodeBottom = nodeTop + (node.height || 0) + 10;
+        
+        minX = Math.min(minX, nodeLeft);
+        maxX = Math.max(maxX, nodeRight);
+        minY = Math.min(minY, nodeTop);
+        maxY = Math.max(maxY, nodeBottom);
+      }
+    });
+    
+    if (minX === Infinity) {
+      console.log(`MindmapController.scrollToShowExpandedNodeAndChildren: No valid node positions found`);
+      return;
+    }
+    
+    const groupWidth = maxX - minX;
+    const groupHeight = maxY - minY;
+    
+    console.log(`MindmapController.scrollToShowExpandedNodeAndChildren: Group bounds: [${minX}, ${minY}, ${maxX}, ${maxY}], size: ${groupWidth}x${groupHeight}`);
+    
+    // Calculate viewport constraints with UI obstructions
+    const container = this.container;
+    const containerRect = container.getBoundingClientRect();
+    
+    const helpButtonArea = { right: 80, bottom: 60 };
+    const exportControlsHeight = 100;
+    const scrollbarWidth = 25;
+    const baseMarginX = Math.max(containerRect.width * 0.08, 30);
+    const baseMarginY = Math.max(containerRect.height * 0.08, 30);
+    
+    // Effective usable viewport
+    const usableWidth = containerRect.width - Math.max(baseMarginX, helpButtonArea.right) - baseMarginX - scrollbarWidth;
+    const usableHeight = containerRect.height - Math.max(baseMarginY, helpButtonArea.bottom) - baseMarginY - exportControlsHeight;
+    
+    // Check if the group fits in the usable viewport
+    const groupFitsHorizontally = groupWidth <= usableWidth;
+    const groupFitsVertically = groupHeight <= usableHeight;
+    
+    let newScrollLeft = currentScroll.left;
+    let newScrollTop = currentScroll.top;
+    
+    if (groupFitsHorizontally && groupFitsVertically) {
+      // Group fits entirely - center it with minimal movement
+      const targetCenterX = minX + groupWidth / 2;
+      const targetCenterY = minY + groupHeight / 2;
+      
+      const viewportCenterX = currentScroll.left + containerRect.width / 2;
+      const viewportCenterY = currentScroll.top + containerRect.height / 2;
+      
+      // Only adjust if the group would be significantly off-center or partially obscured
+      const horizontalOffset = Math.abs(targetCenterX - viewportCenterX);
+      const verticalOffset = Math.abs(targetCenterY - viewportCenterY);
+      
+      if (horizontalOffset > usableWidth / 3 || minX < currentScroll.left + Math.max(baseMarginX, helpButtonArea.right) || maxX > currentScroll.left + containerRect.width - baseMarginX - scrollbarWidth) {
+        newScrollLeft = Math.max(0, targetCenterX - containerRect.width / 2);
+      }
+      
+      if (verticalOffset > usableHeight / 3 || minY < currentScroll.top + Math.max(baseMarginY, helpButtonArea.bottom) || maxY > currentScroll.top + containerRect.height - baseMarginY - exportControlsHeight) {
+        newScrollTop = Math.max(0, targetCenterY - containerRect.height / 2);
+      }
+    } else {
+      // Group doesn't fit - prioritize showing the expanded node and as many children as possible
+      // Use the expanded node as the anchor point
+      const expandedNodeLeft = expandedNode.x + 20 - 5;
+      const expandedNodeTop = expandedNode.y + 20 - 5;
+      const expandedNodeRight = expandedNodeLeft + (expandedNode.width || 0) + 10;
+      const expandedNodeBottom = expandedNodeTop + (expandedNode.height || 0) + 10;
+      
+      // Ensure expanded node is visible with margins
+      const leftMargin = Math.max(baseMarginX, helpButtonArea.right);
+      const topMargin = Math.max(baseMarginY, helpButtonArea.bottom);
+      const rightMargin = baseMarginX + scrollbarWidth;
+      const bottomMargin = baseMarginY + exportControlsHeight;
+      
+      if (expandedNodeLeft < currentScroll.left + leftMargin) {
+        newScrollLeft = Math.max(0, expandedNodeLeft - leftMargin);
+      } else if (expandedNodeRight > currentScroll.left + containerRect.width - rightMargin) {
+        newScrollLeft = expandedNodeRight - containerRect.width + rightMargin;
+      }
+      
+      if (expandedNodeTop < currentScroll.top + topMargin) {
+        newScrollTop = Math.max(0, expandedNodeTop - topMargin);
+      } else if (expandedNodeBottom > currentScroll.top + containerRect.height - bottomMargin) {
+        newScrollTop = expandedNodeBottom - containerRect.height + bottomMargin;
+      }
+    }
+    
+    // Apply scroll only if there's a meaningful change (avoid micro-movements)
+    const scrollThreshold = 5;
+    const needsHorizontalScroll = Math.abs(newScrollLeft - currentScroll.left) > scrollThreshold;
+    const needsVerticalScroll = Math.abs(newScrollTop - currentScroll.top) > scrollThreshold;
+    
+    if (needsHorizontalScroll || needsVerticalScroll) {
+      console.log(`MindmapController.scrollToShowExpandedNodeAndChildren: Scrolling from [${currentScroll.left}, ${currentScroll.top}] to [${newScrollLeft}, ${newScrollTop}]`);
+      
+      this.container.scrollTo({
+        left: newScrollLeft,
+        top: newScrollTop,
+        behavior: 'smooth'
+      });
+    } else {
+      console.log(`MindmapController.scrollToShowExpandedNodeAndChildren: No significant scroll needed`);
+    }
   }
 
   /**
