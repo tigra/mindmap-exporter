@@ -926,20 +926,23 @@ logPropertyInheritanceChain(node, property) {
     
     // Calculate node's position relative to the container viewport
     // Note: node coordinates are in SVG space, we need to account for padding
-    const nodeLeft = node.x + 20; // Add container padding
-    const nodeTop = node.y + 20;  // Add container padding
-    const nodeRight = nodeLeft + (node.width || 0);
-    const nodeBottom = nodeTop + (node.height || 0);
+    // Add extra margin to ensure borders and shadows are visible
+    const nodePadding = 5; // Extra padding for node borders/shadows
+    const nodeLeft = node.x + 20 - nodePadding; // Add container padding, subtract node padding
+    const nodeTop = node.y + 20 - nodePadding;  // Add container padding, subtract node padding
+    const nodeRight = nodeLeft + (node.width || 0) + (nodePadding * 2);
+    const nodeBottom = nodeTop + (node.height || 0) + (nodePadding * 2);
     
     // Define obstructing UI element areas that reduce usable viewport
     const helpButtonArea = {
       left: 0,
       top: 0, 
-      right: 60,  // Help button (28px) + tooltip potential (wider, add safety margin)
-      bottom: 50  // Help button + safety margin
+      right: 80,  // Help button (28px) + tooltip potential + larger safety margin
+      bottom: 60  // Help button + larger safety margin
     };
     
-    const exportControlsHeight = 50; // Estimated height of export controls at bottom
+    // Export controls take significant space at bottom - be more conservative
+    const exportControlsHeight = 80; // Increased to ensure full visibility
     
     // Calculate effective viewport boundaries accounting for obstructions
     const viewportLeft = scrollLeft + helpButtonArea.left;
@@ -947,7 +950,7 @@ logPropertyInheritanceChain(node, property) {
     const viewportRight = scrollLeft + containerRect.width - 15; // Account for potential scrollbar
     const viewportBottom = scrollTop + containerRect.height - exportControlsHeight;
     
-    // Exclude help button area from top-left corner
+    // Exclude help button area from top-left corner and add extra margins
     const effectiveLeft = Math.max(viewportLeft, scrollLeft + helpButtonArea.right);
     const effectiveTop = Math.max(viewportTop, scrollTop + helpButtonArea.bottom);
     
@@ -980,21 +983,25 @@ logPropertyInheritanceChain(node, property) {
     let newScrollTop = container.scrollTop;
     
     // Calculate node's position relative to the container (including padding)
-    const nodeLeft = node.x + 20; // Add container padding
-    const nodeTop = node.y + 20;  // Add container padding
-    const nodeRight = nodeLeft + (node.width || 0);
-    const nodeBottom = nodeTop + (node.height || 0);
+    // Add extra margin to ensure borders and shadows are visible
+    const nodePadding = 5; // Extra padding for node borders/shadows
+    const nodeLeft = node.x + 20 - nodePadding; // Add container padding, subtract node padding
+    const nodeTop = node.y + 20 - nodePadding;  // Add container padding, subtract node padding
+    const nodeRight = nodeLeft + (node.width || 0) + (nodePadding * 2);
+    const nodeBottom = nodeTop + (node.height || 0) + (nodePadding * 2);
     
-    // Define obstructing UI elements and safety margins
+    // Define obstructing UI elements and safety margins - be more conservative
     const helpButtonArea = {
       left: 0,
       top: 0,
-      right: 60,  // Help button + tooltip potential width + safety margin
-      bottom: 50  // Help button height + safety margin
+      right: 80,  // Help button + tooltip potential width + larger safety margin
+      bottom: 60  // Help button height + larger safety margin
     };
     
-    const exportControlsHeight = 50; // Height of export controls at bottom
-    const scrollbarWidth = 15; // Potential scrollbar width
+    // Be more conservative with bottom space for export controls
+    // The export controls overlay the bottom of the container
+    const exportControlsHeight = 100; // Further increased for safety
+    const scrollbarWidth = 25; // Further increased for safety
     
     // Calculate effective viewport with obstructions accounted for
     const effectiveViewportLeft = container.scrollLeft;
@@ -1003,8 +1010,8 @@ logPropertyInheritanceChain(node, property) {
     const effectiveViewportBottom = container.scrollTop + containerRect.height - exportControlsHeight;
     
     // Enhanced margins for better UX, accounting for UI obstructions
-    const baseMarginX = Math.max(containerRect.width * 0.05, 20); // At least 20px margin
-    const baseMarginY = Math.max(containerRect.height * 0.05, 20); // At least 20px margin
+    const baseMarginX = Math.max(containerRect.width * 0.08, 30); // Increased to at least 30px margin
+    const baseMarginY = Math.max(containerRect.height * 0.08, 30); // Increased to at least 30px margin
     
     // Additional margins for obstructed areas
     const leftMargin = Math.max(baseMarginX, helpButtonArea.right);
@@ -1027,7 +1034,8 @@ logPropertyInheritanceChain(node, property) {
       newScrollTop = Math.max(0, nodeTop - topMargin);
     } else if (nodeBottom > effectiveViewportBottom - bottomMargin) {
       // Node is too far down or behind export controls, scroll down
-      newScrollTop = nodeBottom - containerRect.height + exportControlsHeight + bottomMargin;
+      // Add extra margin to ensure the node is well above export controls
+      newScrollTop = nodeBottom - containerRect.height + exportControlsHeight + bottomMargin + 20;
     }
     
     console.log(`MindmapController.calculateMinimalScroll: Node "${node.text}" needs scroll from [${container.scrollLeft}, ${container.scrollTop}] to [${newScrollLeft}, ${newScrollTop}] (accounting for UI obstructions)`);
