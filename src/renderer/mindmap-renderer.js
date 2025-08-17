@@ -1560,11 +1560,19 @@ class MindmapRenderer {
     if (!selectedNodeId) return;
 
     const node = this.nodeMap.get(selectedNodeId);
-    if (!node) return;
+    if (!node) {
+      console.log(`MindmapRenderer.updateSelectionIndicator: Node ${selectedNodeId} not found in nodeMap`);
+      return;
+    }
 
     // Create a dashed rectangle around the selected node
     const svg = document.querySelector('svg');
-    if (!svg) return;
+    if (!svg) {
+      console.log(`MindmapRenderer.updateSelectionIndicator: SVG element not found`);
+      return;
+    }
+
+    console.log(`MindmapRenderer.updateSelectionIndicator: Creating indicator for node "${node.text}" at [${node.x}, ${node.y}] size [${node.width}, ${node.height}]`);
 
     const indicator = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     indicator.setAttribute('id', 'selection-indicator');
@@ -1580,6 +1588,8 @@ class MindmapRenderer {
 
     // Add the indicator to the SVG
     svg.appendChild(indicator);
+    
+    console.log(`MindmapRenderer.updateSelectionIndicator: Selection indicator added to SVG`);
   }
 }
 
