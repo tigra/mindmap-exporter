@@ -341,8 +341,8 @@ createInlineEditor(node) {
   input.style.fontFamily = levelStyle.fontFamily || 'sans-serif';
   input.style.fontSize = (levelStyle.fontSize || 14) + 'px';
   input.style.fontWeight = levelStyle.fontWeight || 'normal';
-  input.style.color = levelStyle.textColor || '#333';
-  input.style.backgroundColor = 'white';
+  input.style.color = '#333'; // Always use dark text for visibility
+  input.style.backgroundColor = 'rgba(255, 255, 255, 0.95)'; // Semi-transparent white background
   input.style.border = '2px solid #007acc';
   input.style.borderRadius = '4px';
   input.style.padding = '8px';
@@ -373,8 +373,8 @@ handleEditorKeydown(event, nodeId) {
     // Cancel editing
     event.preventDefault();
     this.finishNodeEdit(nodeId, false);
-  } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-    // Save with Ctrl+Enter or Cmd+Enter
+  } else if (event.key === 'Enter' && !event.shiftKey) {
+    // Save with Enter (allow Shift+Enter for new lines)
     event.preventDefault();
     this.finishNodeEdit(nodeId, true);
   }
@@ -1399,6 +1399,11 @@ logPropertyInheritanceChain(node, property) {
 
     console.log('Initializing keyboard navigation event listener');
     this.keyboardNavigationHandler = (e) => {
+      // Skip navigation if we're currently editing a node
+      if (this.editingNodeId) {
+        return;
+      }
+      
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         console.log(`Key event captured: ${e.key}`);
         e.preventDefault();
