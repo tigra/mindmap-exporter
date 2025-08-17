@@ -285,6 +285,126 @@ handleNodeEvent(nodeId, eventType) {
     // Select the node
     this.selectNode(nodeId);
   }
+  else if (eventType === 'edit') {
+    // Start inline editing of the node
+    this.startNodeEdit(nodeId);
+  }
+}
+
+/**
+ * Start inline editing of a node
+ * @param {string} nodeId - The ID of the node to edit
+ */
+startNodeEdit(nodeId) {
+  const node = this.model.findNodeById(nodeId);
+  if (!node) {
+    console.warn(`Node not found with ID: ${nodeId}`);
+    return;
+  }
+
+  // Store the current editing state
+  this.editingNodeId = nodeId;
+  this.originalText = node.text;
+
+  // Create an inline editor overlaying the entire node
+  this.createInlineEditor(node);
+}
+
+/**
+ * Create an inline markdown editor for a node
+ * @param {Object} node - The node being edited
+ */
+createInlineEditor(node) {
+  // Get the SVG container position
+  const svgRect = this.container.querySelector('svg').getBoundingClientRect();
+  const containerRect = this.container.getBoundingClientRect();
+  
+  // Calculate node position relative to the page
+  // Node coordinates are in SVG space, need to add container offset and padding
+  const nodeLeft = node.x + svgRect.left - containerRect.left + this.container.scrollLeft;
+  const nodeTop = node.y + svgRect.top - containerRect.top + this.container.scrollTop;
+  
+  // Create input element
+  const input = document.createElement('textarea');
+  input.id = `node-editor-${node.id}`;
+  input.value = node.text;
+  
+  // Get node style for consistent appearance
+  const levelStyle = this.styleManager.getLevelStyle(node.level);
+  
+  // Style the input to overlay the entire node
+  input.style.position = 'absolute';
+  input.style.left = `${containerRect.left + nodeLeft}px`;
+  input.style.top = `${containerRect.top + nodeTop}px`;
+  input.style.width = `${Math.max(node.width, 200)}px`;
+  input.style.height = `${Math.max(node.height, 60)}px`;
+  input.style.fontFamily = levelStyle.fontFamily || 'sans-serif';
+  input.style.fontSize = (levelStyle.fontSize || 14) + 'px';
+  input.style.fontWeight = levelStyle.fontWeight || 'normal';
+  input.style.color = levelStyle.textColor || '#333';
+  input.style.backgroundColor = 'white';
+  input.style.border = '2px solid #007acc';
+  input.style.borderRadius = '4px';
+  input.style.padding = '8px';
+  input.style.resize = 'both';
+  input.style.zIndex = '1000';
+  input.style.outline = 'none';
+  input.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+
+  // Add event listeners
+  input.addEventListener('keydown', (e) => this.handleEditorKeydown(e, node.id));
+  input.addEventListener('blur', () => this.finishNodeEdit(node.id, true));
+
+  // Add input to document
+  document.body.appendChild(input);
+  
+  // Focus and select all text
+  input.focus();
+  input.select();
+}
+
+/**
+ * Handle keydown events in the editor
+ * @param {KeyboardEvent} event - The keyboard event
+ * @param {string} nodeId - The ID of the node being edited
+ */
+handleEditorKeydown(event, nodeId) {
+  if (event.key === 'Escape') {
+    // Cancel editing
+    event.preventDefault();
+    this.finishNodeEdit(nodeId, false);
+  } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    // Save with Ctrl+Enter or Cmd+Enter
+    event.preventDefault();
+    this.finishNodeEdit(nodeId, true);
+  }
+}
+
+/**
+ * Finish node editing
+ * @param {string} nodeId - The ID of the node being edited
+ * @param {boolean} save - Whether to save the changes
+ */
+finishNodeEdit(nodeId, save) {
+  const input = document.getElementById(`node-editor-${nodeId}`);
+  if (!input) return;
+
+  const node = this.model.findNodeById(nodeId);
+  if (!node) return;
+
+  if (save && input.value.trim() !== this.originalText) {
+    // Update the node text
+    node.text = input.value.trim();
+    
+    // Reapply layout and re-render
+    this.applyLayout();
+    this.renderer.render(this.container);
+  }
+
+  // Clean up
+  document.body.removeChild(input);
+  this.editingNodeId = null;
+  this.originalText = null;
 }
 
 /**

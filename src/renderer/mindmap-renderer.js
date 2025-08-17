@@ -1553,15 +1553,15 @@ class MindmapRenderer {
     this.nodeMap.forEach((node, nodeId) => {
       // Overlay element: captures all clicks on the node area (including text)
       this._attachNodeEventHandler(nodeId, 'overlay', 'select');
-      this._attachNodeEventHandler(nodeId, 'overlay', 'toggle', true);
+      this._attachNodeEventHandler(nodeId, 'overlay', 'edit', true); // double-click to edit
       this._attachNodeEventHandler(nodeId, 'overlay', 'debug', false, true); // ctrl+click
       
       // Rect element as fallback (for nodes without overlay or backwards compatibility)
       this._attachNodeEventHandler(nodeId, 'rect', 'select');
-      this._attachNodeEventHandler(nodeId, 'rect', 'toggle', true);
+      this._attachNodeEventHandler(nodeId, 'rect', 'edit', true); // double-click to edit
       this._attachNodeEventHandler(nodeId, 'rect', 'debug', false, true); // ctrl+click
       
-      // Indicator element: single-click for toggle
+      // Indicator element: single-click for toggle (collapse/expand)
       this._attachNodeEventHandler(nodeId, 'indicator', 'toggle');
     });
   }
